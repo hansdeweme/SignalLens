@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 from pathlib import Path
 from typing import Any, Dict
+from mask_contract import normalize_region_masks, StageUnavailable
 
 def _normalize_to_u8(img: np.ndarray) -> np.ndarray:
     img = img.astype(np.float32)
@@ -109,7 +110,7 @@ def run_region_mask_analysis(image_path: str | Path, output_dir: str | Path, bou
         "boundary": float(np.sum(boundary_band) / total),
         "background": float(np.sum(background_mask) / total),
     }
-    return {
+    payload = {
         "region_masks": {
             "subject_mask_path": str(subject_path),
             "boundary_band_path": str(boundary_path),
@@ -119,3 +120,11 @@ def run_region_mask_analysis(image_path: str | Path, output_dir: str | Path, bou
             "ratios": ratios,
         }
     }
+    if any(ratios[name] <= 0 for name in ("subject", "boundary", "background")):
+        raise StageUnavailable("Legacy saliency did not produce meaningful foreground/background/boundary regions.")
+    return normalize_region_masks(
+        payload, mask_source="legacy_edge_saliency", mask_reliability="low",
+        mask_status="approximate", person_specific=False, fallback_used=True,
+        fallback_reason="Edge-saliency regions are approximate and do not identify a person contour.",
+        background_excludes_boundary=True,
+    )

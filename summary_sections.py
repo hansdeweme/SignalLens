@@ -8,6 +8,9 @@ from __future__ import annotations
 from typing import Optional
 # local imports to avoid circular dependencies
 from gui_semantics import ModuleSummary
+from metadata_evidence import (
+    GENERATION_PATTERNS, ENHANCEMENT_PATTERNS, classify_metadata_signals,
+)
 
 def build_osint_section(osint_result) -> ModuleSummary:
     section = ModuleSummary(name="OSINT")
@@ -58,20 +61,30 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         return section
     
     classification = exif_payload.get("classification", {})
-    signals = exif_payload.get("signals", [])
+    signals = [s for s in exif_payload.get("signals", []) if isinstance(s, dict)]
     signal_ids = {s.get("id") for s in signals if isinstance(s, dict)}    
+    # Reconcile legacy payload classifications with the actual evidence IDs.
+    if signal_ids:
+        classification = classify_metadata_signals(signal_ids)
     metadata_status = classification.get("metadata_status", "inconclusive")
+    section.details = {
+        "signal_ids": sorted(s for s in signal_ids if s),
+        "metadata_signals": signals,
+        "provenance_state": classification.get("provenance_state"),
+        "provenance_verified": False,
+        "camera_metadata_present": "CAMERA_METADATA_RICH" in signal_ids,
+    }
     section.pattern = metadata_status
     # prompt override
     if "EMBEDDED_GENERATION_PROMPT" in signal_ids:
         section.pattern = "embedded_generation_prompt_detected"
-        section.status = "strong"
+        section.status = "medium"
         section.polarity = "suspicious"
-        section.score = 0.98
+        section.score = 0.75
         section.note = (
             "Embedded generation prompt and/or workflow metadata detected in the image. "
-            "This includes structured generation parameters and prompt content, which "
-            "constitutes direct declarative evidence of AI-based image generation."
+            "Generation-specific structure provides an unverified declaration of AI-mediated creation. "
+            "Metadata authenticity has not been verified; this does not establish a localized edit."
         )
         # Optional: surface snippet for UI/debugging
         evidence = [
@@ -81,10 +94,10 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         ]
         if evidence:
             snippet = str(evidence[0])[:300]
-            section.details = {
+            section.details.update({
                 "generation_prompt_snippet": snippet,
                 "evidence_count": len(evidence),
-            }
+            })
         return section    
     # creator override
     creator_identity = [
@@ -103,14 +116,19 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         section.note += " Creator attribution metadata is present."
     # mapping
     metadata_map = {
+        "embedded_generation_prompt_detected": (
+            "medium",
+            "Metadata contains an embedded generation declaration; metadata authenticity is unverified.",
+            0.75,
+        ),
         "declared_synthetic_candidate": (
             "medium",
-            "Metadata suggests declared or tool-attributed synthetic generation.",
+            "Metadata declares synthetic generation; metadata authenticity is unverified.",
             0.75,
         ),
         "declared_enhancement_candidate": (
             "medium",
-            "Metadata suggests declared or tool-attributed enhancement or generative editing.",
+            "Metadata declares enhancement or generative editing; authenticity is unverified. This does not establish whole-image generation.",
             0.70,
         ),
         "camera_metadata_present": (
@@ -130,7 +148,7 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         ),
         "sparse_or_stripped": (
             "weak",
-            "Metadata is sparse or stripped and does not provide meaningful provenance clues.",
+            "Metadata is sparse or stripped, limiting provenance assessment. Absence alone does not indicate synthetic origin.",
             0.0,
         ),
         "inconclusive": (
@@ -143,16 +161,10 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         metadata_status,
         ("inconclusive", "Metadata analysis completed.", 0.0),
     )
-    if metadata_status in {
-        "declared_synthetic_candidate",
-        "declared_enhancement_candidate",
-        "sparse_or_stripped"
-    }:
+    if metadata_status in GENERATION_PATTERNS | ENHANCEMENT_PATTERNS:
         section.polarity = "suspicious"
     elif metadata_status == "camera_metadata_present":
         section.polarity = "benign"                
-    elif metadata_status == "provenance_present_unverified":
-        section.polarity = "benign"
     else:
         section.polarity = "neutral"
     return section
@@ -316,7 +328,20 @@ def build_region_mask_section(region_masks_payload) -> ModuleSummary:
         "subject_mask_path": masks.get("subject_mask_path"),
         "boundary_band_path": masks.get("boundary_band_path"),
         "background_mask_path": masks.get("background_mask_path"),
+        **{key: masks.get(key) for key in (
+            "mask_source", "mask_status", "mask_reliability", "person_specific", "fallback_used", "fallback_reason",
+        )},
     }
+    if masks.get("mask_status") == "approximate" or masks.get("person_specific") is False:
+        section.status = "not_run"
+        section.pattern = None
+        section.note = (
+            f"Approximate regions from {masks.get('mask_source', source)} are available for diagnostics only. "
+            "They do not identify reliable person geometry and are not used for person-specific forensic conclusions. "
+            f"Fallback reason: {masks.get('fallback_reason') or 'Person contour unavailable.'}"
+        )
+    elif masks.get("mask_status") == "limited":
+        section.note += " Person segmentation is usable with quality limitations."
     return section
 
 def build_segmentation_alignment_section(payload) -> ModuleSummary:

@@ -10,6 +10,11 @@ from pathlib import Path
 from typing import Callable, Any
 import json
 import time
+from PIL import Image
+from mask_contract import (
+    StageUnavailable, InvalidMaskPayload, person_mask_diagnostics,
+    validate_region_masks, require_person_geometry, PERSON_MASK_STATUSES,
+)
 # local imports
 from signallens_settings import get_patch_profile, get_subject_background_profile
 from run_reporting import RunRecorder
@@ -60,6 +65,7 @@ class AnalysisState:
     cfa_demosaic_payload: dict | None = None
     region_masks_payload: dict | None = None
     region_masks_payload_old: dict | None = None
+    region_segmentation_payload: dict | None = None
     person_subject_mask_payload: dict | None = None
     segmentation_alignment_payload: dict | None = None
     region_fft_payload: dict | None = None    
@@ -73,6 +79,10 @@ class AnalysisState:
     person_mask_meta: dict | None = None
     person_mask_reliable: bool = False
     person_mask_reliability: str | None = None
+    mask_diagnostics: dict = field(default_factory=dict)
+    stage_statuses: dict[str, dict] = field(default_factory=dict)
+    analysis_coverage: dict = field(default_factory=dict)
+    _validated_mask_id: int | None = None
     @property
     def has_errors(self) -> bool:
         return len(self.errors) > 0
@@ -89,11 +99,13 @@ class SignalLensController:
         log_fn: LogFn | None = None,
         status_fn: StatusFn | None = None,
         summary_update_fn: Callable[[], None] | None = None,
+        use_legacy_region_masks: bool | None = None,
     ) -> None:
         self.log_fn = log_fn or (lambda msg, level="info": None)
         self.status_fn = status_fn or (lambda msg: None)
         self.summary_update_fn = summary_update_fn
         self.perf = PERFCOUNT
+        self.use_legacy_region_masks = RUN_LEGACY_REGION_MASKS if use_legacy_region_masks is None else use_legacy_region_masks
 
     def log(self, message: str, level: str = "info") -> None:
         self.log_fn(message, level)
@@ -106,59 +118,178 @@ class SignalLensController:
             self.summary_update_fn()
 
     def run_stage(
-        self,
-        state: AnalysisState,
-        name: str,
-        func,
-        assign_attr: str | None = None,
-        success_log=None,
-        status_success: str | None = None,
-        require: list[str] | None = None,
+        self, state: AnalysisState, name: str, func, assign_attr: str | None = None,
+        success_log=None, status_success: str | None = None,
+        require: list[str] | None = None, mask_requirement: str | None = None,
     ):
-        if require:
-            for attr in require:
-                if getattr(state, attr, None) is None:
-                    self.log(f"Skipping {name} (missing dependency: {attr})", "warn")
-                    print(f"[SignalLens] Stage skipped: {name} (missing dependency: {attr})")
-                    return None
-        self.log(f"Running {name}...", "info")
-        if self.perf:
-            print(f"[SignalLens] Stage started: {name}")
+        stage_start = time.perf_counter()
+        mask_blocked = False
+        if assign_attr:
+            setattr(state, assign_attr, None)
         if state.run_recorder:
             state.run_recorder.record_stage_start(name)
-            state.run_recorder.log(f"Stage started: {name}", "info")                        
-        stage_start = time.perf_counter()
+            state.run_recorder.log(f"Stage started: {name}", "info")
+
+        def finish(status, reason=None):
+            duration = time.perf_counter() - stage_start
+            state.stage_statuses[name] = {
+                "status": status, "reason": reason, "assign_attr": assign_attr,
+                "elapsed_seconds": round(duration, 4),
+            }
+            if state.run_recorder:
+                state.run_recorder.record_stage_finish(
+                    name, duration, status=status,
+                    error=reason if status == "failed" else None,
+                    reason=reason if status != "success" else None,
+                )
+                level = "error" if status == "failed" else "warn" if status != "success" else "success"
+                state.run_recorder.log(f"Stage {status}: {name}" + (f" | {reason}" if reason else ""), level)
+            return duration
+
         try:
+            if mask_requirement:
+                if state.region_masks_payload is not None and state._validated_mask_id != id(state.region_masks_payload):
+                    validate_region_masks(state.region_masks_payload)
+                    state._validated_mask_id = id(state.region_masks_payload)
+                try:
+                    require_person_geometry(state.region_masks_payload)
+                except StageUnavailable:
+                    mask_blocked = True
+                    raise
+            for attr in require or []:
+                if getattr(state, attr, None) is None:
+                    raise StageUnavailable(f"Missing dependency: {attr}")
+            self.log(f"Running {name}...", "info")
             result = func()
-            stage_duration = time.perf_counter() - stage_start
+            if assign_attr and result is None:
+                raise StageUnavailable(f"{name} produced no evidence payload.")
             if assign_attr:
                 setattr(state, assign_attr, result)
+            if assign_attr == "person_subject_mask_payload" and result:
+                for item in result.get("person_subject_mask", {}).get("backend_errors", []):
+                    message = f"Segmentation backend {item['backend']} failed: {item['error']}"
+                    state.errors.append(message)
+                    if state.run_recorder:
+                        state.run_recorder.record_error(name, message)
+                        state.run_recorder.log(message, "error")
+                if result.get("person_subject_mask", {}).get("mask_status") == "error":
+                    finish("failed", "Segmentation backend error; see retained backend diagnostics.")
+                    return result
             if success_log:
                 success_log(result)
-                # state.run_recorder.log(f"Result: {result}", "info")    
             self.update_summary()
             if status_success:
                 self.set_status(status_success)
+            duration = finish("success")
             self.log(f"{name} completed.", "success")
             if self.perf:
-                print(f"[SignalLens] Stage completed: {name} in {stage_duration:.2f}s")
-            if state.run_recorder:
-                state.run_recorder.record_stage_finish(name, elapsed_seconds=stage_duration, status="success")
-                state.run_recorder.log(f"Stage succeeded: {name} ({stage_duration:.3f}s)", "success")                
+                print(f"[SignalLens] Stage completed: {name} in {duration:.2f}s")
             return result
+        except StageUnavailable as exc:
+            reason = str(exc)
+            finish("unavailable" if name == "Person-derived region masks" else "skipped", reason)
+            if mask_blocked:
+                disabled = state.mask_diagnostics.setdefault("disabled_stages", [])
+                if name not in disabled:
+                    disabled.append(name)
+            self.log(f"Skipping {name} ({reason})", "warn")
+            print(f"[SignalLens] Stage unavailable: {name} ({reason})")
+            return None
         except Exception as exc:
-            stage_duration = time.perf_counter() - stage_start
-            msg = f"{name} failed: {exc}"
-            state.errors.append(msg)
-            self.log(f"ERROR [{name}]: {exc}", "error")
+            if assign_attr:
+                setattr(state, assign_attr, None)
+            if isinstance(exc, InvalidMaskPayload) or assign_attr == "region_masks_payload":
+                state.mask_diagnostics.update(mask_status="error", validation_error=str(exc),
+                                              mask_reliability="low", person_mask_reliable=False,
+                                              person_mask_reliability="low")
+                state.person_mask_reliable = False
+                state.person_mask_reliability = "low"
+                state.region_masks_payload = None
+                state._validated_mask_id = None
+            message = f"{name} failed: {exc}"
+            state.errors.append(message)
+            duration = finish("failed", str(exc))
+            self.log(message, "error")
             self.set_status(f"{name} error.")
             if state.run_recorder:
-                state.run_recorder.record_stage_finish(name, elapsed_seconds=stage_duration, status="failed", error=str(exc))
                 state.run_recorder.record_error(name, str(exc))
-                state.run_recorder.log(f"Stage failed: {name} | {exc}", "error")                        
-            print(f"[SignalLens] Stage failed: {name} after {stage_duration:.2f}s ({exc})")
+            print(f"[SignalLens] Stage failed: {name} after {duration:.2f}s ({exc})")
             return None
-               
+
+    def _select_region_masks(self, state: AnalysisState):
+        person_stage = state.stage_statuses.get("Person-aware subject mask", {})
+        execution_error = person_stage.get("reason") if person_stage.get("status") == "failed" else None
+        diagnostics = person_mask_diagnostics(state.person_subject_mask_payload, execution_error)
+        state.mask_diagnostics = diagnostics
+        state.person_mask_reliability = diagnostics["person_mask_reliability"]
+        state.person_mask_reliable = diagnostics["person_mask_reliable"]
+        block = (state.person_subject_mask_payload or {}).get("person_subject_mask", {})
+        original = dict(diagnostics)
+        status = diagnostics["mask_status"]
+        if status in PERSON_MASK_STATUSES or status == "approximate":
+            selected = derive_region_masks_from_person_mask(
+                person_mask_path=block["mask_path"],
+                image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
+                output_dir=state.output_dir,
+                person_mask_reliability=diagnostics["mask_reliability"],
+                mask_source=diagnostics["mask_source"], person_specific=diagnostics["person_specific"],
+            )
+        elif self.use_legacy_region_masks:
+            selected = self.run_stage(
+                state, "Region-mask legacy", lambda: run_region_mask_analysis(
+                    image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
+                    output_dir=state.output_dir, boundary_width_px=18,
+                ), assign_attr="region_masks_payload_old", require=["prepared_images_payload"],
+            )
+            if selected:
+                selected["region_masks"]["fallback_reason"] = "; ".join(diagnostics["rejection_reasons"])
+        else:
+            selected = None
+        if selected is None:
+            diagnostics["fallback_reason"] = "; ".join(diagnostics["rejection_reasons"])
+            diagnostics["fallback_selection"] = "Legacy fallback unavailable." if self.use_legacy_region_masks else "Legacy fallback disabled."
+            raise StageUnavailable(f"{diagnostics['mask_status']}: {diagnostics['fallback_reason']} {diagnostics['fallback_selection']}")
+        masks = validate_region_masks(selected)
+        expected = state.prepared_images_payload["prepared"]["subject"]
+        if masks["shape"] != [expected["height"], expected["width"]]:
+            raise InvalidMaskPayload("Region masks do not match prepared subject-image geometry.")
+        state.mask_diagnostics = {**diagnostics, **{k: masks[k] for k in (
+            "mask_source", "mask_status", "mask_reliability", "person_specific", "fallback_used", "fallback_reason",
+        )}, "segmentation_outcome": original}
+        state._validated_mask_id = id(selected)
+        return selected
+
+    def _cross_signal(self, state: AnalysisState):
+        ela = state.ela_payload["ela"]
+        noise = state.noise_payload["noise"]
+        block_size = int(ela["blockwise"].get("block_size", 64))
+        if int(noise["blockwise"].get("block_size", 64)) != block_size:
+            raise StageUnavailable("ELA and residual hotspot grids have incompatible block sizes.")
+        geometries = []
+        for payload, path_key in ((ela, "ela_image_path"), (noise, "residual_image_path")):
+            geometry = payload.get("image_geometry")
+            if geometry:
+                geometries.append((int(geometry["height"]), int(geometry["width"])))
+            elif payload.get(path_key):
+                with Image.open(payload[path_key]) as image:
+                    geometries.append((image.height, image.width))
+        if len(set(geometries)) > 1:
+            raise StageUnavailable("ELA and residual image geometries do not match.")
+        if geometries:
+            image_shape = geometries[0]
+        else:
+            with Image.open(state.selected_file) as image:
+                image_shape = (image.height, image.width)
+        if any(d <= 0 for d in image_shape):
+            raise ValueError("Invalid cross-signal image geometry.")
+        result = compute_cross_signal_payload(
+            ela_blocks=ela["blockwise"]["top_blocks"], noise_blocks=noise["blockwise"]["top_blocks"],
+            ela_pattern=ela["pattern"], noise_pattern=noise["pattern"],
+            image_shape=image_shape, block_size=block_size,
+        )
+        result["image_geometry"] = {"height": image_shape[0], "width": image_shape[1], "source": "ELA/residual image grid"}
+        return result
+
 #----------------------------------------------------------------
 # The run_analysis method orchestrates the entire analysis workflow, executing each stage in sequence while managing the state and handling errors gracefully.
 #  We have 4 layers of signals:
@@ -294,95 +425,25 @@ class SignalLensController:
             require=["prepared_images_payload"],
             success_log=lambda p: self.log(
                 "Person subject mask: "
-                f"{p.get('person_subject_mask', {}).get('quality', {}).get('mask_reliability', 'unknown')} | "
+                f"{p.get('person_subject_mask', {}).get('mask_status', 'unknown')} | "
+                f"reliability={p.get('person_subject_mask', {}).get('mask_reliability', 'unknown')} | "
                 f"backend={p.get('person_subject_mask', {}).get('backend', 'unknown')} | "
                 f"area={p.get('person_subject_mask', {}).get('quality', {}).get('subject_area_ratio', 0.0):.3f}",
                 "finding",
             ),
             status_success="Person-aware subject mask done",
         )
-        # Substage 6a: Person-derived region masks       
-        def _derive_person_region_masks_if_reliable(state):
-            person_block = (state.person_subject_mask_payload or {}).get("person_subject_mask", {})
-            quality = person_block.get("quality", {})
-            reliability = quality.get("mask_reliability", "low")
-
-            state.person_mask_reliability = reliability
-            state.person_mask_reliable = reliability in {"high", "medium"}
-
-            if not state.person_mask_reliable:
-                if state.region_masks_payload_old is not None:
-                    return state.region_masks_payload_old
-                raise ValueError(
-                    f"Person subject mask is not reliable enough and no legacy fallback exists: {reliability}"
-                )
-
-            return derive_region_masks_from_person_mask(
-                person_mask_path=person_block["mask_path"],
-                image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
-                output_dir=state.output_dir,
-                person_mask_reliability=reliability,
-            )
+        # Quality rejection is an expected unavailable outcome. Legacy masks,
+        # when explicitly enabled, are selected before any regional consumer.
         self.run_stage(
-            state=state,
-            name="Person-derived region masks",
-            func=lambda: _derive_person_region_masks_if_reliable(state),
+            state, "Person-derived region masks", lambda: self._select_region_masks(state),
             assign_attr="region_masks_payload",
-            require=["person_subject_mask_payload", "prepared_images_payload"],
-            success_log=lambda p: self.log(
-                "Region masks from person subject: "
-                f"subject={p.get('region_masks', {}).get('subject_ratio', 0.0):.3f} | "
-                f"boundary={p.get('region_masks', {}).get('boundary_ratio', 0.0):.3f} | "
-                f"background={p.get('region_masks', {}).get('background_ratio', 0.0):.3f}",
-                "finding",
-            ),
-            status_success="Person-derived region masks done",
+            status_success="Region-mask selection completed",
         )
-        def _update_person_mask_reliability(state):
-            block = (state.person_subject_mask_payload or {}).get("person_subject_mask", {})
-            quality = block.get("quality", {})
-            reliability = quality.get("mask_reliability", "low")
-            state.person_mask_reliability = reliability
-            state.person_mask_reliable = reliability in {"high", "medium"}
-            return {
-                "person_mask_reliability": reliability,
-                "person_mask_reliable": state.person_mask_reliable,
-            }            
         self.run_stage(
-            state=state,
-            name="Person mask reliability",
-            func=lambda: _update_person_mask_reliability(state),
-            assign_attr="person_mask_meta",
-            require=["person_subject_mask_payload"],
-            success_log=lambda p: self.log(
-                f"Person mask reliability: {p.get('person_mask_reliability')} "
-                f"(usable={p.get('person_mask_reliable')})",
-                "info",
-            ),
-            status_success="Person mask reliability evaluated",
+            state, "Person mask reliability", lambda: dict(state.mask_diagnostics),
+            assign_attr="person_mask_meta", status_success="Person mask reliability evaluated",
         )
-        if RUN_LEGACY_REGION_MASKS == True:            
-            # Stage 7: Legacy Region masks (once needed for: subject vs background, boundary band, all subject modules )
-            self.run_stage(
-                state=state,
-                name="Region-mask legacy",
-                func=lambda: run_region_mask_analysis(
-                    image_path=state.selected_file,
-                    output_dir=state.output_dir,
-                    boundary_width_px=18,
-                ),
-                assign_attr="region_masks_payload_old",
-                success_log=lambda p: self.log(
-                    "Region masks created: "
-                    f"subject={p.get('region_masks', {}).get('ratios', {}).get('subject', 0.0):.3f}, "
-                    f"boundary={p.get('region_masks', {}).get('ratios', {}).get('boundary', 0.0):.3f}, "
-                    f"background={p.get('region_masks', {}).get('ratios', {}).get('background', 0.0):.3f}",
-                    "finding",
-                ),
-                status_success="Region-mask analysis done",
-            )
-            if state.person_mask_reliable == False:
-                state.region_masks_payload = state.region_masks_payload_old                
         # Stage 8: Subject boundary
         self.run_stage(
             state=state,
@@ -407,6 +468,7 @@ class SignalLensController:
             ),
             assign_attr="region_segmentation_payload",
             require=["region_masks_payload"],
+            mask_requirement="person",
         )        
         # Stage 10: FFT
         self.run_stage(
@@ -417,6 +479,7 @@ class SignalLensController:
                 out_dir=state.output_dir,
             ),
             assign_attr="fft_payload",
+            require=["prepared_images_payload"],
             success_log=lambda p: self.log(f"FFT pattern: {p.get('fft', {}).get('frequency_pattern')}", "finding"),
             status_success="FFT analysis done",
         )
@@ -436,6 +499,7 @@ class SignalLensController:
                 max_pairs_for_overlay=patch_params.get("max_pairs_for_overlay", 60),                                
             ),
             assign_attr="patch_similarity_payload",
+            require=["prepared_images_payload"],
             success_log=lambda p: self.log(
                 f"Pattern: {p.get('patch_similarity', {}).get('similarity_pattern')} | "
                 f"profile={state.analysis_mode} | "
@@ -452,25 +516,10 @@ class SignalLensController:
             self.log(f"Cross-signal note: {p['cross_signal'].get('cross_signal_note')}", "info")
             self.log(f"Boundary pattern: {p['boundary_signal'].get('boundary_pattern')}", "info")
             self.log(f"Boundary note: {p['boundary_signal'].get('boundary_note')}", "info")
-        def cross_signal_func():
-            ela_blocks = state.ela_payload["ela"]["blockwise"]["top_blocks"]
-            noise_blocks = state.noise_payload["noise"]["blockwise"]["top_blocks"]
-            ela_pattern = state.ela_payload["ela"]["pattern"]
-            noise_pattern = state.noise_payload["noise"]["pattern"]
-            image_shape = tuple(state.region_masks_payload["region_masks"]["shape"])
-            block_size = int(state.ela_payload["ela"]["blockwise"].get("block_size", 64))
-            return compute_cross_signal_payload(
-                ela_blocks=ela_blocks,
-                noise_blocks=noise_blocks,
-                ela_pattern=ela_pattern,
-                noise_pattern=noise_pattern,
-                image_shape=image_shape,
-                block_size=block_size,
-            )
         self.run_stage(
             state=state,
             name="Cross-signal analysis",
-            func=cross_signal_func,
+            func=lambda: self._cross_signal(state),
             assign_attr="cross_signal_payload",
             require=["ela_payload", "noise_payload"],
             success_log=log_cross_signal_result,
@@ -489,6 +538,7 @@ class SignalLensController:
             ),
             assign_attr="boundary_focus_payload",
             require=["region_masks_payload", "ela_payload", "noise_payload"],
+            mask_requirement="person",
             success_log=lambda p: self.log(
                 "Boundary focus pattern: "
                 f"{p.get('boundary_focus', {}).get('pattern', 'unknown')} | "
@@ -511,6 +561,7 @@ class SignalLensController:
             ),
             assign_attr="region_fft_payload",
             require=["region_masks_payload", "prepared_images_payload"],
+            mask_requirement="person",
             success_log=lambda p: self.log(
                 "Region FFT pattern: "
                 f"{p.get('region_fft', {}).get('pattern', 'unknown')} | "
@@ -532,6 +583,7 @@ class SignalLensController:
             ),
             assign_attr="segmentation_alignment_payload",
             require=["cross_signal_payload", "region_masks_payload"],
+            mask_requirement="person",
         )                
         # Stage 16: Subject-only texture 
         def _subject_prepared(state):
@@ -556,6 +608,7 @@ class SignalLensController:
             ),
             assign_attr="subject_texture_consistency_payload",
             require=["region_masks_payload", "prepared_images_payload"],
+            mask_requirement="person",
             success_log=lambda p: self.log(
                 "Subject texture consistency pattern: "
                 f"{p.get('subject_texture_consistency', {}).get('pattern', 'unknown')} | "
@@ -596,6 +649,7 @@ class SignalLensController:
                 "region_masks_payload",
                 "prepared_images_payload",
             ],
+            mask_requirement="person",
             status_success="Subject process asymmetry analysis done",
         )
         # Stage 18: Subject material realism analysis
@@ -619,6 +673,7 @@ class SignalLensController:
                 "region_masks_payload",
                 "prepared_images_payload",
             ],
+            mask_requirement="person",
             status_success="Subject material realism analysis done",
         )
         # 19: Patch spatial analysis (requires region masks)
@@ -632,6 +687,7 @@ class SignalLensController:
             ),
             assign_attr="patch_spatial_payload",
             require=["patch_similarity_payload", "region_masks_payload"],
+            mask_requirement="person",
             success_log=lambda p: self.log(
                 "Patch spatial pattern: "
                 f"{p.get('patch_spatial', {}).get('pattern', 'unknown')} | "
@@ -690,8 +746,17 @@ class SignalLensController:
             )
         # 
         total_duration = time.perf_counter() - analysis_start
-        print(f"[SignalLens] Full analysis completed in {total_duration:.2f}s")
+        counts = {status: sum(s["status"] == status for s in state.stage_statuses.values())
+                  for status in ("success", "skipped", "unavailable", "failed")}
+        partial = bool(counts["skipped"] or counts["unavailable"] or counts["failed"] or state.errors)
+        state.analysis_coverage = {
+            "status": "partial" if partial else "complete", "stage_counts": counts,
+            "elapsed_seconds": round(total_duration, 4),
+            "unavailable_stages": [name for name, status in state.stage_statuses.items() if status["status"] != "success"],
+        }
+        print(f"[SignalLens] Analysis completed in {total_duration:.2f}s (coverage={state.analysis_coverage['status']}, stages={counts})")
         if state.run_recorder:
-            state.run_recorder.log("Analysis run completed", "success")
-            state.run_recorder.finalize(status="completed")
+            state.run_recorder.diagnostics.update(mask=state.mask_diagnostics, coverage=state.analysis_coverage)
+            state.run_recorder.log(f"Analysis completed; coverage={state.analysis_coverage['status']}", "warn" if partial else "success")
+            state.run_recorder.finalize(status="completed_with_errors" if state.errors else "completed_partial" if partial else "completed")
         return state

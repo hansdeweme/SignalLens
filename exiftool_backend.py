@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import hashlib
 import shutil
+import re
 import sys, subprocess
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
@@ -36,6 +37,7 @@ from exif_config import (
     TEXT_LIKE_TAG_HINTS,
     GENERATION_PROMPT_TAGS
 )
+from metadata_evidence import classify_metadata_signals, DIGITAL_SOURCE_TYPE_DECLARATIONS
 
 # ----------------------------------------------------------------------
 # Configuration
@@ -135,6 +137,15 @@ def split_group_and_tag(raw_key: str) -> Tuple[str, str]:
 def is_text_like_tag(tag_name: str) -> bool:
     tag_l = tag_name.lower()
     return any(hint in tag_l for hint in TEXT_LIKE_TAG_HINTS)
+
+
+def _is_embedded_metadata_entry(entry: Dict[str, Any]) -> bool:
+    """Exclude host paths and extractor diagnostics from declarative evidence."""
+    raw_group, raw_tag = split_group_and_tag(str(entry.get("raw_key", "")))
+    group = str(entry.get("group") or raw_group).lower()
+    tag = str(entry.get("tag") or raw_tag).lower()
+    return (group not in {"system", "exiftool", "composite"}
+            and tag not in {"sourcefile", "filename", "basename", "directory", "filepath"})
 
 def contains_any(text: str, terms: List[str]) -> List[str]:
     hits = []
@@ -255,6 +266,7 @@ def extract_watchlist_hits(record: Dict[str, Any]) -> Dict[str, List[Dict[str, A
         "other_watchlist": [],
         "broad_text_scan": [],
         "generation_prompt": [],
+        "digital_source_type": [],
     }
     for raw_key, value in record.items():
         group, tag = split_group_and_tag(raw_key)
@@ -266,9 +278,14 @@ def extract_watchlist_hits(record: Dict[str, Any]) -> Dict[str, List[Dict[str, A
             "tag": tag,
             "value": value,
         }
+        if not _is_embedded_metadata_entry(entry):
+            continue
         # ------------------------------------------------------------------
         # High-priority semantic routing
         # ------------------------------------------------------------------
+        if tag_l == "digitalsourcetype":
+            hits["digital_source_type"].append(entry)
+            continue
         # Software attribution / processing identity
         if tag_l in {"software", "processingsoftware", "hostcomputer"}:
             hits["software"].append(entry)
@@ -278,7 +295,7 @@ def extract_watchlist_hits(record: Dict[str, Any]) -> Dict[str, List[Dict[str, A
             hits.setdefault("creator_identity", []).append(entry)
             continue
         # XMP prompt info
-        if tag_l in {"prompt", "parameters", "workflow"}:
+        if tag_l in GENERATION_PROMPT_TAGS:
             hits["generation_prompt"].append(entry)
             continue        
         # XMP history / resource-event style tags
@@ -382,7 +399,7 @@ def collect_textual_evidence(hits: Dict[str, List[Dict[str, Any]]]) -> List[Dict
         "broad_text_scan",
         "generation_prompt"
     ):
-        evidence.extend(hits.get(bucket_name, []))
+        evidence.extend(item for item in hits.get(bucket_name, []) if _is_embedded_metadata_entry(item))
     return evidence
 
 def find_term_matches(hits: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
@@ -441,6 +458,41 @@ def find_term_matches(hits: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[D
             result[key] = deduplicate_match_items(result[key])       
     return result
 
+def _explicit_generation_workflow(items: List[Dict[str, Any]]) -> bool:
+    """Require generation-specific structure, not merely a populated tag.
+
+    Recognize ComfyUI sampler nodes, diffusion parameters or a Midjourney job
+    signature. A Job ID alone, a folder name or generic prompt prose is not enough.
+    Tool names alone remain ambiguous; authenticity is never verified here.
+    """
+    text = "\n".join(normalize_text(item.get("value")) for item in items)
+    sampler_node = re.search(r'["\'](?:class_type|type)["\']\s*:\s*["\'](?:ksampler|samplercustom)', text)
+    parameters = all(re.search(pattern, text) for pattern in (
+        r"\bsteps\s*:", r"\bsampler\s*:", r"\bseed\s*:", r"\bcfg scale\s*:",
+    ))
+    job_id = re.search(
+        r"\bjob id\s*:\s*[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", text,
+    )
+    generation_parameter = re.search(r"(?:^|\s)--(?:chaos|c|stylize|s)\s+\d+(?:\.\d+)?\b", text)
+    version_or_style = re.search(r"(?:^|\s)--(?:(?:version|v)\s+\d+(?:\.\d+)?\b|style\s+raw\b)", text)
+    return bool(sampler_node or parameters or (job_id and generation_parameter and version_or_style))
+
+
+def _source_type_declarations(
+    hits: Dict[str, List[Dict[str, Any]]], signal_id: str,
+) -> List[Dict[str, Any]]:
+    evidence = []
+    for item in hits.get("digital_source_type", []):
+        if not _is_embedded_metadata_entry(item):
+            continue
+        value = item.get("value")
+        values = value if isinstance(value, (list, tuple)) else [value]
+        for candidate in values:
+            if isinstance(candidate, str) and DIGITAL_SOURCE_TYPE_DECLARATIONS.get(candidate.strip()) == signal_id:
+                evidence.append({**item, "declaration_kind": "iptc_digital_source_type", "matched_value": candidate.strip()})
+    return evidence
+
+
 def build_signals(
     file_path: Path,
     record: Dict[str, Any],
@@ -450,7 +502,11 @@ def build_signals(
     signals: List[Signal] = []
 
     # 0. Generator prompt
-    generation_prompt_evidence = hits.get("generation_prompt", [])
+    prompt_fields = hits.get("generation_prompt", [])
+    generation_prompt_evidence = [
+        item for item in prompt_fields + hits.get("container_text", [])
+        if _is_embedded_metadata_entry(item) and _explicit_generation_workflow([item])
+    ]
     if generation_prompt_evidence:
         signals.append(
             Signal(
@@ -460,11 +516,18 @@ def build_signals(
                 status="hit",
                 summary=(
                     "Image metadata contains an embedded generation prompt or workflow, "
-                    "which is strong declarative evidence of synthetic image generation."
+                    "which declares a generation workflow; metadata authenticity is unverified."
                 ),
                 evidence=generation_prompt_evidence,
             )
         )
+    elif prompt_fields:
+        signals.append(Signal(
+            id="AMBIGUOUS_WORKFLOW_METADATA", severity="low", confidence=0.40,
+            status="supporting",
+            summary="Workflow or prompt fields are populated without a specific generation structure.",
+            evidence=prompt_fields,
+        ))
     # 1. Creator
     creator_identity = hits.get("creator_identity", [])
     if creator_identity:
@@ -565,27 +628,31 @@ def build_signals(
             )
         )
     # 9. Explicit declarative generation wording
-    if matches["declarative_generation_terms"]:
+    generation_declarations = (matches["declarative_generation_terms"]
+                               + _source_type_declarations(hits, "DECLARED_SYNTHETIC"))
+    if generation_declarations:
         signals.append(
             Signal(
                 id="DECLARED_SYNTHETIC",
                 severity="high",
                 confidence=0.92,
                 status="hit",
-                summary="Metadata contains explicit wording suggestive of synthetic or AI-generated origin.",
-                evidence=matches["declarative_generation_terms"],
+                summary="Metadata declares synthetic or AI-generated origin through wording or IPTC Digital Source Type; authenticity is unverified.",
+                evidence=generation_declarations,
             )
         )
     # 10. Explicit declarative enhancement wording
-    if matches["declarative_enhancement_terms"]:
+    enhancement_declarations = (matches["declarative_enhancement_terms"]
+                                + _source_type_declarations(hits, "DECLARED_ENHANCEMENT"))
+    if enhancement_declarations:
         signals.append(
             Signal(
                 id="DECLARED_ENHANCEMENT",
                 severity="high",
                 confidence=0.90,
                 status="hit",
-                summary="Metadata contains explicit wording suggestive of enhancement, restoration, upscaling, or generative editing.",
-                evidence=matches["declarative_enhancement_terms"],
+                summary="Metadata declares enhancement or generative editing through wording or IPTC Digital Source Type; this does not establish whole-image generation.",
+                evidence=enhancement_declarations,
             )
         )
     # 11. Generic editing software only
@@ -651,6 +718,8 @@ def _count_semantic_hits(hits: Dict[str, List[Dict[str, Any]]]) -> int:
         "container_text",
         "c2pa",
         "other_watchlist",
+        "generation_prompt",
+        "digital_source_type",
         # intentionally exclude broad_text_scan
     )
     count = 0
@@ -789,35 +858,11 @@ def assess_metadata_sparsity(record: Dict[str, Any], hits: Dict[str, List[Dict[s
 
 
 def derive_classification(signals: List[Signal]) -> Dict[str, Any]:
-    signal_ids = {s.id for s in signals}
-    declared_generation = ("EMBEDDED_GENERATION_PROMPT" in signal_ids or "DECLARED_SYNTHETIC" in signal_ids or "AI_TOOL_NAME_MATCH" in signal_ids)
-    declared_enhancement = "DECLARED_ENHANCEMENT" in signal_ids or "ENHANCEMENT_TOOL_NAME_MATCH" in signal_ids
-    stripped = "METADATA_STRIPPED_OR_SPARSE" in signal_ids
-    provenance_present = "C2PA_PRESENT" in signal_ids
-    provenance_verified = False  # reserved for later dedicated C2PA validator
-    if declared_generation:
-        metadata_status = "declared_synthetic_candidate"
-    elif declared_enhancement:
-        metadata_status = "declared_enhancement_candidate"
-    elif provenance_present:
-        metadata_status = "provenance_present_unverified"
-    elif "GENERIC_EDITING_SOFTWARE_PRESENT" in signal_ids:
-        metadata_status = "edited_or_processed_but_inconclusive"
-    elif "METADATA_STRIPPED_OR_SPARSE" in signal_ids:
-        metadata_status = "sparse_or_stripped"
-    elif "CAMERA_METADATA_RICH" in signal_ids:
-        metadata_status = "camera_metadata_present"        
-    else:
-        metadata_status = "inconclusive"
-    # print(f"Exiftool: metadata classificatie: {metadata_status}")
-    return {
-        "metadata_status": metadata_status,
-        "stripped": stripped,
-        "declared_generation": declared_generation,
-        "declared_enhancement": declared_enhancement,
-        "provenance_present": provenance_present,
-        "provenance_verified": provenance_verified,
-    }
+    result = classify_metadata_signals(s.id for s in signals)
+    # Keep the extractor's legacy status; the summary exposes the prompt pattern.
+    if result["metadata_status"] == "embedded_generation_prompt_detected":
+        result["metadata_status"] = "declared_synthetic_candidate"
+    return result
 
 # ----------------------------------------------------------------------
 # Main orchestration

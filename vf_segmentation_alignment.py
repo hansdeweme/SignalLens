@@ -35,6 +35,11 @@ def compute_segmentation_boundary_alignment(cross_payload, region_masks_payload)
     boundary = _load_bin_mask(boundary_path)
     if boundary is None:
         return None
+    # Hotspots use the ELA/residual image grid. Person masks may use a resized
+    # gatekeeper image; align coordinates instead of cropping the hotspot grid.
+    original_hotspot_shape = list(hotspot.shape)
+    if hotspot.shape != boundary.shape:
+        hotspot = cv2.resize(hotspot.astype(np.uint8), (boundary.shape[1], boundary.shape[0]), interpolation=cv2.INTER_NEAREST)
 
     # Raw overlap: how much of hotspots sit on boundary
     raw_align = _overlap_ratio(hotspot, boundary)
@@ -49,5 +54,7 @@ def compute_segmentation_boundary_alignment(cross_payload, region_masks_payload)
         "alignment_score": float(score),
         "raw_overlap": float(raw_align),
         "boundary_coverage": float(boundary_coverage),
+        "hotspot_input_shape": original_hotspot_shape,
+        "boundary_shape": list(boundary.shape),
     }
     

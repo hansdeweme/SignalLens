@@ -17,8 +17,10 @@ import numpy as np
 import sys
 import contextlib
 import os
+from importlib.metadata import version, PackageNotFoundError
 # local imports
 from app_paths import app_dir, resource_path
+from mask_contract import normalize_region_masks, person_mask_diagnostics
 
 @contextlib.contextmanager
 def suppress_native_stderr():
@@ -243,6 +245,15 @@ def _quality_from_mask(
     else:
         reliability = "low"
         pattern = "person_subject_mask_unreliable"
+    reasons = []
+    if not person_detected:
+        reasons.append("No detected person supports this mask.")
+    if not 0.03 <= area_ratio <= 0.90:
+        reasons.append(f"Foreground area ratio {area_ratio:.6f} is outside the existing usable range [0.03, 0.90].")
+    if largest_component_ratio < 0.50:
+        reasons.append(f"Largest-component coverage {largest_component_ratio:.6f} is below the existing 0.50 usable minimum.")
+    if reliability == "medium":
+        reasons.append("Usable with limitations: the existing high-quality area/component criteria were not all met.")
     return {
         "pattern": pattern,
         "person_detected": bool(person_detected),
@@ -251,6 +262,7 @@ def _quality_from_mask(
         "largest_component_ratio": float(largest_component_ratio),
         "component_count": int(component_count),
         "mask_reliability": reliability,
+        "quality_reasons": reasons,
     }
 
 def _save_mask(mask: np.ndarray, path: Path) -> None:
@@ -301,6 +313,7 @@ def run_person_subject_mask_analysis(
     person_detected = False
     detection_backend = "none"
     backend_error: str | None = None    
+    backend_errors = []
 # ------------------------------------------------------------
 # Preferred backend: MediaPipe
 # ------------------------------------------------------------
@@ -312,18 +325,23 @@ def run_person_subject_mask_analysis(
                 threshold=0.60,
             )
         if raw_mask is not None:
-            person_detected = True
-            person_count = 1
+            person_detected = bool(np.any(raw_mask))
+            person_count = int(person_detected)
             detection_backend = "mediapipe_tasks_image_segmenter"
     except Exception as e:
         backend_error = str(e)
+        backend_errors.append({"backend": "mediapipe_tasks_image_segmenter", "error": str(e)})
         print(f"[PersonMask] MediaPipe Tasks failed, falling back to HOG: {e}")
     
     # ------------------------------------------------------------
     # Fallback backend: OpenCV HOG person detector
     # ------------------------------------------------------------
     if raw_mask is None:
-        bbox, hog_confidence = _detect_person_bbox_hog(image_bgr)
+        try:
+            bbox, hog_confidence = _detect_person_bbox_hog(image_bgr)
+        except Exception as exc:
+            backend_errors.append({"backend": "opencv_hog", "error": str(exc)})
+            bbox, hog_confidence = None, 0.0
         if bbox is not None:
             raw_mask = _make_bbox_mask((h, w), bbox)
             detector_confidence = float(hog_confidence)
@@ -386,8 +404,11 @@ def run_person_subject_mask_analysis(
         "mask_area_ratio": float(_safe_area_ratio(mask)) if mask is not None else 0.0,
         "quality": quality,
     })
-    _write_person_mask_debug(output_dir, stem, debug_info)    
-    return {
+    try:
+        backend_version = version("mediapipe") if detection_backend == "mediapipe_tasks_image_segmenter" else cv2.__version__
+    except PackageNotFoundError:
+        backend_version = None
+    payload = {
         "person_subject_mask": {
             "pattern": quality["pattern"],
             "status": (
@@ -398,6 +419,10 @@ def run_person_subject_mask_analysis(
             "person_mask_reliability": person_mask_reliability,
             "backend": detection_backend,
             "requested_backend": backend,
+            "backend_version": backend_version,
+            "backend_errors": backend_errors,
+            "confidence_kind": "mean foreground confidence, not a person-detection probability" if detection_backend == "mediapipe_tasks_image_segmenter" else "HOG score proxy or unavailable",
+            "fallback_reason": backend_error or ("No MediaPipe person mask was produced." if detection_backend != "mediapipe_tasks_image_segmenter" else None),
             "model_name": model_name if detection_backend == "mediapipe_tasks_image_segmenter" else None,
             "mask_path": str(mask_path),
             "overlay_path": str(overlay_path),
@@ -408,8 +433,19 @@ def run_person_subject_mask_analysis(
             },
         }
     }
+    diagnostics = person_mask_diagnostics(payload)
+    payload["person_subject_mask"].update({key: diagnostics[key] for key in (
+        "mask_status", "mask_source", "mask_reliability", "person_specific", "fallback_used", "fallback_reason",
+    )})
+    payload["person_subject_mask"]["person_mask_reliability"] = diagnostics["person_mask_reliability"]
+    if diagnostics["mask_status"] in {"approximate", "unavailable", "error"}:
+        payload["person_subject_mask"]["status"] = diagnostics["mask_status"]
+    debug_info.update(backend_version=backend_version, mask_status=diagnostics["mask_status"],
+                      rejection_reasons=diagnostics["rejection_reasons"], backend_errors=backend_errors)
+    _write_person_mask_debug(output_dir, stem, debug_info)
+    return payload
 
-def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_path: str | Path, output_dir: str | Path, person_mask_reliability: str | None = None,) -> dict:
+def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_path: str | Path, output_dir: str | Path, person_mask_reliability: str | None = None, mask_source: str = "mediapipe_tasks_image_segmenter", person_specific: bool = True,) -> dict:
     person_mask = cv2.imread(str(person_mask_path), cv2.IMREAD_GRAYSCALE)
     if person_mask is None:
         raise ValueError(f"Failed to load person mask: {person_mask_path}")
@@ -421,6 +457,7 @@ def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_pat
     background = (subject == 0).astype(np.uint8)
     stem = Path(image_path).stem
     out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
     subject_path = out / f"{stem}_person_subject_region_mask.png"
     boundary_path = out / f"{stem}_person_boundary_band_mask.png"
     background_path = out / f"{stem}_person_background_mask.png"
@@ -429,7 +466,7 @@ def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_pat
     cv2.imwrite(str(background_path), background * 255)
     image_area = max(subject.size, 1)
     h, w = subject.shape
-    return {
+    payload = {
         "region_masks": {
             "shape": [int(h), int(w)],
             "height": int(h),
@@ -444,3 +481,9 @@ def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_pat
             "background_ratio": float(np.count_nonzero(background) / image_area),
         }
     }
+    return normalize_region_masks(
+        payload, mask_source=mask_source, mask_reliability=person_mask_reliability or "low",
+        mask_status=("reliable" if person_mask_reliability == "high" else "limited" if person_mask_reliability == "medium" else "unreliable") if person_specific else "approximate",
+        person_specific=person_specific, fallback_used=not person_specific,
+        fallback_reason="Bounding-box geometry is approximate." if not person_specific else None,
+    )

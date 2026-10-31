@@ -38,6 +38,7 @@ class RunRecorder:
     errors: List[Dict[str, Any]] = field(default_factory=list)
     warnings: List[Dict[str, Any]] = field(default_factory=list)
     artifacts: Dict[str, Any] = field(default_factory=dict)
+    diagnostics: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.output_dir = Path(self.output_dir)
@@ -64,13 +65,14 @@ class RunRecorder:
         })
         self.flush_manifest()
 
-    def record_stage_finish(self, stage_name: str, elapsed_seconds: float, status: str = "success", error: str | None = None) -> None:
+    def record_stage_finish(self, stage_name: str, elapsed_seconds: float, status: str = "success", error: str | None = None, reason: str | None = None) -> None:
         for stage in reversed(self.stages):
             if stage["name"] == stage_name and stage["finished_at"] is None:
                 stage["finished_at"] = _now_iso()
                 stage["status"] = status
                 stage["elapsed_seconds"] = round(float(elapsed_seconds), 4)
                 stage["error"] = error
+                stage["reason"] = reason
                 break
         self.flush_manifest()
 
@@ -107,6 +109,7 @@ class RunRecorder:
             "artifacts": self.artifacts,
             "errors": self.errors,
             "warnings": self.warnings,
+            "diagnostics": self.diagnostics,
         }
 
     def flush_manifest(self) -> None:

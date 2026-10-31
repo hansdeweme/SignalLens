@@ -5,6 +5,7 @@
 #Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
 #
 from __future__ import annotations
+from hypothesis_evidence import ROLE_TITLES, evidence_presentation
 import json
 from pathlib import Path
 from typing import Any
@@ -77,6 +78,8 @@ def _add_list(lines: list[str], title: str, items: list[str] | None) -> None:
 #=========================================================================
 def _build_decision_win_explanation(reasoning_trace: dict) -> list[str]:
     decision = reasoning_trace.get("decision", {}) or {}
+    if decision.get("selection_reason"):
+        return [decision["selection_reason"]]
     scorecard = reasoning_trace.get("scorecard", {}) or {}
     derived = reasoning_trace.get("derived_signals", {}) or {}
 
@@ -307,12 +310,45 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
     scorecard = reasoning_trace.get("scorecard", {}) or {}
     derived = reasoning_trace.get("derived_signals", {}) or {}
     sections = reasoning_trace.get("section_snapshot", {}) or {}
+    pipeline = reasoning_trace.get("pipeline_status", {})
+    if pipeline:
+        _add_heading(lines, "Pipeline Coverage")
+        _add_kv(lines, "Coverage", pipeline.get("coverage", {}).get("status"))
+        _add_kv(lines, "Stage Counts", pipeline.get("coverage", {}).get("stage_counts"))
+        mask = pipeline.get("mask_diagnostics", {})
+        for key in ("mask_status", "mask_source", "mask_reliability", "fallback_used", "fallback_reason"):
+            _add_kv(lines, key, mask.get(key))
+        _add_list(lines, "Mask Rejection Reasons", mask.get("rejection_reasons"))
+        _add_list(lines, "Unavailable Regional Stages", mask.get("disabled_stages"))
     _add_heading(lines, "Final Decision")
     _add_kv(lines, "Branch", decision.get("decision_branch"))
     _add_kv(lines, "Dominant Pattern", decision.get("dominant_pattern"))
     _add_kv(lines, "Confidence Tier", decision.get("confidence_tier"))
     _add_kv(lines, "Polarity", decision.get("polarity"))
+    if decision.get("primary_hypothesis"):
+        _add_kv(lines, "Primary Hypothesis", decision["primary_hypothesis"])
     lines.append("")
+    for assessment in reasoning_trace.get("hypothesis_assessments", []):
+        _add_heading(lines, assessment["hypothesis_id"])
+        for key in ("polarity", "confidence_tier", "decision_branch", "explanation"):
+            _add_kv(lines, key, assessment.get(key))
+        presentation = evidence_presentation(assessment)
+        for role, title in ROLE_TITLES.items():
+            _add_list(lines, title, presentation[role.replace("_evidence", "_explanations")])
+        _add_list(lines, "Limitations", assessment.get("limitations"))
+    provenance = reasoning_trace.get("provenance_evidence")
+    if provenance:
+        _add_heading(lines, "Provenance Evidence")
+        for key, value in provenance.items():
+            _add_kv(lines, key, value)
+    if reasoning_trace.get("decision_route_trace"):
+        _add_heading(lines, "Route Candidates")
+        for candidate in reasoning_trace["decision_route_trace"]:
+            lines.append(
+                f"- {candidate.get('route')}: matched={candidate.get('matched')}; "
+                f"{candidate.get('disposition') or candidate.get('reason')}"
+            )
+        lines.append("")
     overall_text = decision.get("overall_text")
     if overall_text:
         _add_heading(lines, "Decision Summary")
@@ -326,8 +362,10 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         for item in why_lines:
             lines.append(f"- {item}")
         lines.append("")
-    _add_list(lines, "Supporting Signals", decision.get("supporting_signals"))
-    _add_list(lines, "Contradicting Signals", decision.get("contradicting_signals"))
+    for role, title in ROLE_TITLES.items():
+        explanations = decision.get(role.replace("_evidence", "_explanations"))
+        _add_list(lines, title, explanations if explanations is not None else decision.get(role.replace("_evidence", "_signals")))
+    _add_list(lines, "Evidence Limitations", decision.get("limitations"))
     _add_list(lines, "Confidence Rationale", decision.get("confidence_rationale"))
     _add_heading(lines, "Scorecard Highlights")
     highlight_keys = [
@@ -360,6 +398,9 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         "fft_structured",
         "camera_like_support",
         "metadata_synthetic",
+        "metadata_enhancement",
+        "metadata_missing",
+        "provenance_state",
         "provenance_clean",
         "local_signals_weak",
     ]

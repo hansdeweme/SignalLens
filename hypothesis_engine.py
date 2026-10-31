@@ -9,6 +9,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 # local imports to avoid circular dependencies
 from gui_semantics import ModuleSummary
+from metadata_evidence import (
+    ProvenanceState, MISSING_METADATA_PATTERNS, metadata_provenance_state,
+)
 
 STATUS_WEIGHT = {
     "not_run": 0.0,
@@ -62,11 +65,15 @@ class DerivedSignals:
     subject_texture_strong: bool = False
     subject_texture_moderate: bool = False    
     subject_process_asymmetry_moderate: bool = False
+    subject_process_asymmetry_strong: bool = False
     material_realism_strong: bool = False
     material_realism_medium: bool = False
     material_realism_weak: bool = False
     material_realism_low: bool = False        
     metadata_synthetic: bool = False
+    metadata_enhancement: bool = False
+    metadata_missing: bool = False
+    provenance_state: str = ProvenanceState.NO_SUBSTANTIVE_PROVENANCE_EVIDENCE.value
     metadata_clean: bool = True
     metadata_camera_like: bool = False
     osint_ai_context: bool = False
@@ -123,16 +130,33 @@ class ScoreCard:
     suspicious_domains: set[str] = field(default_factory=set)
     benign_domains: set[str] = field(default_factory=set)
 
+
+@dataclass
+class HypothesisAssessment:
+    hypothesis_id: str
+    polarity: str = "neutral"
+    confidence_tier: str = "Inconclusive"
+    supporting_evidence: list[str] = field(default_factory=list)
+    moderating_evidence: list[str] = field(default_factory=list)
+    limitations: list[str] = field(default_factory=list)
+    decision_branch: str | None = None
+    explanation: str = "No substantive support established for this hypothesis."
+    contradicting_evidence: list[str] = field(default_factory=list)
+    contextual_evidence: list[str] = field(default_factory=list)
+    evidence_details: dict[str, dict] = field(default_factory=dict)
+
 def weight(section: ModuleSummary | None) -> float:
     if section is None:
         return 0.0
     return STATUS_WEIGHT.get(section.status, 0.0)
 
 def is_suspicious(section: ModuleSummary | None) -> bool:
-    return section is not None and section.polarity == "suspicious" and weight(section) > 0
+    return (section is not None and section.pattern not in MISSING_METADATA_PATTERNS
+            and section.polarity == "suspicious" and weight(section) > 0)
 
 def is_benign(section: ModuleSummary | None) -> bool:
-    return section is not None and section.polarity == "benign" and weight(section) > 0
+    return (section is not None and section.pattern not in MISSING_METADATA_PATTERNS
+            and section.polarity == "benign" and weight(section) > 0)
 
 def detail(section: ModuleSummary | None, key: str, default=0):
     if section is None or not getattr(section, "details", None):
@@ -209,7 +233,10 @@ def derive_signals(ev: EvidenceSnapshot) -> DerivedSignals:
     d.material_realism_strong = mat_score >= 0.58
     d.material_realism_medium = 0.44 <= mat_score < 0.58
     d.material_realism_weak = 0.30 <= mat_score < 0.44
-    d.material_realism_low = mat_score <= 0.20        
+    d.material_realism_low = bool(
+        mat is not None and mat.score is not None
+        and mat.status not in {"not_run", "inconclusive"} and mat_score <= 0.20
+    )
     d.fft_score = detail(ev.fft, "fft_anomaly_score", 0.0)
     d.peak_periodicity = detail(ev.fft, "peak_periodicity_score", 0.0)
     d.peak_symmetry = detail(ev.fft, "peak_symmetry_score", 0.0)
@@ -222,10 +249,16 @@ def derive_signals(ev: EvidenceSnapshot) -> DerivedSignals:
     d.separated_pair_count = detail(ev.patch_similarity, "spatially_separated_pair_count", 0)
     d.mean_similarity = detail(ev.patch_similarity, "mean_similarity", 0.0)
     d.max_similarity = detail(ev.patch_similarity, "max_similarity", 0.0)
-    d.metadata_synthetic = (ev.metadata is not None and ev.metadata.pattern in {"declared_synthetic_candidate", "declared_enhancement_candidate"})
-    d.metadata_missing = ev.metadata is not None and ev.metadata == "sparse_or_stripped" 
-    d.metadata_clean = not d.metadata_synthetic
-    d.metadata_camera_like = (ev.metadata is not None and ev.metadata.pattern in {"camera_metadata_present", "provenance_present_unverified"})
+    state = metadata_provenance_state(ev.metadata)
+    d.provenance_state = state.value
+    d.metadata_synthetic = state == ProvenanceState.UNVERIFIED_GENERATION_DECLARATION
+    d.metadata_enhancement = state == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION
+    d.metadata_missing = ev.metadata is not None and ev.metadata.pattern in MISSING_METADATA_PATTERNS
+    d.metadata_clean = not (d.metadata_synthetic or d.metadata_enhancement)
+    d.metadata_camera_like = bool(ev.metadata and (
+        ev.metadata.pattern == "camera_metadata_present"
+        or detail(ev.metadata, "camera_metadata_present", False)
+    ))
     d.osint_ai_context = ev.osint is not None and ev.osint.pattern == "ai_gallery"
     d.osint_clean = ev.osint is None or ev.osint.pattern not in {"ai_gallery"}
     d.provenance_clean = d.metadata_clean and d.osint_clean
@@ -552,9 +585,9 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
     # --------------------------------------------------
     # 7. Provenance
     # --------------------------------------------------
-    if ds.metadata_synthetic and ds.osint_ai_context:
+    if (ds.metadata_synthetic or ds.metadata_enhancement) and ds.osint_ai_context:
         card.provenance_boost += 1.25
-    elif ds.metadata_synthetic:
+    elif ds.metadata_synthetic or ds.metadata_enhancement:
         card.provenance_boost += 0.75
     elif ds.osint_ai_context:
         card.provenance_boost += 0.50

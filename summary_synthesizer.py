@@ -105,12 +105,59 @@ def build_summary_result(state, osint_result=None, scene_context: dict | None = 
     result.sections["patch_spatial"] = build_patch_spatial_section(state.patch_spatial_payload)
     result.sections["compression_history"] = build_compression_history_section(state.compression_history_payload)
     result.sections["cfa_demosaic"] = build_cfa_demosaic_section(state.cfa_demosaic_payload)
+    # Missing outputs are unavailable evidence, never benign measurements.
+    statuses = getattr(state, "stage_statuses", {})
+    for key, section in result.sections.items():
+        attr = "cross_signal_payload" if key in {"cross_signal", "boundary"} else f"{key}_payload"
+        stage = next((value for value in statuses.values() if value.get("assign_attr") == attr), None)
+        if stage and stage["status"] != "success" and getattr(state, attr, None) is None:
+            section.status, section.polarity, section.pattern, section.score = "not_run", "neutral", None, None
+            section.note = f"Unavailable ({stage['status']}): {stage.get('reason') or 'No valid input evidence.'}"
+            section.details.update(analysis_status=stage["status"], unavailability_reason=stage.get("reason"))
+    mask_diagnostics = getattr(state, "mask_diagnostics", {})
+    subject_boundary = result.sections["subject_boundary"]
+    if mask_diagnostics and (
+        not mask_diagnostics.get("person_specific")
+        or mask_diagnostics.get("mask_status") not in {"reliable", "limited"}
+    ) and subject_boundary.pattern in {
+        "possible_subject_background_segmentation_artifact", "possible_boundary_transition_inconsistency",
+    }:
+        # This detector measures intrinsic image-edge bands, not a person mask.
+        # Preserve its measurement, but do not turn an unvalidated edge into a
+        # person/background mechanism when actual subject geometry is missing.
+        subject_boundary.details = dict(subject_boundary.details)
+        subject_boundary.details.update(
+            raw_detector_pattern=subject_boundary.pattern, raw_detector_note=subject_boundary.note,
+            raw_detector_status=subject_boundary.status, evidence_scope="unvalidated_image_edges",
+        )
+        subject_boundary.status, subject_boundary.polarity = "weak", "neutral"
+        subject_boundary.pattern = "image_edge_boundary_observation"
+        subject_boundary.note = (
+            "Image-edge boundary features were measured, but no validated person boundary is available. "
+            "These observations cannot establish person/background segmentation or replacement artifacts."
+        )
     # Derived attachments / metadata
     result.overlay_paths = extract_overlay_paths(state.cross_signal_payload)
     result.module_scores = extract_module_scores(result.sections)
     # Overall decision
     analysis_mode=getattr(state, "analysis_mode", None)
     result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, )    # Rendered outputs
+    coverage = getattr(state, "analysis_coverage", {})
+    if coverage:
+        result.reasoning_trace["pipeline_status"] = {
+            "coverage": coverage, "mask_diagnostics": getattr(state, "mask_diagnostics", {}), "stages": statuses,
+        }
+        if coverage.get("status") == "partial":
+            limitation = (
+                "Analysis coverage is incomplete. Unavailable stages: "
+                + ", ".join(coverage.get("unavailable_stages", []))
+                + ". Missing regional evidence supports neither authenticity nor synthetic origin."
+            )
+            result.overall_text = result.overall_text.rstrip() + "\n\nCoverage limitation: " + limitation + "\n"
+            result.reasoning_trace["decision"]["overall_text"] = result.overall_text
+            result.reasoning_trace["decision"]["limitations"].append(limitation)
+            for assessment in result.reasoning_trace.get("hypothesis_assessments", []):
+                assessment["limitations"].append(limitation)
     result.full_text = render_summary_text(result)
     result.full_html = render_summary_html(result)
     return result
