@@ -12,6 +12,8 @@ venv/
 
 # Test images — exclude entire directory and all contents
 /test_images/
+# Exif Tool files
+/exiftool_files/
 
 # Build and distribution artifacts
 build/
