@@ -1,0 +1,51 @@
+# Read multiple Python files and combine them into a single text file
+with open("signallens-codebase.txt", "w", encoding="utf-8") as output_file:
+    for filename in ["analysis_worker.py",
+                    "decision_logic.py",
+                    "exif_config.py",
+                    "exiftool_backend.py",
+                    "gui_semantics.py",
+                    "hypothesis_engine.py",
+                    "image_gatekeeper.py",
+                    "narrative_builder.py",
+                    "osint_dialogs.py",
+                    "osint_reverse_search.py",
+                    "reasoning_persistence.py",
+                    "run_reporting.py",
+                    "signal_language.py",
+                    "signallens_controller.py",
+                    "signallens_gui.py",
+                    "signallens_settings.py",
+                    "summary_persistence.py",
+                    "summary_sections.py",
+                    "summary_synthesizer.py",
+                    "summary_types.py",
+                    "vf_boundary_focus.py",
+                    "vf_cfa_demosaic.py",
+                    "vf_compression_history.py",
+                    "vf_cross_signal.py", 
+                    "vf_ela.py",
+                    "vf_fft.py",
+                    "vf_noise.py",
+                    "vf_overlay.py",
+                    "vf_patch_similarity.py",
+                    "vf_patch_spatial.py",
+                    "vf_person_subject_mask.py",
+                    "vf_region_fft.py",
+                    "vf_region_masks.py",
+                    "vf_region_segmentation.py",
+                    "vf_segmentation_alignment.py",
+                    "vf_sensor_origin.py",
+                    "vf_subject_boundary.py",   
+                    "vf_subject_material_realism.py", 
+                    "vf_subject_process_asymmetry.py",
+                    "vf_subject_texture_consistency.py",
+                    "exif_rules.json",
+                    "exif_signals.json",
+                    "signallens_settings.json"
+                    ]:
+        with open(filename, "r", encoding="utf-8") as input_file:
+            content = input_file.read()
+            output_file.write(f"--- Start of {filename} ---\n")
+            output_file.write(content)
+            output_file.write(f"\n--- End of {filename} ---\n\n")   

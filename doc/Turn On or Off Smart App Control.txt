@@ -1,0 +1,4 @@
+Open Windows Security
+Click/tap on App & browser control in the left pane.
+click/tap on the Smart App Control settings right side.
+

@@ -1,0 +1,17 @@
+Required:
+PyQt6
+OpenCV
+NumPy
+pandas
+Pillow
+MediaPipe vision/tasks pieces
+scikit-learn / scipy if patch acceleration uses NearestNeighbors
+ExifTool external files
+SignalLens JSON/config/model resources
+
+Not required:
+audio stack
+Hugging Face transformers
+Torch
+TorchVision
+TensorBoard

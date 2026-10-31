@@ -1,0 +1,44 @@
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+
+
+# Test images — exclude entire directory and all contents
+/test_images/
+
+# Build and distribution artifacts
+build/
+dist/
+*.exe
+*.msi
+*.spec.bak
+
+# Local analysis outputs
+analyzed/
+prepared_images/
+exif_signals.json
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# IDE and user configuration
+.idea/
+.vscode/
+.env
+.env.*
+
+# Keep project configuration and build recipes
+!signallens_settings.json
+!exif_rules.json
+!*.spec
