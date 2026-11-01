@@ -1,0 +1,249 @@
+"""Optional shadow diagnostics over existing summaries and Phase 2A arithmetic.
+
+No detector execution, production card mutation, routing or shadow confidence.
+"""
+from collections import defaultdict
+from dataclasses import asdict
+from math import fsum, isclose
+from hashlib import sha256
+import re
+
+from evidence_lineage import Addition, Family, Kind, LineageError, REGISTRY, build_lineage, lineage_to_json
+from marginal_corroboration import Contribution, allocate_marginal
+from scorecard_integrity import COMPONENT_FIELDS, reconstruct_scorecard_calculation
+
+
+# Exact aliases from derive_signals/compute_scorecard, not guessed detector edges.
+_SIGNAL_GROUPS = {
+    'metadata':('metadata_synthetic','metadata_enhancement','metadata_missing','metadata_clean','metadata_camera_like','provenance_state'),
+    'osint':('osint_ai_context','osint_clean'),
+    'sensor_origin':('camera_like_support','sensor_trace_inconsistency'),
+    'cfa_demosaic':('cfa_camera_like_support','cfa_inconsistency'),
+    'compression_history':('compression_consistent','compression_inconsistency','double_jpeg_suspect','block_history_anomaly'),
+    'subject_boundary':('subject_boundary_strong','subject_boundary_medium'),
+    'subject_texture_consistency':('subject_texture_strong','subject_texture_moderate'),
+    'subject_process_asymmetry':('subject_process_asymmetry_strong','subject_process_asymmetry_moderate','region_geometry_unreliable'),
+    'subject_material_realism':('material_realism_strong','material_realism_medium','material_realism_weak','material_realism_low'),
+    'region_masks':('segmentation_fragmented','segmentation_clean','segmentation_natural','person_mask_reliable','subject_area_ratio','boundary_support_ratio','boundary_support_low','boundary_reliability_score'),
+    'segmentation_alignment':('segmentation_boundary_score','segmentation_boundary_strong','segmentation_boundary_medium'),
+    'fft':('fft_structured','fft_score','peak_periodicity','peak_symmetry','peak_count','axis_bias'),
+    'patch_similarity':('patch_structured','patch_score','repetition_score','coverage_ratio','pair_count','separated_pair_count','mean_similarity','max_similarity'),
+    'boundary':('strong_local_edit','fragmented_local_edit'),
+    'cross_signal':('strong_cross',),
+}
+SIGNAL_SOURCES = {name:(section,) for section,names in _SIGNAL_GROUPS.items() for name in names}
+SIGNAL_SOURCES.update(provenance_clean=('metadata','osint'),local_signals_weak=('ela','noise','cross_signal','boundary'))
+
+
+def _operation_sources(reason, previous, nodes, ds):
+    sources=set()
+    unrecognized=[]
+    for name in re.findall(r'\bds\.([a-zA-Z_]+)',reason):
+        if name not in SIGNAL_SOURCES:
+            unrecognized.append(name)
+        sources.update(SIGNAL_SOURCES.get(name,()))
+    sources.update(re.findall(r'\bev\.([a-zA-Z_]+)',reason))
+    if 'ctx.' in reason or 'natural_scene_risk' in reason:
+        sources.add('scene_context')
+    if 'asym_strong' in reason or 'asym_medium' in reason:
+        sources.add('subject_process_asymmetry')
+    if 'boundary_stack' in reason:
+        sources.update(('boundary','cross_signal'))
+        if 'boundary_stack_strong' in reason:
+            sources.add('fft')
+        sources.update(s for s,flag in (('subject_boundary','subject_boundary_strong'),('segmentation_alignment','segmentation_boundary_strong')) if getattr(ds,flag,False))
+    if re.search(r'(?<![\w.])boundary_(strong|medium)\b',reason):
+        # Actual OR members; don't invent a missing second observation.
+        strength='strong' if re.search(r'(?<![\w.])boundary_strong\b',reason) else 'medium'
+        sources.update(s for s,flag in (('subject_boundary','subject_boundary_'+strength),('segmentation_alignment','segmentation_boundary_'+strength)) if getattr(ds,flag,False))
+    if 'patch_spatial_' in reason:
+        sources.add('patch_spatial')
+    if 'camera_benign' in reason:
+        sources.update(('metadata','sensor_origin'))
+    if 'clone_candidate' in reason:
+        sources.add('patch_similarity')
+    if reason in {'boundary_reliability','boundary_reliability_caution'}:
+        sources.add('region_masks')
+    if reason in {'region_geometry_reliability','region_geometry_caution'}:
+        sources.add('subject_process_asymmetry')
+    if reason.startswith('photo_context_'):
+        sources.update(('metadata','scene_context'))
+    component=None
+    if reason=='local_support_conversion': component='local_edit_support_score'
+    elif reason=='measured_camera_caution' or 'card.camera_counter_support' in reason: component='camera_counter_support'
+    elif 'card.synthetic_boost' in reason: component='synthetic_boost'
+    elif reason=='clone_floor': component='clone_support_score'
+    if component:
+        for row in previous:
+            if row['field']==component:
+                sources.update(s.removeprefix('evidence:') for s in row['evidence_ids'])
+    # These can be absence conditions or negative OR alternatives rather than
+    # support. Keep the condition separately; never manufacture their ancestry.
+    ids=tuple(sorted('evidence:'+s for s in sources if 'evidence:'+s in nodes and nodes['evidence:'+s].available))
+    return ids,tuple(unrecognized)
+
+
+def _operation_records(calc, nodes, ds):
+    rows=[]
+    for index,op in enumerate(calc['component_operations']):
+        ids,unknown=_operation_sources(op['reason'],rows,nodes,ds)
+        # Contribution after later attenuation of this same component. This is
+        # not an additive attribution of nonlinear floors or Q to a detector.
+        factor=1.0
+        later_floor=False
+        for later in calc['component_operations'][index+1:]:
+            if later['field']==op['field']:
+                if later['operation']=='multiply': factor*=later['operand']
+                elif later['operation']=='maximum': later_floor=True
+        stable_rule_id=sha256(op['reason'].encode('utf-8')).hexdigest()[:12]
+        rows.append({'contribution_id':f'component:{op["field"]}:{op["operation"]}:{stable_rule_id}',
+            'ledger_index':index,
+            'field':op['field'],'operation':op['operation'],'raw_contribution':op.get('raw_operand', op['operand']),
+            'reliability_adjusted_contribution':op['operand']*factor if op['operation']=='add' and not later_floor else None,
+            'later_component_multiplier':factor,'nonlinear_floor_follows':later_floor,
+            'evidence_ids':ids,'measurement_ancestry':tuple(sorted({a for key in ids for a in nodes[key].measurement_ancestry})),
+            'condition':op['reason'],'unknown_signal_aliases':unknown,
+            'control_dependencies':('evidence:region_masks',) if op['reason'] in {'boundary_reliability','boundary_reliability_caution'} else (),
+            'diagnostic_contribution':op['operand'],'difference':op['operand']-op.get('raw_operand', op['operand']),
+            'reason':('Production numerical restatement suppression already applied; no shadow reallocation.' if 'numerical_allocation' in op
+                      else 'Existing explicit arithmetic/control policy retained; not another independent evidence credit.')})
+    if len({r['contribution_id'] for r in rows})!=len(rows):
+        raise LineageError('Duplicate component-rule identifier; review operation lineage.')
+    return rows
+
+
+def _corroboration(ids, nodes):
+    selected=[nodes[key] for key in sorted(set(ids)) if key in nodes and nodes[key].available]
+    measurements={a for r in selected for a in r.measurement_ancestry if a!='measurement:selected_mask_geometry'}
+    shared=defaultdict(list)
+    overlaps=defaultdict(list)
+    for r in selected:
+        for a in r.measurement_ancestry:
+            if a!='measurement:selected_mask_geometry': shared[a].append(r.evidence_id)
+        for group in r.overlap_groups: overlaps[group].append(r.evidence_id)
+    families=sorted({r.family.value for r in selected if r.family not in {Family.GEOMETRY,Family.CONTEXT}})
+    return {'supporting_indicator_count':len(selected),'distinct_measurement_ancestries':sorted(measurements),
+        'measurement_ancestry_count':len(measurements),'distinct_measurement_families':families,
+        'shared_ancestry':{k:v for k,v in sorted(shared.items()) if len(v)>1},
+        'overlapping_feature_groups':{k:v for k,v in sorted(overlaps.items()) if len(v)>1},
+        'derived_or_composite_indicators':[r.evidence_id for r in selected if r.kind!=Kind.PRIMARY],
+        'missing_required_ancestry':{r.evidence_id:list(r.missing_dependencies) for r in selected if r.missing_dependencies},
+        'only_one_measurement_family':len(families)==1,
+        'independent_observation_count':None,
+        'interpretation':'Distinct extractions/families are descriptive, not a statistical independence count.'}
+
+
+def _gate_diagnostics(sections, ds, nodes, calc):
+    strong=[]
+    mat=sections.get('subject_material_realism')
+    if mat and mat.score is not None and mat.score>=.58: strong.append('evidence:subject_material_realism')
+    for key,pattern in (('subject_process_asymmetry','subject_process_asymmetry_strong'),('boundary','possible_foreground_background_processing_mismatch'),('cross_signal','strong_hotspot_convergence')):
+        if (section:=sections.get(key)) and section.pattern==pattern: strong.append('evidence:'+key)
+    boundary=['evidence:'+key for key in ('boundary','boundary_focus','subject_boundary','segmentation_alignment')
+        if (s:=sections.get(key)) and s.status in {'medium','strong'} and s.polarity=='suspicious']
+    groups={
+        'determine_confidence.strong_signals':strong,
+        '_boundary_corroborated':boundary,
+        'suspicious_domain_bonus':['evidence:'+r['section'] for r in calc['base_evidence'] if r['polarity']=='suspicious' and r.get('credited_weight', r['weight'])>0],
+        'synthetic_material_asymmetry_conjunction':['evidence:'+k for k,f in (('subject_material_realism','material_realism_strong'),('subject_process_asymmetry','subject_process_asymmetry_strong')) if getattr(ds,f,False)],
+        'synthetic_fft_patch_conjunction':['evidence:'+k for k,f in (('fft','fft_structured'),('patch_similarity','patch_structured')) if getattr(ds,f,False)],
+        'camera_convergence_bonus':['evidence:'+k for k,f in (('metadata','metadata_camera_like'),('sensor_origin','camera_like_support'),('cfa_demosaic','cfa_camera_like_support')) if getattr(ds,f,False)],
+        'synthetic_supported_by_other_domains':['evidence:'+k for k,f in (('metadata','metadata_synthetic'),('osint','osint_ai_context'),('subject_material_realism','material_realism_strong')) if getattr(ds,f,False)],
+    }
+    return {name:{**_corroboration(ids,nodes),
+        'production_indicator_ids':ids,'production_indicator_count':len(ids),
+        'production_gate_changed':False,
+        'ancestry_review_recommended':bool(_corroboration(ids,nodes)['shared_ancestry'] or _corroboration(ids,nodes)['overlapping_feature_groups']),
+        'counterfactual_gate_result':None,
+        'limitation':'Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined.'}
+        for name,ids in sorted(groups.items())}
+
+
+def _aggregates(calc, allocated):
+    bases={}
+    for polarity in ('suspicious','benign'):
+        selected=[r for r in allocated if r['polarity']==polarity and r['diagnostic_contribution']>0]
+        domains={r['domain'] for r in selected if r['domain']}
+        bases[polarity]=fsum(r['diagnostic_contribution'] for r in selected)+max(0,len(domains)-1)*calc['domain_bonus']
+    values=calc['final_contributions']; t=calc['aggregate_transforms']
+    q=fsum([bases['suspicious'],*(values[n] for n in ('synthetic_boost','edit_boost','provenance_boost','sensor_boost','compression_boost'))])
+    return {'suspicious_score':max(0,q*t['camera_multiplier']-values['caution_penalty'])*t['geometry_multiplier']*t['photo_context_multiplier'],
+        'benign_score':bases['benign'],'base_suspicious':bases['suspicious'],'base_benign':bases['benign']}
+
+
+def build_dependency_analysis(sections, card, ds, *, context=None, hypotheses=(), experimental=None):
+    """Pure optional sidecar. Existing multi-role component policy stays fixed.
+
+    Default: structural restatement rules only. No current audited detector is a
+    declared pure restatement: all real children add relationships, localization
+    or interpretation. Thus valid baseline totals ordinarily remain identical.
+    """
+    if not card.is_valid:
+        return {'mode':'shadow','lineage_version':'2b2','status':'unavailable',
+            'production_score_unchanged':True,'limitations':['Production scorecard is invalid; shadow aggregation withheld.']}
+    calc=card.calculation
+    replay=reconstruct_scorecard_calculation(calc)
+    if any(not isclose(getattr(card,k),replay[k],rel_tol=1e-12,abs_tol=1e-12) for k in (*COMPONENT_FIELDS,'suspicious_score','benign_score')):
+        raise LineageError('Production card differs from its calculation; shadow aggregation withheld.')
+    records=build_lineage(sections,context=context)
+    nodes={r.evidence_id:r for r in records}
+    contributions=[Contribution('base:'+r['section'],('evidence:'+r['section'],),'base_'+r['polarity'],
+        r.get('credited_weight', r['weight']),r['polarity'],nodes['evidence:'+r['section']].hypotheses,r['domain']) for r in calc['base_evidence']]
+    allocated=allocate_marginal(contributions,records,experimental=experimental)
+    operations=_operation_records(calc,nodes,ds)
+    unknown_operations=[r['contribution_id'] for r in operations if r['unknown_signal_aliases'] or
+        (r['operation']=='add' and r['raw_contribution']>0 and not r['evidence_ids'] and not r['control_dependencies'])]
+    unknown_base=[c.contribution_id for c in contributions if any(not nodes[e].known for e in c.evidence_ids)]
+    aggregates=_aggregates(calc,allocated)
+    families={}
+    for family in Family:
+        rows=[r for r in allocated if any(nodes[e].family==family for e in r['evidence_ids'])]
+        if rows:
+            families[family.value]={
+                'evidence_ids':sorted({e for r in rows for e in r['evidence_ids']}),
+                'existing_suspicious_base':fsum(r['existing_contribution'] for r in rows if r['polarity']=='suspicious'),
+                'shadow_suspicious_base':fsum(r['diagnostic_contribution'] for r in rows if r['polarity']=='suspicious'),
+                'existing_benign_base':fsum(r['existing_contribution'] for r in rows if r['polarity']=='benign'),
+                'shadow_benign_base':fsum(r['diagnostic_contribution'] for r in rows if r['polarity']=='benign'),
+                'pending_incremental_credit_ids':[r['contribution_id'] for r in rows if r['requires_empirical_validation']],
+                'component_operation_ids':[r['contribution_id'] for r in operations if any(nodes[e].family==family for e in r['evidence_ids'])],
+                'component_attribution_note':'Operation references can span families; do not sum mixed-family references as disjoint credits.',
+            }
+    role_map={}
+    for h in hypotheses:
+        role_map[h.hypothesis_id]={role:list(getattr(h,role)) for role in ('supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence')}
+    scored_ids=['evidence:'+r['section'] for r in calc['base_evidence'] if r.get('credited_weight', r['weight'])>0]
+    return {'mode':'shadow','lineage_version':'2b2','status':'partial' if unknown_operations or unknown_base else 'complete','production_score_unchanged':True,
+        'policy':'structural_restatement_only' if experimental is None else 'experimental:'+experimental.name,
+        'lineage':lineage_to_json(records),'families':families,'contributions':allocated,
+        'component_lineage':operations,'production_calculation_version':calc['calculation_version'],
+        'lineage_coverage':{'scoring_indicator_count':len(contributions),
+            'known_scoring_indicator_count':sum(all(nodes[e].known for e in c.evidence_ids) for c in contributions),
+            'unknown_base_credit_ids':unknown_base,
+            'unknown_component_rule_ids':unknown_operations},
+        'domain_accounting':{'production_suspicious_bonus':calc['base_suspicious']-fsum(r.get('credited_weight', r['weight']) for r in calc['base_evidence'] if r['polarity']=='suspicious'),
+            'shadow_suspicious_bonus':aggregates['base_suspicious']-fsum(r['diagnostic_contribution'] for r in allocated if r['polarity']=='suspicious'),
+            'policy':'Existing 0.25 per additional credited domain retained; families are not substituted for domains.'},
+        'shared_ancestry':_corroboration(scored_ids,nodes),
+        'corroboration_gates':_gate_diagnostics(sections,ds,nodes,calc),
+        'hypothesis_evidence_roles':role_map,'shadow_aggregates':aggregates,
+        'comparison':{key:{'production':getattr(card,key),'shadow':aggregates[key],
+            'difference':aggregates[key]-getattr(card,key)} for key in ('suspicious_score','benign_score')},
+        'limitations':[
+            'Shadow totals have no confidence tier, hypothesis selection or probability interpretation.',
+            'Measurement ancestry does not establish statistical independence or forensic redundancy.',
+            'Added localization/interpretation has no calibrated marginal weight; existing credit is provisional.',
+            'Existing component synergies, camera moderation, penalties and domain bonus policy remain fixed. This is not a full causal ablation.',
+            'Measurement IDs describe feature extractions; overlapping helper code and masks are recorded separately.',
+            'The morphology segmentation stage is not scored in normal summary synthesis; its snapshot alias is region_masks.',
+        ]}
+
+
+def safe_dependency_analysis(*args, **kwargs):
+    """An optional diagnostic failure cannot change the authoritative decision."""
+    try:
+        return build_dependency_analysis(*args,**kwargs)
+    except Exception as exc:
+        return {'mode':'shadow','lineage_version':'2b2','status':'error','production_score_unchanged':True,
+            'errors':[f'{type(exc).__name__}: {exc}'],'shadow_aggregates':{},
+            'limitations':['Dependency diagnostics failed; no shadow conclusion or score is available.']}

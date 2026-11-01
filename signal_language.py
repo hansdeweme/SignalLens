@@ -105,7 +105,7 @@ SIGNAL_LANGUAGE = {
         "polarity": "suspicious",
     },
     "no_meaningful_convergence": {
-        "label": "independent forensic signals do not converge meaningfully",
+        "label": "ELA and residual hotspot checks do not meaningfully overlap",
         "short": "no convergence",
         "polarity": "neutral",
     },

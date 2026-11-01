@@ -1,0 +1,329 @@
+"""Finite arithmetic, observation availability and independent score reconstruction."""
+
+from math import fsum, isclose, isfinite
+from numbers import Real
+
+
+class ScorecardIntegrityError(ValueError):
+    """Invalid evidence or arithmetic; must not produce a confident conclusion."""
+
+
+STATUS_WEIGHTS = {
+    "not_run": 0.0, "unavailable": 0.0, "skipped": 0.0, "failed": 0.0,
+    "error": 0.0, "inconclusive": 0.0, "weak": 0.5, "medium": 1.5, "strong": 3.0,
+}
+ACTIVE_STATUSES = {"weak", "medium", "strong"}
+COMPONENT_FIELDS = (
+    "camera_counter_support", "local_edit_support_score", "clone_support_score",
+    "synthetic_boost", "edit_boost", "provenance_boost", "sensor_boost",
+    "compression_boost", "caution_penalty",
+)
+BOOST_FIELDS = ("synthetic_boost", "edit_boost", "provenance_boost", "sensor_boost", "compression_boost")
+SIGNED_FIELDS = {"local_edit_support_score", "edit_boost"}
+REL_TOL = ABS_TOL = 1e-12
+SCORING_DETAILS = {
+    "fft": ("fft_anomaly_score", "peak_periodicity_score", "peak_symmetry_score", "peak_count", "axis_bias_score"),
+    "patch_similarity": ("repetition_score", "coverage_ratio", "pair_count", "spatially_separated_pair_count", "mean_similarity", "max_similarity"),
+    "region_masks": ("subject_ratio", "boundary_ratio"),
+}
+
+
+def finite_number(value, path: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value):
+        raise ScorecardIntegrityError(f"{path} must be a finite number; got {value!r}.")
+    return float(value)
+
+
+def usable_observation(section) -> bool:
+    return section is not None and section.status in ACTIVE_STATUSES
+
+
+def camera_attenuation(measured_support: float) -> float:
+    support = finite_number(measured_support, "measured_camera_support")
+    if support < 0:
+        raise ScorecardIntegrityError("Measured camera support cannot be negative.")
+    return 0.55 if support >= 3.0 else 0.70 if support >= 2.0 else 0.85 if support >= 1.0 else 1.0
+
+
+def available_sections(sections: dict) -> dict:
+    return {key: section for key, section in sections.items() if usable_observation(section)}
+
+
+def validate_score_inputs(sections: dict) -> None:
+    for key, section in sections.items():
+        if section is None:
+            continue
+        if section.status not in STATUS_WEIGHTS:
+            raise ScorecardIntegrityError(f"{key}: unknown observation status {section.status!r}.")
+        if not usable_observation(section):
+            continue
+        if section.polarity not in {"suspicious", "benign", "neutral"}:
+            raise ScorecardIntegrityError(f"{key}: unknown polarity {section.polarity!r}.")
+        if section.domain is not None and not isinstance(section.domain, str):
+            raise ScorecardIntegrityError(f"{key}: domain must be text or null.")
+        if section.score is not None:
+            finite_number(section.score, f"{key}.score")
+        if section.details is not None and not isinstance(section.details, dict):
+            raise ScorecardIntegrityError(f"{key}.details must be a dictionary.")
+        for name in SCORING_DETAILS.get(key, ()):
+            value = (section.details or {}).get(name)
+            if value is not None:
+                finite_number(value, f"{key}.details.{name}")
+
+
+def validate_derived_signals(derived) -> None:
+    for name, value in vars(derived).items():
+        if isinstance(value, (Real,)) and not isinstance(value, bool):
+            finite_number(value, f"derived_signals.{name}")
+    reliability = finite_number(derived.boundary_reliability_score, "boundary_reliability_score")
+    if not 0 <= reliability <= 1:
+        raise ScorecardIntegrityError("Boundary reliability must be between zero and one.")
+    for name in ("peak_count", "pair_count", "separated_pair_count"):
+        if getattr(derived, name) < 0:
+            raise ScorecardIntegrityError(f"{name} cannot be negative.")
+
+
+def validate_score_context(context) -> None:
+    for name, value in vars(context).items():
+        if type(value) is not bool:
+            raise ScorecardIntegrityError(f"Context flag {name} must be boolean; got {value!r}.")
+
+
+class ComponentLedger:
+    """Records existing component operations; aggregates are computed separately."""
+
+    def __init__(self, card):
+        self.card = card
+        self.operations: list[dict] = []
+
+    def apply(self, field: str, operation: str, operand, reason: str) -> None:
+        if field not in COMPONENT_FIELDS:
+            raise ScorecardIntegrityError(f"Unknown component: {field}.")
+        value = finite_number(operand, f"{field} operand")
+        current = getattr(self.card, field)
+        if operation == "add":
+            result = current + value
+        elif operation == "multiply":
+            if not 0 <= value <= 1:
+                raise ScorecardIntegrityError("Attenuation multipliers must be between zero and one.")
+            result = current * value
+        elif operation == "maximum":
+            result = max(current, value)
+        else:
+            raise ScorecardIntegrityError(f"Unknown component operation: {operation}.")
+        setattr(self.card, field, finite_number(result, field))
+        self.operations.append({"field": field, "operation": operation, "operand": value, "reason": reason})
+
+    def add(self, field, operand, reason):
+        self.apply(field, "add", operand, reason)
+
+    def multiply(self, field, operand, reason):
+        self.apply(field, "multiply", operand, reason)
+
+    def maximum(self, field, operand, reason):
+        self.apply(field, "maximum", operand, reason)
+
+
+def replay_components(operations: list[dict]) -> dict[str, float]:
+    """Pure replay from serialized operands, without a ScoreCard or detectors."""
+    values = dict.fromkeys(COMPONENT_FIELDS, 0.0)
+    for item in operations:
+        field, operation = item["field"], item["operation"]
+        if field not in values:
+            raise ScorecardIntegrityError(f"Unknown component: {field}.")
+        operand = finite_number(item["operand"], f"{field} operand")
+        if operation == "add":
+            values[field] += operand
+        elif operation == "multiply":
+            if not 0 <= operand <= 1:
+                raise ScorecardIntegrityError("Attenuation multiplier outside [0, 1].")
+            values[field] *= operand
+        elif operation == "maximum":
+            if field != "clone_support_score" or operand != 0:
+                raise ScorecardIntegrityError("Unexpected component floor.")
+            values[field] = max(values[field], operand)
+        else:
+            raise ScorecardIntegrityError(f"Unknown component operation {operation!r}.")
+        finite_number(values[field], field)
+    return values
+
+
+def reconstruct_scorecard_calculation(calculation: dict) -> dict[str, float]:
+    if calculation.get("calculation_version") != "2a" or calculation.get("status") != "valid":
+        raise ScorecardIntegrityError("A valid version 2a calculation is required.")
+    rows = calculation["base_evidence"]
+    ids = [row["section"] for row in rows]
+    if len(set(ids)) != len(ids) or any(not isinstance(key, str) for key in ids):
+        raise ScorecardIntegrityError("Base evidence identifiers must be unique text keys.")
+    if any(row["polarity"] not in {"suspicious", "benign"} or (row["domain"] is not None and not isinstance(row["domain"], str)) for row in rows):
+        raise ScorecardIntegrityError("Invalid base evidence domain or polarity.")
+    if calculation.get("domain_bonus") != 0.25:
+        raise ScorecardIntegrityError("Unexpected domain-bonus coefficient.")
+    validate_numerical_allocation(calculation)
+    bases = {}
+    for polarity in ("suspicious", "benign"):
+        selected = [r for r in rows if r["polarity"] == polarity]
+        for row in selected:
+            if row["status"] not in ACTIVE_STATUSES or row["weight"] != STATUS_WEIGHTS[row["status"]]:
+                raise ScorecardIntegrityError("Base evidence status/weight mismatch.")
+            finite_number(row["weight"], "base evidence weight")
+        domains = {r["domain"] for r in selected if r["domain"] and r.get('credited_weight', r['weight']) > 0}
+        bases[polarity] = fsum(r.get('credited_weight', r['weight']) for r in selected) + max(0, len(domains) - 1) * calculation["domain_bonus"]
+    values = replay_components(calculation["component_operations"])
+    transforms = calculation["aggregate_transforms"]
+    for name in ("camera_multiplier", "geometry_multiplier", "photo_context_multiplier"):
+        factor = finite_number(transforms[name], name)
+        if not 0 <= factor <= 1:
+            raise ScorecardIntegrityError(f"{name} is outside [0, 1].")
+    subtotal = fsum([bases["suspicious"], *(values[name] for name in BOOST_FIELDS)])
+    after_penalty = subtotal * transforms["camera_multiplier"] - values["caution_penalty"]
+    values["suspicious_score"] = max(0.0, after_penalty) * transforms["geometry_multiplier"] * transforms["photo_context_multiplier"]
+    values["benign_score"] = bases["benign"]
+    values["base_suspicious"] = bases["suspicious"]
+    values["base_benign"] = bases["benign"]
+    for name, value in values.items():
+        finite_number(value, name)
+    return values
+
+
+def validate_numerical_allocation(calculation):
+    """Independently reconcile 2B.4 allocations; historical 2A still replays."""
+    rows = calculation['base_evidence']
+    audit = calculation.get('numerical_deduplication')
+    if audit is None:
+        if any(r.get('credited_weight', r['weight']) != r['weight'] for r in rows):
+            raise ScorecardIntegrityError('Adjusted base credit requires a numerical allocation audit.')
+        return
+    if audit.get('version') != '2b4':
+        raise ScorecardIntegrityError('Unknown numerical allocation version.')
+    allocations = audit['contributions']
+    by_key = {a['section']: a for a in allocations}
+    if len(by_key) != len(allocations) or set(by_key) != {r['section'] for r in rows}:
+        raise ScorecardIntegrityError('Numerical allocation coverage/identity mismatch.')
+    for row in rows:
+        a = by_key[row['section']]
+        raw = finite_number(a['raw_contribution'], 'raw base credit')
+        credit = finite_number(a['credited_contribution'], 'credited base credit')
+        suppressed = finite_number(a['suppressed_contribution'], 'suppressed base credit')
+        if (a['evidence_id'] != 'evidence:' + row['section'] or raw != row['weight']
+                or credit != row.get('credited_weight') or credit not in (0.0, raw)
+                or suppressed != raw - credit or a['classification'] not in {'A', 'B', 'C', 'D'}
+                or (suppressed > 0 and a['classification'] not in {'A', 'B'})
+                or a['eligible_marginal_contribution'] != credit
+                or a['reliability_multiplier'] != 1.0 or a['final_adjusted_contribution'] != credit
+                or a['polarity'] != row['polarity'] or not a['reason']):
+            raise ScorecardIntegrityError('Numerical allocation does not reconcile with raw/eligible base credit.')
+    unresolved = [a['evidence_id'] for a in allocations if a['unresolved']]
+    if audit['unresolved_relationships'] != unresolved:
+        raise ScorecardIntegrityError('Unresolved numerical relationships do not reconcile.')
+    component_rows = audit.get('component_allocations', [])
+    operations = calculation['component_operations']
+    expected_indices = [i for i, op in enumerate(operations) if 'numerical_allocation' in op]
+    if [r['ledger_index'] for r in component_rows] != expected_indices:
+        raise ScorecardIntegrityError('Component allocation coverage mismatch.')
+    for row in component_rows:
+        op = operations[row['ledger_index']]
+        factor = 1.0
+        for later in operations[row['ledger_index'] + 1:]:
+            if later['field'] == row['field'] and later['operation'] == 'multiply':
+                factor *= later['operand']
+        boundary = by_key.get('boundary', {})
+        if (boundary.get('classification') != 'B' or boundary.get('suppressed_contribution', 0) <= 0
+                or op['operation'] != 'add' or op['operand'] != 0
+                or row['field'] != op['field'] or row['classification'] != 'B'
+                or row['raw_contribution'] != op['raw_operand']
+                or row['raw_contribution'] != row['suppressed_contribution']
+                or row['credited_contribution'] != 0 or row['final_adjusted_contribution'] != 0
+                or row['reliability_multiplier'] != factor):
+            raise ScorecardIntegrityError('Component numerical allocation mismatch.')
+    for polarity in ('suspicious', 'benign'):
+        selected = [r for r in rows if r['polarity'] == polarity]
+        raw_domains = {r['domain'] for r in selected if r['domain']}
+        domains = {r['domain'] for r in selected if r['domain'] and r['credited_weight'] > 0}
+        expected = {
+            'raw_base_weight': fsum(r['weight'] for r in selected),
+            'credited_base_weight': fsum(r['credited_weight'] for r in selected),
+            'suppressed_base_weight': fsum(r['weight'] - r['credited_weight'] for r in selected),
+            'raw_domain_bonus': max(0, len(raw_domains) - 1) * .25,
+            'credited_domain_bonus': max(0, len(domains) - 1) * .25,
+            'credited_domains': sorted(domains),
+        }
+        if audit['aggregate_reconciliation'][polarity] != expected:
+            raise ScorecardIntegrityError('Numerical base/domain reconciliation mismatch.')
+
+
+def validate_scorecard(card) -> None:
+    if not card.is_valid:
+        raise ScorecardIntegrityError("The scorecard is explicitly invalid.")
+    calc = card.calculation
+    for name in ("raw_contributions", "final_contributions"):
+        if set(calc.get(name, {})) != set(COMPONENT_FIELDS):
+            raise ScorecardIntegrityError(f"Incomplete {name}.")
+    raw_count = calc.get("raw_operation_count")
+    if type(raw_count) is not int or not 0 <= raw_count <= len(calc.get("component_operations", [])):
+        raise ScorecardIntegrityError("Invalid raw calculation boundary.")
+    reconstructed = reconstruct_scorecard_calculation(calc)
+    for name in (*COMPONENT_FIELDS, "suspicious_score", "benign_score"):
+        value = finite_number(getattr(card, name), name)
+        if name not in SIGNED_FIELDS and value < 0:
+            raise ScorecardIntegrityError(f"{name} cannot be negative.")
+        if not isclose(value, reconstructed[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+            raise ScorecardIntegrityError(f"{name} does not reconcile with the calculation ledger.")
+    for name in ("base_suspicious", "base_benign"):
+        if not isclose(calc[name], reconstructed[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+            raise ScorecardIntegrityError(f"{name} does not reconcile.")
+    for name, value in calc["final_contributions"].items():
+        if name not in COMPONENT_FIELDS or not isclose(value, reconstructed[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+            raise ScorecardIntegrityError(f"Final {name} does not reconcile.")
+    for name in ("suspicious_score", "benign_score"):
+        if not isclose(calc["aggregate_scores"][name], reconstructed[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+            raise ScorecardIntegrityError(f"Serialized {name} does not reconcile.")
+    raw = replay_components(calc["component_operations"][:calc["raw_operation_count"]])
+    for name, value in calc["raw_contributions"].items():
+        if not isclose(value, raw[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+            raise ScorecardIntegrityError(f"Raw {name} does not reconcile.")
+    for polarity in ("suspicious", "benign"):
+        domains = {r["domain"] for r in calc["base_evidence"] if r["polarity"] == polarity and r["domain"] and r.get('credited_weight', r['weight']) > 0}
+        if getattr(card, f"{polarity}_domains") != domains:
+            raise ScorecardIntegrityError(f"{polarity} domains do not match available evidence.")
+    adjustments = calc["reliability_adjustments"]
+    reliability = finite_number(adjustments["boundary_reliability"], "boundary_reliability")
+    if not 0 <= reliability <= 1:
+        raise ScorecardIntegrityError("Boundary reliability outside [0, 1].")
+    geometry_bad = adjustments["region_geometry_unreliable"]
+    transforms = calc["aggregate_transforms"]
+    prior = transforms["photo_context_prior"]
+    if any(type(value) is not bool for value in (geometry_bad, prior, adjustments["boundary_adjustment_applicable"])):
+        raise ScorecardIntegrityError("Adjustment availability flags must be booleans.")
+    boundary_applicable = raw["local_edit_support_score"] > 0 or raw["edit_boost"] > 0
+    if adjustments["boundary_adjustment_applicable"] != boundary_applicable:
+        raise ScorecardIntegrityError("Boundary adjustment is not scoped to observed mechanism support.")
+
+    def require_operation(field, reason, operation, operand, active):
+        items = [o for o in calc["component_operations"] if o["field"] == field and o["reason"] == reason]
+        if len(items) != int(active) or any(o["operation"] != operation or not isclose(o["operand"], operand, rel_tol=REL_TOL, abs_tol=ABS_TOL) for o in items):
+            raise ScorecardIntegrityError(f"Missing, duplicated or incorrect adjustment: {field}, {reason}.")
+
+    for field in ("local_edit_support_score", "edit_boost"):
+        require_operation(field, "region_geometry_reliability", "multiply", 0.45, geometry_bad)
+        require_operation(field, "boundary_reliability", "multiply", reliability, boundary_applicable and reliability < 1)
+    require_operation("caution_penalty", "region_geometry_caution", "add", 1.0, geometry_bad)
+    require_operation("caution_penalty", "boundary_reliability_caution", "add", 1 - reliability, boundary_applicable and reliability < 1)
+    require_operation("camera_counter_support", "photo_context_routing_bonus", "add", 1.5, prior)
+    require_operation("caution_penalty", "photo_context_caution", "add", 1.0, prior)
+    measured = finite_number(transforms["measured_camera_support"], "measured_camera_support")
+    require_operation("caution_penalty", "measured_camera_caution", "add", measured, True)
+    if not isclose(card.camera_counter_support, measured + (1.5 if prior else 0.0), rel_tol=REL_TOL, abs_tol=ABS_TOL):
+        raise ScorecardIntegrityError("Camera routing and measured support do not reconcile.")
+    expected_transforms = {
+        "camera_multiplier": camera_attenuation(measured),
+        "geometry_multiplier": 0.75 if geometry_bad else 1.0,
+        "photo_context_multiplier": 0.70 if prior else 1.0,
+        "suspicious_floor": 0.0,
+    }
+    if any(transforms[k] != value for k, value in expected_transforms.items()):
+        raise ScorecardIntegrityError("Aggregate transformations do not match the declared policy.")
+    if adjustments["geometry_mechanism_multiplier"] != (0.45 if geometry_bad else 1.0):
+        raise ScorecardIntegrityError("Geometry mechanism multiplier mismatch.")
+    if calc["penalties"] != [o for o in calc["component_operations"] if o["field"] == "caution_penalty"]:
+        raise ScorecardIntegrityError("Penalty breakdown does not match component operations.")

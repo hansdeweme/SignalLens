@@ -10,6 +10,7 @@ from metadata_evidence import (
     GENERATION_SIGNAL_IDS, ENHANCEMENT_SIGNAL_IDS,
 )
 from signal_language import humanize_signal
+from scorecard_integrity import usable_observation
 
 Role = Literal["supporting_evidence", "contradicting_evidence", "moderating_evidence", "contextual_evidence"]
 ROLE_TITLES = {
@@ -183,7 +184,7 @@ def scope_hypothesis_evidence(
         }
 
     for section_key, section in sorted(sections.items()):
-        if not section or section.status in {"not_run", "inconclusive"}:
+        if not usable_observation(section):
             continue
         for use in EVIDENCE_RELATIONSHIPS.get((section_key, section.pattern), ()):
             role, interpretation = use.role, use.interpretation
@@ -198,7 +199,8 @@ def scope_hypothesis_evidence(
                 section.pattern, interpretation)
 
     metadata = sections.get("metadata")
-    if metadata and metadata.status != "not_run":
+    if metadata and (usable_observation(metadata) or metadata.status == "inconclusive"):
+        metadata_active = usable_observation(metadata)
         details = metadata.details or {}
         signals = {s["id"]: s for s in details.get("metadata_signals", []) if isinstance(s, dict) and s.get("id")}
         ids = set(details.get("signal_ids", []))
@@ -206,7 +208,7 @@ def scope_hypothesis_evidence(
             ids = {metadata.pattern}
         for signal_id in sorted(ids):
             observations = signals.get(signal_id, {}).get("evidence", [])
-            if signal_id in GENERATION_SIGNAL_IDS or signal_id in GENERATION_PATTERNS:
+            if metadata_active and (signal_id in GENERATION_SIGNAL_IDS or signal_id in GENERATION_PATTERNS):
                 pattern = ("embedded_generation_prompt_detected" if signal_id in {"EMBEDDED_GENERATION_PROMPT", "embedded_generation_prompt_detected"}
                            else "declared_synthetic_candidate")
                 add("synthetic_origin", "supporting_evidence", f"metadata:{signal_id}", "metadata", pattern,
@@ -215,7 +217,7 @@ def scope_hypothesis_evidence(
                     "A generation declaration does not identify a localized editing mechanism.", observations)
                 add("camera_acquisition", "contextual_evidence", f"metadata:{signal_id}", "metadata", pattern,
                     "A generation declaration can coexist with camera-compatible structure; it does not authenticate acquisition history.", observations)
-            elif signal_id in ENHANCEMENT_SIGNAL_IDS or signal_id in ENHANCEMENT_PATTERNS:
+            elif metadata_active and (signal_id in ENHANCEMENT_SIGNAL_IDS or signal_id in ENHANCEMENT_PATTERNS):
                 add("synthetic_origin", "supporting_evidence", f"metadata:{signal_id}", "metadata", "declared_enhancement_candidate",
                     "Metadata declares enhancement or generative editing; authenticity is unverified and whole-image generation is not established.", observations)
                 add("localized_editing", "contextual_evidence", f"metadata:{signal_id}", "metadata", "declared_enhancement_candidate",
@@ -241,7 +243,7 @@ def scope_hypothesis_evidence(
                 add(hypothesis, "contextual_evidence", f"metadata:{metadata.pattern}", "metadata", metadata.pattern,
                     "Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.",
                     signals.get("METADATA_STRIPPED_OR_SPARSE", {}).get("evidence", []))
-        if metadata.pattern == "camera_metadata_present" or details.get("camera_metadata_present"):
+        if metadata_active and (metadata.pattern == "camera_metadata_present" or details.get("camera_metadata_present")):
             observations = signals.get("CAMERA_METADATA_RICH", {}).get("evidence", [])
             for hypothesis, role, interpretation in (
                 ("camera_acquisition", "supporting_evidence", "Camera metadata is compatible with acquisition, but its authenticity is unverified."),
@@ -254,7 +256,7 @@ def scope_hypothesis_evidence(
     unresolved = by_id.get("unresolved_anomaly")
     if unresolved:
         for key, section in sorted(sections.items()):
-            if section and section.polarity == "suspicious" and section.status not in {"not_run", "inconclusive"} and section.pattern not in MISSING_METADATA_PATTERNS:
+            if usable_observation(section) and section.polarity == "suspicious" and section.pattern not in MISSING_METADATA_PATTERNS:
                 add("unresolved_anomaly", "supporting_evidence", f"{key}:{section.pattern}", key, section.pattern,
                     "An anomalous observation is present; its cause is unresolved and it does not establish generation or a specific edit.")
     for assessment in assessments:

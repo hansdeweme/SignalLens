@@ -5,21 +5,25 @@
 #
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from math import fsum
 from typing import Optional
 # local imports to avoid circular dependencies
 from gui_semantics import ModuleSummary
+from numerical_evidence import allocate_base_evidence, add_fragment_component, finalize_component_allocations
 from metadata_evidence import (
     ProvenanceState, MISSING_METADATA_PATTERNS, metadata_provenance_state,
 )
+from scorecard_integrity import (
+    STATUS_WEIGHTS, COMPONENT_FIELDS, BOOST_FIELDS, ComponentLedger,
+    available_sections, usable_observation, validate_score_inputs,
+    validate_derived_signals, validate_scorecard,
+    camera_attenuation,
+    ScorecardIntegrityError,
+    validate_score_context,
+)
 
-STATUS_WEIGHT = {
-    "not_run": 0.0,
-    "inconclusive": 0.0,
-    "weak": 0.5,
-    "medium": 1.5,
-    "strong": 3.0,
-}
+STATUS_WEIGHT = STATUS_WEIGHTS
 
 @dataclass
 class HypothesisContext:
@@ -129,6 +133,9 @@ class ScoreCard:
     synthetic_supported_by_other_domains: bool = False
     suspicious_domains: set[str] = field(default_factory=set)
     benign_domains: set[str] = field(default_factory=set)
+    is_valid: bool = True
+    validation_errors: list[str] = field(default_factory=list)
+    calculation: dict = field(default_factory=dict, repr=False, metadata={"trace_exclude": True})
 
 
 @dataclass
@@ -144,6 +151,8 @@ class HypothesisAssessment:
     contradicting_evidence: list[str] = field(default_factory=list)
     contextual_evidence: list[str] = field(default_factory=list)
     evidence_details: dict[str, dict] = field(default_factory=dict)
+    confidence_policy_rule: str | None = None
+    confidence_rationale: list[str] = field(default_factory=list)
 
 def weight(section: ModuleSummary | None) -> float:
     if section is None:
@@ -159,7 +168,7 @@ def is_benign(section: ModuleSummary | None) -> bool:
             and section.polarity == "benign" and weight(section) > 0)
 
 def detail(section: ModuleSummary | None, key: str, default=0):
-    if section is None or not getattr(section, "details", None):
+    if not usable_observation(section) or not getattr(section, "details", None):
         return default
     value = section.details.get(key, default)
     return default if value is None else value
@@ -174,6 +183,7 @@ def build_context(scene_context: dict | None) -> HypothesisContext:
     )
 
 def build_evidence_snapshot(sections: dict[str, ModuleSummary]) -> EvidenceSnapshot:
+    sections = available_sections(sections)
     return EvidenceSnapshot(
         metadata=sections.get("metadata"),
         osint=sections.get("osint"),
@@ -197,6 +207,8 @@ def build_evidence_snapshot(sections: dict[str, ModuleSummary]) -> EvidenceSnaps
     )
 
 def derive_signals(ev: EvidenceSnapshot) -> DerivedSignals:
+    ev = replace(ev, **{key: value if usable_observation(value) else None for key, value in vars(ev).items()})
+    validate_score_inputs(vars(ev))
     d = DerivedSignals()
     d.camera_like_support = (ev.sensor_origin is not None and ev.sensor_origin.pattern == "camera_like_acquisition_supported")
     d.cfa_camera_like_support = (ev.cfa_demosaic is not None and ev.cfa_demosaic.pattern == "camera_like_cfa_supported")
@@ -299,27 +311,50 @@ def derive_signals(ev: EvidenceSnapshot) -> DerivedSignals:
     return d
 
 def compute_base_scores(sections: dict[str, ModuleSummary], ) -> tuple[float, float, set[str], set[str]]:
-    suspicious_sections = [s for s in sections.values() if is_suspicious(s)]
-    benign_sections = [s for s in sections.values() if is_benign(s)]
-    suspicious_score = sum(weight(s) for s in suspicious_sections)
-    benign_score = sum(weight(s) for s in benign_sections)
-    suspicious_domains = {s.domain for s in suspicious_sections if getattr(s, "domain", None)}
-    benign_domains = {s.domain for s in benign_sections if getattr(s, "domain", None)}
-    suspicious_score += max(0, len(suspicious_domains) - 1) * 0.25
-    benign_score += max(0, len(benign_domains) - 1) * 0.25
-    return suspicious_score, benign_score, suspicious_domains, benign_domains
+    validate_score_inputs(sections)
+    _, audit = _allocate_base_scores(sections)
+    return _base_totals(audit)
+
+
+def _allocate_base_scores(sections):
+    rows = [
+        {"section": key, "status": section.status, "polarity": section.polarity,
+         "domain": section.domain, "weight": weight(section)}
+        for key, section in sorted(sections.items()) if is_suspicious(section) or is_benign(section)
+    ]
+    return allocate_base_evidence(sections, rows)
+
+
+def _base_totals(audit):
+    totals = audit['aggregate_reconciliation']
+    return (
+        totals['suspicious']['credited_base_weight'] + totals['suspicious']['credited_domain_bonus'],
+        totals['benign']['credited_base_weight'] + totals['benign']['credited_domain_bonus'],
+        set(totals['suspicious']['credited_domains']), set(totals['benign']['credited_domains']),
+    )
 
 def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext, ev: EvidenceSnapshot, ds: DerivedSignals,) -> ScoreCard:
+    validate_score_inputs(sections)
+    validate_derived_signals(ds)
+    validate_score_context(ctx)
+    ev = replace(ev, **{key: value if usable_observation(value) else None for key, value in vars(ev).items()})
+    expected_signals = derive_signals(ev)
+    mismatched = [name for name, value in vars(expected_signals).items() if getattr(ds, name) != value]
+    if mismatched:
+        raise ScorecardIntegrityError("Derived signals do not match available evidence: " + ", ".join(mismatched))
     card = ScoreCard()
+    ledger = ComponentLedger(card)
     # --------------------------------------------------
     # Base scores from section status/polarity
     # --------------------------------------------------
+    base_evidence, numerical_audit = _allocate_base_scores(sections)
     (
         card.suspicious_score,
         card.benign_score,
         card.suspicious_domains,
         card.benign_domains,
-    ) = compute_base_scores(sections)
+    ) = _base_totals(numerical_audit)
+    base_suspicious, base_benign = card.suspicious_score, card.benign_score
     # --------------------------------------------------
     # Helpers
     # --------------------------------------------------
@@ -332,84 +367,84 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
     # 1. Camera / benign counter-support
     # --------------------------------------------------
     if ds.metadata_camera_like:
-        card.camera_counter_support += 1.50
+        ledger.add('camera_counter_support', 1.50, 'ds.metadata_camera_like')
     if ds.camera_like_support:
-        card.camera_counter_support += 1.25
+        ledger.add('camera_counter_support', 1.25, 'ds.camera_like_support')
     if ds.cfa_camera_like_support:
-        card.camera_counter_support += 1.00
+        ledger.add('camera_counter_support', 1.00, 'ds.cfa_camera_like_support')
     # Reward convergence of multiple camera-like signals
     if card.camera_counter_support >= 2.0:
-        card.camera_counter_support += 0.50
+        ledger.add('camera_counter_support', 0.50, 'card.camera_counter_support >= 2.0')
     # Additional benign moderation
     if ds.segmentation_natural and ds.camera_like_support:
-        card.caution_penalty += 0.40
+        ledger.add('caution_penalty', 0.40, 'ds.segmentation_natural and ds.camera_like_support')
     if ds.material_realism_low and ds.provenance_clean:
-        card.caution_penalty += 0.60
+        ledger.add('caution_penalty', 0.60, 'ds.material_realism_low and ds.provenance_clean')
     if ds.compression_consistent and ds.provenance_clean and ds.local_signals_weak:
-        card.caution_penalty += 0.40
+        ledger.add('caution_penalty', 0.40, 'ds.compression_consistent and ds.provenance_clean and ds.local_signals_weak')
     if ds.camera_like_support and ds.provenance_clean:
-        card.caution_penalty += 0.35
+        ledger.add('caution_penalty', 0.35, 'ds.camera_like_support and ds.provenance_clean')
     if ds.camera_like_support and ds.provenance_clean and ds.local_signals_weak:
-        card.caution_penalty += 0.40
+        ledger.add('caution_penalty', 0.40, 'ds.camera_like_support and ds.provenance_clean and ds.local_signals_weak')
     if ds.cfa_camera_like_support and ds.provenance_clean and ds.local_signals_weak:
-        card.caution_penalty += 0.25
+        ledger.add('caution_penalty', 0.25, 'ds.cfa_camera_like_support and ds.provenance_clean and ds.local_signals_weak')
     # --------------------------------------------------
     # 2. Local editing support
     # --------------------------------------------------
     if ds.strong_local_edit:
-        card.local_edit_support_score += 2.0
+        ledger.add('local_edit_support_score', 2.0, 'ds.strong_local_edit')
     elif ds.fragmented_local_edit:
-        card.local_edit_support_score += 0.5
+        add_fragment_component(ledger, numerical_audit, 'local_edit_support_score', 0.5, 'otherwise / ds.fragmented_local_edit')
     if ds.strong_cross:
-        card.local_edit_support_score += 1.0
+        ledger.add('local_edit_support_score', 1.0, 'ds.strong_cross')
     if boundary_strong:
-        card.local_edit_support_score += 0.75
+        ledger.add('local_edit_support_score', 0.75, 'boundary_strong')
     elif boundary_medium:
-        card.local_edit_support_score += 0.35
+        ledger.add('local_edit_support_score', 0.35, 'otherwise / boundary_medium')
     if ds.sensor_trace_inconsistency:
-        card.local_edit_support_score += 0.50
+        ledger.add('local_edit_support_score', 0.50, 'ds.sensor_trace_inconsistency')
     if ds.cfa_inconsistency:
-        card.local_edit_support_score += 0.35
+        ledger.add('local_edit_support_score', 0.35, 'ds.cfa_inconsistency')
     if ds.compression_inconsistency:
-        card.local_edit_support_score += 0.40
+        ledger.add('local_edit_support_score', 0.40, 'ds.compression_inconsistency')
     if ds.subject_texture_strong:
-        card.local_edit_support_score += 0.75
+        ledger.add('local_edit_support_score', 0.75, 'ds.subject_texture_strong')
     elif ds.subject_texture_moderate:
-        card.local_edit_support_score += 0.35
+        ledger.add('local_edit_support_score', 0.35, 'otherwise / ds.subject_texture_moderate')
     if asym_strong:
-        card.local_edit_support_score += 0.75
+        ledger.add('local_edit_support_score', 0.75, 'asym_strong')
     elif asym_medium:
-        card.local_edit_support_score += 0.40
+        ledger.add('local_edit_support_score', 0.40, 'otherwise / asym_medium')
     if ds.material_realism_strong:
-        card.local_edit_support_score += 1.50
+        ledger.add('local_edit_support_score', 1.50, 'ds.material_realism_strong')
     elif ds.material_realism_medium:
-        card.local_edit_support_score += 0.75
+        ledger.add('local_edit_support_score', 0.75, 'otherwise / ds.material_realism_medium')
     elif ds.material_realism_weak:
-        card.local_edit_support_score += 0.35
+        ledger.add('local_edit_support_score', 0.35, 'otherwise / otherwise / ds.material_realism_weak')
     # Camera-like acquisition slightly tempers local-edit interpretation
     if ds.camera_like_support:
-        card.local_edit_support_score -= 0.20
+        ledger.add('local_edit_support_score', -(0.20), 'ds.camera_like_support')
     if ds.cfa_camera_like_support:
-        card.local_edit_support_score -= 0.20
+        ledger.add('local_edit_support_score', -(0.20), 'ds.cfa_camera_like_support')
     # --------------------------------------------------
     # 3. Edit boost (what actually affects final suspicious score)
     # --------------------------------------------------
     if ds.subject_texture_strong:
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'ds.subject_texture_strong')
     elif ds.subject_texture_moderate:
-        card.edit_boost += 0.20
+        ledger.add('edit_boost', 0.20, 'otherwise / ds.subject_texture_moderate')
     if asym_strong:
-        card.edit_boost += 0.30
+        ledger.add('edit_boost', 0.30, 'asym_strong')
     elif asym_medium:
-        card.edit_boost += 0.15
+        ledger.add('edit_boost', 0.15, 'otherwise / asym_medium')
     if ds.material_realism_strong:
-        card.edit_boost += 0.75
+        ledger.add('edit_boost', 0.75, 'ds.material_realism_strong')
     elif ds.material_realism_medium:
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'otherwise / ds.material_realism_medium')
     if ds.segmentation_boundary_strong:
-        card.edit_boost += 0.25
+        ledger.add('edit_boost', 0.25, 'ds.segmentation_boundary_strong')
     elif ds.segmentation_boundary_medium:
-        card.edit_boost += 0.10
+        ledger.add('edit_boost', 0.10, 'otherwise / ds.segmentation_boundary_medium')
     # --------------------------------------------------
     # 4. Local-edit synergies
     # --------------------------------------------------
@@ -425,34 +460,34 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
         and (boundary_strong or boundary_medium)
     )
     if ds.segmentation_boundary_strong and ds.strong_cross:
-        card.local_edit_support_score += 0.50
-        card.edit_boost += 0.25
+        ledger.add('local_edit_support_score', 0.50, 'ds.segmentation_boundary_strong and ds.strong_cross')
+        ledger.add('edit_boost', 0.25, 'ds.segmentation_boundary_strong and ds.strong_cross')
     elif ds.segmentation_boundary_medium and ds.strong_cross:
-        card.local_edit_support_score += 0.25
-        card.edit_boost += 0.10
+        ledger.add('local_edit_support_score', 0.25, 'otherwise / ds.segmentation_boundary_medium and ds.strong_cross')
+        ledger.add('edit_boost', 0.10, 'otherwise / ds.segmentation_boundary_medium and ds.strong_cross')
     if ds.material_realism_strong and ds.strong_cross:
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'ds.material_realism_strong and ds.strong_cross')
     elif ds.material_realism_medium and ds.strong_cross:
-        card.edit_boost += 0.20
+        ledger.add('edit_boost', 0.20, 'otherwise / ds.material_realism_medium and ds.strong_cross')
     if ds.material_realism_strong and ds.subject_boundary_strong:
-        card.edit_boost += 0.50
+        ledger.add('edit_boost', 0.50, 'ds.material_realism_strong and ds.subject_boundary_strong')
     if ds.material_realism_strong and asym_strong:
-        card.edit_boost += 0.75
+        ledger.add('edit_boost', 0.75, 'ds.material_realism_strong and asym_strong')
     elif ds.material_realism_medium and asym_strong:
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'otherwise / ds.material_realism_medium and asym_strong')
     if boundary_stack_strong:
-        card.local_edit_support_score += 1.25
-        card.edit_boost += 0.50
+        ledger.add('local_edit_support_score', 1.25, 'boundary_stack_strong')
+        ledger.add('edit_boost', 0.50, 'boundary_stack_strong')
     elif boundary_stack_medium:
-        card.local_edit_support_score += 0.60
+        ledger.add('local_edit_support_score', 0.60, 'otherwise / boundary_stack_medium')
     if ds.fragmented_local_edit and ds.strong_cross:
-        card.edit_boost += 0.50
+        add_fragment_component(ledger, numerical_audit, 'edit_boost', 0.50, 'ds.fragmented_local_edit and ds.strong_cross')
     if ds.subject_boundary_strong and (ds.strong_cross or ds.fragmented_local_edit):
-        card.edit_boost += 0.75
+        ledger.add('edit_boost', 0.75, 'ds.subject_boundary_strong and (ds.strong_cross or ds.fragmented_local_edit)')
     elif ds.subject_boundary_medium and (ds.strong_cross or ds.fragmented_local_edit):
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'otherwise / ds.subject_boundary_medium and (ds.strong_cross or ds.fragmented_local_edit)')
     elif ds.subject_boundary_strong and ds.local_signals_weak:
-        card.edit_boost += 0.35
+        ledger.add('edit_boost', 0.35, 'otherwise / otherwise / ds.subject_boundary_strong and ds.local_signals_weak')
     # Realism fallback when local signals are otherwise weak
     if (
         ds.material_realism_strong
@@ -460,9 +495,9 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
         and not ds.strong_local_edit
         and not ds.strong_cross
     ):
-        card.edit_boost += 0.40
+        ledger.add('edit_boost', 0.40, 'ds.material_realism_strong and ds.local_signals_weak and (not ds.strong_local_edit) and (not ds.strong_cross)')
     # Convert structural support into a modest effective boost
-    card.edit_boost += 0.18 * card.local_edit_support_score
+    ledger.add('edit_boost', 0.18 * card.local_edit_support_score, 'local_support_conversion')
     # ------------------------------------------------------------
     # Clone / patch-reuse support
     # ------------------------------------------------------------
@@ -499,55 +534,55 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
             or (ev.cross_signal is None or ev.cross_signal.status in {"not_run", "inconclusive", "weak"})
         )
     )
-    clone_score = 0.0
-    # Base candidate support: lower than before, because clone-reuse should earn trust.
-    if card.clone_candidate:
-        clone_score += 1.25
-    # Strong local similarity still matters.
-    if ds.patch_score >= 0.85:
-        clone_score += 0.50
-    if ds.mean_similarity >= 0.92:
-        clone_score += 0.35
-    if ds.separated_pair_count >= 10:
-        clone_score += 0.35
-    # Spatial compactness helps clone interpretation, but broad coverage hurts it.
-    if ds.coverage_ratio <= 0.18:
-        clone_score += 0.35
-    elif ds.coverage_ratio > 0.25:
-        clone_score -= 0.40
-    # Spatial corroboration is important.
-    if patch_spatial_supportive:
-        clone_score += 0.60
-    if patch_spatial_inconclusive:
-        clone_score -= 0.75
-    # Cross-signal can help, but should not dominate clone interpretation.
-    if ds.strong_cross and card.clone_candidate:
-        clone_score += 0.15
-    # Local-edit evidence can coexist with clone evidence, but do not reward this much.
-    if ds.strong_local_edit and card.clone_candidate:
-        clone_score += 0.05
-    # Natural scene / repetitive-structure moderation.
-    if natural_scene_risk:
-        clone_score -= 0.85
-    # Camera-like evidence should substantially damp clone interpretation
-    # when spatial corroboration is weak.
-    if camera_benign:
-        clone_score -= 0.90
+    if usable_observation(ev.patch_similarity):
+        # Base candidate support: lower than before, because clone-reuse should earn trust.
+        if card.clone_candidate:
+            ledger.add('clone_support_score', 1.25, 'usable_observation(ev.patch_similarity) / card.clone_candidate')
+        # Strong local similarity still matters.
+        if ds.patch_score >= 0.85:
+            ledger.add('clone_support_score', 0.50, 'usable_observation(ev.patch_similarity) / ds.patch_score >= 0.85')
+        if ds.mean_similarity >= 0.92:
+            ledger.add('clone_support_score', 0.35, 'usable_observation(ev.patch_similarity) / ds.mean_similarity >= 0.92')
+        if ds.separated_pair_count >= 10:
+            ledger.add('clone_support_score', 0.35, 'usable_observation(ev.patch_similarity) / ds.separated_pair_count >= 10')
+        # Spatial compactness helps clone interpretation, but broad coverage hurts it.
+        if detail(ev.patch_similarity, "coverage_ratio", None) is not None and ds.coverage_ratio <= 0.18:
+            ledger.add('clone_support_score', 0.35, "usable_observation(ev.patch_similarity) / detail(ev.patch_similarity, 'coverage_ratio', None) is not None and ds.coverage_ratio <= 0.18")
+        elif ds.coverage_ratio > 0.25:
+            ledger.add('clone_support_score', -(0.40), 'usable_observation(ev.patch_similarity) / otherwise / ds.coverage_ratio > 0.25')
+        # Spatial corroboration is important.
+        if patch_spatial_supportive:
+            ledger.add('clone_support_score', 0.60, 'usable_observation(ev.patch_similarity) / patch_spatial_supportive')
         if patch_spatial_inconclusive:
-            clone_score -= 0.60
-    # Stronger camera damping when metadata is explicitly camera-like and clone is not spatially confirmed.
-    if ds.metadata_camera_like and not patch_spatial_supportive:
-        clone_score *= 0.35
-    elif ds.metadata_camera_like:
-        clone_score *= 0.65
-    card.clone_support_score += max(0.0, clone_score)
+            ledger.add('clone_support_score', -(0.75), 'usable_observation(ev.patch_similarity) / patch_spatial_inconclusive')
+        # Cross-signal can help, but should not dominate clone interpretation.
+        if ds.strong_cross and card.clone_candidate:
+            ledger.add('clone_support_score', 0.15, 'usable_observation(ev.patch_similarity) / ds.strong_cross and card.clone_candidate')
+        # Local-edit evidence can coexist with clone evidence, but do not reward this much.
+        if ds.strong_local_edit and card.clone_candidate:
+            ledger.add('clone_support_score', 0.05, 'usable_observation(ev.patch_similarity) / ds.strong_local_edit and card.clone_candidate')
+        # Natural scene / repetitive-structure moderation.
+        if natural_scene_risk:
+            ledger.add('clone_support_score', -(0.85), 'usable_observation(ev.patch_similarity) / natural_scene_risk')
+        # Camera-like evidence should substantially damp clone interpretation
+        # when spatial corroboration is weak.
+        if camera_benign:
+            ledger.add('clone_support_score', -(0.90), 'usable_observation(ev.patch_similarity) / camera_benign')
+            if patch_spatial_inconclusive:
+                ledger.add('clone_support_score', -(0.60), 'usable_observation(ev.patch_similarity) / camera_benign / patch_spatial_inconclusive')
+        # Stronger camera damping when metadata is explicitly camera-like and clone is not spatially confirmed.
+        if ds.metadata_camera_like and not patch_spatial_supportive:
+            ledger.multiply('clone_support_score', 0.35, 'usable_observation(ev.patch_similarity) / ds.metadata_camera_like and (not patch_spatial_supportive)')
+        elif ds.metadata_camera_like:
+            ledger.multiply('clone_support_score', 0.65, 'usable_observation(ev.patch_similarity) / otherwise / ds.metadata_camera_like')
+        ledger.maximum("clone_support_score", 0.0, "clone_floor")
     # --------------------------------------------------
     # 6. Synthetic structure
     # --------------------------------------------------
     if ds.segmentation_fragmented:
-        card.synthetic_boost += 0.50
+        ledger.add('synthetic_boost', 0.50, 'ds.segmentation_fragmented')
     if ds.segmentation_clean:
-        card.synthetic_boost += 0.30
+        ledger.add('synthetic_boost', 0.30, 'ds.segmentation_clean')
     if (
         ds.fft_structured
         and ds.patch_structured
@@ -563,49 +598,49 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
         and ds.mean_similarity >= 0.88
         and ds.max_similarity >= 0.92
     ):
-        card.synthetic_boost += 1.00
+        ledger.add('synthetic_boost', 1.00, 'ds.fft_structured and ds.patch_structured and (ds.fft_score >= 0.8) and (ds.peak_periodicity >= 0.7) and (ds.peak_symmetry >= 0.55) and (ds.peak_count >= 4) and (ds.axis_bias >= 0.6) and (ds.patch_score >= 0.7) and (ds.repetition_score >= 0.6) and (ds.separated_pair_count >= 8) and (ds.pair_count >= 12) and (ds.mean_similarity >= 0.88) and (ds.max_similarity >= 0.92)')
         if ds.local_signals_weak and ds.coverage_ratio >= 0.18 and ds.provenance_clean:
-            card.caution_penalty += 1.50
+            ledger.add('caution_penalty', 1.50, 'ds.fft_structured and ds.patch_structured and (ds.fft_score >= 0.8) and (ds.peak_periodicity >= 0.7) and (ds.peak_symmetry >= 0.55) and (ds.peak_count >= 4) and (ds.axis_bias >= 0.6) and (ds.patch_score >= 0.7) and (ds.repetition_score >= 0.6) and (ds.separated_pair_count >= 8) and (ds.pair_count >= 12) and (ds.mean_similarity >= 0.88) and (ds.max_similarity >= 0.92) / ds.local_signals_weak and ds.coverage_ratio >= 0.18 and ds.provenance_clean')
     if ds.material_realism_strong:
-        card.synthetic_boost += 0.75
+        ledger.add('synthetic_boost', 0.75, 'ds.material_realism_strong')
     elif ds.material_realism_medium:
-        card.synthetic_boost += 0.40
+        ledger.add('synthetic_boost', 0.40, 'otherwise / ds.material_realism_medium')
     # Context moderation of synthetic structure
     if card.synthetic_boost > 0:
         if ctx.natural_repetition:
-            card.synthetic_boost *= 0.75
+            ledger.multiply('synthetic_boost', 0.75, 'card.synthetic_boost > 0 / ctx.natural_repetition')
         if ctx.decorative_geometric:
-            card.synthetic_boost *= 0.85
+            ledger.multiply('synthetic_boost', 0.85, 'card.synthetic_boost > 0 / ctx.decorative_geometric')
         if ctx.smartphone_computational:
-            card.synthetic_boost *= 0.85
+            ledger.multiply('synthetic_boost', 0.85, 'card.synthetic_boost > 0 / ctx.smartphone_computational')
         if ctx.screen_origin:
-            card.synthetic_boost *= 0.50
+            ledger.multiply('synthetic_boost', 0.50, 'card.synthetic_boost > 0 / ctx.screen_origin')
         if ds.metadata_camera_like:
-            card.synthetic_boost *= 0.60
+            ledger.multiply('synthetic_boost', 0.60, 'card.synthetic_boost > 0 / ds.metadata_camera_like')
     # --------------------------------------------------
     # 7. Provenance
     # --------------------------------------------------
     if (ds.metadata_synthetic or ds.metadata_enhancement) and ds.osint_ai_context:
-        card.provenance_boost += 1.25
+        ledger.add('provenance_boost', 1.25, '(ds.metadata_synthetic or ds.metadata_enhancement) and ds.osint_ai_context')
     elif ds.metadata_synthetic or ds.metadata_enhancement:
-        card.provenance_boost += 0.75
+        ledger.add('provenance_boost', 0.75, 'otherwise / ds.metadata_synthetic or ds.metadata_enhancement')
     elif ds.osint_ai_context:
-        card.provenance_boost += 0.50
+        ledger.add('provenance_boost', 0.50, 'otherwise / otherwise / ds.osint_ai_context')
     # --------------------------------------------------
     # 8. Sensor / compression
     # --------------------------------------------------
     if ds.sensor_trace_inconsistency and (ds.strong_cross or ds.strong_local_edit):
-        card.sensor_boost += 0.75
+        ledger.add('sensor_boost', 0.75, 'ds.sensor_trace_inconsistency and (ds.strong_cross or ds.strong_local_edit)')
     if ds.cfa_inconsistency and (ds.strong_cross or ds.strong_local_edit):
-        card.sensor_boost += 0.40
+        ledger.add('sensor_boost', 0.40, 'ds.cfa_inconsistency and (ds.strong_cross or ds.strong_local_edit)')
     if ds.compression_inconsistency and (
         ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong
     ):
-        card.compression_boost += 0.75
+        ledger.add('compression_boost', 0.75, 'ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong)')
     elif ds.double_jpeg_suspect:
-        card.compression_boost += 0.40
+        ledger.add('compression_boost', 0.40, 'otherwise / ds.double_jpeg_suspect')
     elif ds.block_history_anomaly and (ds.fft_structured or ds.patch_structured):
-        card.compression_boost += 0.35
+        ledger.add('compression_boost', 0.35, 'otherwise / otherwise / ds.block_history_anomaly and (ds.fft_structured or ds.patch_structured)')
     # --------------------------------------------------
     # 9. Contextual false-positive risk
     # --------------------------------------------------
@@ -623,59 +658,86 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
         and not ds.subject_boundary_strong
     )
     if ds.coverage_ratio > 0.20 and ds.separated_pair_count >= 8:
-        card.caution_penalty += 0.50
+        ledger.add('caution_penalty', 0.50, 'ds.coverage_ratio > 0.2 and ds.separated_pair_count >= 8')
     if ds.coverage_ratio > 0.28 and ds.local_signals_weak and ds.provenance_clean:
-        card.caution_penalty += 1.00
+        ledger.add('caution_penalty', 1.00, 'ds.coverage_ratio > 0.28 and ds.local_signals_weak and ds.provenance_clean')
     if ctx.natural_repetition:
-        card.caution_penalty += 0.75
+        ledger.add('caution_penalty', 0.75, 'ctx.natural_repetition')
     if ctx.decorative_geometric and ds.fft_structured:
-        card.caution_penalty += 0.50
+        ledger.add('caution_penalty', 0.50, 'ctx.decorative_geometric and ds.fft_structured')
     if ctx.smartphone_computational:
-        card.caution_penalty += 0.40
+        ledger.add('caution_penalty', 0.40, 'ctx.smartphone_computational')
     if ctx.screen_origin:
-        card.caution_penalty += 1.00
+        ledger.add('caution_penalty', 1.00, 'ctx.screen_origin')
     # Also include camera counter-support as caution
-    card.caution_penalty += card.camera_counter_support
-    # --------------------------------------------------
-    # 10. Final suspicious score
-    # --------------------------------------------------
-    card.suspicious_score += (
-        card.synthetic_boost
-        + card.edit_boost
-        + card.provenance_boost
-        + card.sensor_boost
-        + card.compression_boost
-    )
-    # Overweighted suspicious scores are best handled by multiplicative compression,
-    # not only subtraction. This preserves ranking while preventing runaway inflation.
-    if card.camera_counter_support >= 3.0:
-        card.suspicious_score *= 0.55
-    elif card.camera_counter_support >= 2.0:
-        card.suspicious_score *= 0.70
-    elif card.camera_counter_support >= 1.0:
-        card.suspicious_score *= 0.85
-    card.suspicious_score -= card.caution_penalty
-    card.suspicious_score = max(0.0, card.suspicious_score)
-    # --------------------------------------------------
-    # 11. Synthetic support from other domains
-    # --------------------------------------------------
-    card.synthetic_supported_by_other_domains = (
-        ds.metadata_synthetic
-        or ds.osint_ai_context
-        or ds.material_realism_strong
-    )
-    #-----------------------------------------------------------
-    # reliability
-    #-----------------------------------------------------------
+    ledger.add('caution_penalty', card.camera_counter_support, 'measured_camera_caution')
+    # Raw mechanism values include existing within-mechanism context transforms.
+    raw_contributions = {name: getattr(card, name) for name in COMPONENT_FIELDS}
+    raw_operation_count = len(ledger.operations)
+    measured_camera_support = card.camera_counter_support
+    photo_prior = has_real_photo_context_prior(ctx, ev, ds)
+    if photo_prior:
+        ledger.add("camera_counter_support", 1.5, "photo_context_routing_bonus")
+        ledger.add("caution_penalty", 1.0, "photo_context_caution")
+
+    # Reliability applies to observed local/edit support, not to an absent sensor.
+    boundary_applicable = card.local_edit_support_score > 0 or card.edit_boost > 0
     if ds.region_geometry_unreliable:
-        card.local_edit_support_score *= 0.45
-        card.edit_boost *= 0.45
-        card.suspicious_score *= 0.75
-        card.caution_penalty += 1.0
-        card.contextual_false_positive_risk = True        
-    if ds.boundary_reliability_score < 1.0:
-        card.local_edit_support_score *= ds.boundary_reliability_score
-        card.edit_boost *= ds.boundary_reliability_score
-        card.caution_penalty += (1.0 - ds.boundary_reliability_score)
-    
+        ledger.multiply("local_edit_support_score", 0.45, "region_geometry_reliability")
+        ledger.multiply("edit_boost", 0.45, "region_geometry_reliability")
+        ledger.add("caution_penalty", 1.0, "region_geometry_caution")
+        card.contextual_false_positive_risk = True
+    if boundary_applicable and ds.boundary_reliability_score < 1.0:
+        ledger.multiply("local_edit_support_score", ds.boundary_reliability_score, "boundary_reliability")
+        ledger.multiply("edit_boost", ds.boundary_reliability_score, "boundary_reliability")
+        ledger.add("caution_penalty", 1.0 - ds.boundary_reliability_score, "boundary_reliability_caution")
+
+    # The routing context bonus is separate from measured camera evidence. Keep
+    # the original measured-camera attenuation and explicit photo-prior factor.
+    camera_multiplier = camera_attenuation(measured_camera_support)
+    geometry_multiplier = 0.75 if ds.region_geometry_unreliable else 1.0
+    photo_multiplier = 0.70 if photo_prior else 1.0
+    subtotal = fsum([base_suspicious, *(getattr(card, name) for name in BOOST_FIELDS)])
+    card.suspicious_score = max(0.0, subtotal * camera_multiplier - card.caution_penalty) * geometry_multiplier * photo_multiplier
+    card.benign_score = base_benign
+    card.synthetic_supported_by_other_domains = (
+        ds.metadata_synthetic or ds.osint_ai_context or ds.material_realism_strong
+    )
+    finalize_component_allocations(numerical_audit, ledger.operations)
+    card.calculation = {
+        "calculation_version": "2a", "status": "valid",
+        "base_suspicious": base_suspicious, "base_benign": base_benign,
+        "base_evidence": base_evidence,
+        "numerical_deduplication": numerical_audit,
+        "domain_bonus": 0.25,
+        "component_operations": ledger.operations,
+        "raw_operation_count": raw_operation_count,
+        "raw_contributions": raw_contributions,
+        "final_contributions": {name: getattr(card, name) for name in COMPONENT_FIELDS},
+        "reliability_adjustments": {
+            "boundary_reliability": ds.boundary_reliability_score,
+            "boundary_adjustment_applicable": boundary_applicable,
+            "region_geometry_unreliable": ds.region_geometry_unreliable,
+            "geometry_mechanism_multiplier": 0.45 if ds.region_geometry_unreliable else 1.0,
+        },
+        "penalties": [item for item in ledger.operations if item["field"] == "caution_penalty"],
+        "aggregate_transforms": {
+            "measured_camera_support": measured_camera_support,
+            "camera_multiplier": camera_multiplier,
+            "geometry_multiplier": geometry_multiplier,
+            "photo_context_multiplier": photo_multiplier,
+            "photo_context_prior": photo_prior,
+            "suspicious_floor": 0.0,
+        },
+        "aggregate_scores": {"suspicious_score": card.suspicious_score, "benign_score": card.benign_score},
+    }
+    validate_scorecard(card)
     return card
+
+
+def has_real_photo_context_prior(ctx: HypothesisContext, ev: EvidenceSnapshot, ds: DerivedSignals) -> bool:
+    return bool(
+        ds.provenance_clean and not ds.metadata_synthetic
+        and ev.metadata is not None and ev.metadata.pattern == "camera_metadata_present"
+        and ctx.smartphone_computational
+    )

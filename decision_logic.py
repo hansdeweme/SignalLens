@@ -5,8 +5,9 @@
 #
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Callable
+from math import isfinite
 # Local imports 
 from gui_semantics import ModuleSummary
 from hypothesis_engine import (
@@ -19,6 +20,18 @@ from hypothesis_engine import (
     is_benign,
     weight,
     HypothesisAssessment,
+    DerivedSignals,
+    ScoreCard,
+    has_real_photo_context_prior,
+)
+from scorecard_integrity import ScorecardIntegrityError, available_sections
+from confidence_policy import (
+    Finding, Specificity, finding_specificity, AssessmentEvidence,
+    ConfidencePolicyResult, evaluate_confidence, generic_confidence,
+)
+from confidence_policy_inputs import snapshot_confidence_facts, coverage_limitations
+from production_corroboration import (
+    CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate,
 )
 from metadata_evidence import (
     ProvenanceState, metadata_provenance_state,
@@ -39,7 +52,7 @@ def _section_snapshot(sections: dict[str, ModuleSummary]) -> dict[str, dict]:
             "status": s.status,
             "polarity": s.polarity,
             "pattern": s.pattern,
-            "score": float(s.score) if s.score is not None else None,
+            "score": _jsonable_scalar(s.score),
             "note": s.note,
         }
     return snapshot
@@ -54,6 +67,8 @@ def _object_to_dict(obj) -> dict:
     if hasattr(obj, "__dataclass_fields__"):
         out = {}
         for k in obj.__dataclass_fields__.keys():
+            if obj.__dataclass_fields__[k].metadata.get("trace_exclude"):
+                continue
             v = getattr(obj, k)
             out[k] = _jsonable_scalar(v)
         return out
@@ -62,6 +77,8 @@ def _object_to_dict(obj) -> dict:
     return {}
 
 def _jsonable_scalar(v):
+    if isinstance(v, float) and not isfinite(v):
+        return None
     if isinstance(v, (str, int, float, bool)) or v is None:
         return v
     if hasattr(v, "__dataclass_fields__") or hasattr(v, "__dict__"):
@@ -73,7 +90,8 @@ def _jsonable_scalar(v):
     if isinstance(v, dict):
         return {str(k): _jsonable_scalar(val) for k, val in v.items()}
     try:
-        return float(v)
+        number = float(v)
+        return number if isfinite(number) else None
     except Exception:
         return str(v)
 
@@ -95,6 +113,8 @@ def _build_reasoning_trace(
     primary_hypothesis: str | None = None,
     selection_reason: str | None = None,
     confidence_rationale: list[str] | None = None,
+    corroboration_gates: list[dict] | None = None,
+    confidence_policy_results: list[ConfidencePolicyResult] | None = None,
 ) -> dict:
     assessment = next((h for h in (hypotheses or []) if h.hypothesis_id == primary_hypothesis), None)
     presentation = evidence_presentation(assessment)
@@ -112,6 +132,19 @@ def _build_reasoning_trace(
         "evidence_snapshot": _object_to_dict(ev),
         "derived_signals": _object_to_dict(ds),
         "scorecard": _object_to_dict(card),
+        "scorecard_calculation": _jsonable_scalar(card.calculation),
+        "confidence_policy": {
+            "version": "3", "primary_hypothesis": primary_hypothesis,
+            "assessments": [_object_to_dict(item) for item in (confidence_policy_results or [])],
+        },
+        "corroboration_audit": {
+            "version": "2b3",
+            "evaluated_gates": _jsonable_scalar(sorted(corroboration_gates or [], key=lambda item: item['gate_id'])),
+            "limitations": [
+                "Measurement-disjoint ancestry is a structural diversity check, not statistical independence.",
+                "Compound conditions allow related interpretations. Production base-credit allocation is audited separately; shadow policy remains diagnostic.",
+            ],
+        },
         "decision_route_trace": [
             _object_to_dict(item) for item in (route_trace or [])
         ],        
@@ -127,7 +160,7 @@ def _build_reasoning_trace(
             "dominant_pattern": dominant_pattern,
             "confidence_tier": confidence_tier,
             "polarity": polarity,
-            **presentation,
+            **_jsonable_scalar(presentation),
             "confidence_rationale": rationale,
             "overall_text": overall_text,
         },
@@ -139,6 +172,7 @@ def _build_reasoning_trace(
 # We do NOT pass DerivedSignals. Instead, re-derive minimal logic from sections.
 
 def determine_dominant_pattern(sections):
+    sections = available_sections(sections)
     # ----------------------------
     # Extract sections safely
     # ----------------------------
@@ -258,26 +292,34 @@ def determine_dominant_pattern(sections):
     return "inconclusive"
 
 # same principle
-def determine_confidence(card, sections):
+def determine_confidence(card, sections, *, corroboration_gates=None):
     mat = sections.get("subject_material_realism")
     asym = sections.get("subject_process_asymmetry")
     boundary = sections.get("boundary")
     cross = sections.get("cross_signal")
     mat_score = mat.score if mat and mat.score is not None else 0.0
-    strong_signals = sum([
-        mat_score >= 0.58,
-        bool(asym and asym.pattern == "subject_process_asymmetry_strong"),
-        bool(boundary and boundary.pattern == "possible_foreground_background_processing_mismatch"),
-        bool(cross and cross.pattern == "strong_hotspot_convergence"),
-    ])
+    from numbers import Real
+    considered = [key for key, matched in (
+        ('subject_material_realism', isinstance(mat_score, Real) and not isinstance(mat_score, bool) and isfinite(mat_score) and mat_score >= 0.58),
+        ('subject_process_asymmetry', bool(asym and asym.pattern == 'subject_process_asymmetry_strong')),
+        ('boundary', bool(boundary and boundary.pattern == 'possible_foreground_background_processing_mismatch')),
+        ('cross_signal', bool(cross and cross.pattern == 'strong_hotspot_convergence')),
+    ) if matched]
+    active = available_sections(sections)
+    strong_signals = sum(key in active and active[key].polarity == 'suspicious' for key in considered)
+    source_check = evaluate_corroboration(
+        sections, ['evidence:' + key for key in considered],
+        CorroborationRequirement('confidence.strong_source_diversity', 'unresolved_anomaly',
+            RequirementKind.DISTINCT_SOURCES, minimum_indicators=2, minimum_sources=2),
+    )
     score = card.suspicious_score
-    if strong_signals >= 2 and score >= 3.0:
-        return "High"
-    if strong_signals >= 1 and score >= 2.0:
-        return "Medium"
-    if score >= 1.2:
-        return "Low"
-    return "Inconclusive"
+    source_check.update(observed_strong_indicator_count=strong_signals,
+        score_requirement_satisfied=score >= 3.0,
+        gate_passed=source_check['requirement_satisfied'] and score >= 3.0,
+        production_correction='Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged.')
+    record_gate(corroboration_gates, source_check)
+    # Compatibility helper; authoritative generic thresholds live in the policy.
+    return generic_confidence(score, strong_signals, source_check['requirement_satisfied'])[0]
 
 def extract_secondary_patterns(
     sections: dict[str, ModuleSummary],
@@ -380,6 +422,8 @@ def build_confidence_rationale(
     module counts cannot establish a mechanism or statistical independence.
     """
     reasons = [selection_reason] if selection_reason else []
+    if assessment is not None and assessment.confidence_policy_rule:
+        return reasons + list(assessment.confidence_rationale)
     if assessment is None:
         reasons.append("No hypothesis-scoped assessment was supplied; aggregate scores alone do not identify a mechanism.")
         return reasons
@@ -426,6 +470,8 @@ class DecisionRouteTraceItem:
     hypothesis_id: str | None = None
     selected: bool = False
     disposition: str | None = None
+    legacy_confidence: str | None = None
+    confidence_source: str | None = None
 
 @dataclass
 class DecisionEnv:
@@ -442,6 +488,9 @@ class DecisionEnv:
     hypotheses: list[HypothesisAssessment] = field(default_factory=list)
     primary_hypothesis: str | None = None
     selection_reason: str | None = None
+    corroboration_gates: list[dict] = field(default_factory=list)
+    confidence_policy_results: list[ConfidencePolicyResult] = field(default_factory=list)
+    coverage_limitations: tuple[str, ...] = ()
 
 @dataclass(frozen=True)
 class DecisionResult:
@@ -451,6 +500,11 @@ class DecisionResult:
     polarity: str
     branch: str
     debug_message: str | None = None
+    finding: Finding = Finding.UNSPECIFIED
+
+    @property
+    def specificity(self):
+        return finding_specificity(self.finding)
     
 #---------------------------------------------------
 # context info set into the GUI by analist
@@ -540,10 +594,23 @@ def _boundary_corroborated(env: DecisionEnv) -> bool:
     for section in (boundary_focus_section, subject_boundary_section, boundary_section):
         if section is not None and section.score is not None:
             boundary_specific_strength = max(boundary_specific_strength, float(section.score))
-    return (
+    passed = (
         boundary_corroboration_count >= 2
         and boundary_specific_strength >= 0.45
     )
+    check = evaluate_corroboration(
+        env.sections, ['evidence:' + key for key, supported in (
+            ('boundary', boundary_signal_strong), ('boundary_focus', boundary_focus_strong),
+            ('subject_boundary', subject_boundary_strong), ('segmentation_alignment', segmentation_alignment_supportive),
+        ) if supported],
+        CorroborationRequirement('boundary.compound_support', 'localized_editing',
+            RequirementKind.COMPOUND, minimum_indicators=2),
+    )
+    check.update(strength_requirement_satisfied=boundary_specific_strength >= 0.45,
+        gate_passed=passed, production_condition_changed=False,
+        interpretation='Related boundary checks establish compound spatial/processing agreement; they are not counted as separate independent measurement sources.')
+    record_gate(env.corroboration_gates, check)
+    return passed
 
 def _photo_like_clean_signals(env: DecisionEnv) -> bool:
     ev = env.ev
@@ -601,23 +668,22 @@ def build_decision_env(
 ) -> DecisionEnv:
     ctx = build_context(scene_context)
     ev = build_evidence_snapshot(sections)
-    ds = derive_signals(ev)
-    card = compute_scorecard(sections, ctx, ev, ds)
-    metadata = ev.metadata
-    real_photo_context_prior = (
-        ds.provenance_clean
-        and not ds.metadata_synthetic
-        and metadata is not None
-        and metadata.pattern == "camera_metadata_present"
-        and bool(getattr(ctx, "smartphone_computational", False))
-    )
-    if real_photo_context_prior:
-        card.camera_counter_support += 1.5
-        card.caution_penalty += 1.0
-        card.suspicious_score *= 0.70
-    dominant_pattern = determine_dominant_pattern(sections)
+    try:
+        ds = derive_signals(ev)
+        card = compute_scorecard(sections, ctx, ev, ds)
+        real_photo_context_prior = has_real_photo_context_prior(ctx, ev, ds)
+        dominant_pattern = determine_dominant_pattern(sections)
+    except ScorecardIntegrityError as exc:
+        ds = DerivedSignals()
+        card = ScoreCard(is_valid=False, validation_errors=[str(exc)], calculation={
+            "calculation_version": "2a", "status": "invalid", "errors": [str(exc)],
+        })
+        dominant_pattern = "scorecard_invalid"
+        real_photo_context_prior = False
     if card.camera_counter_support >= 2.5 and ds.local_signals_weak:
         dominant_pattern = "photo_like_consistency_supported"
+    corroboration_gates = []
+    confidence_tier = determine_confidence(card, sections, corroboration_gates=corroboration_gates) if card.is_valid else "Inconclusive"
     return DecisionEnv(
         sections=sections,
         ctx=ctx,
@@ -625,10 +691,11 @@ def build_decision_env(
         ds=ds,
         card=card,
         dominant_pattern=dominant_pattern,
-        confidence_tier=determine_confidence(card, sections),
+        confidence_tier=confidence_tier,
         real_photo_context_prior=real_photo_context_prior,
         analysis_mode=analysis_mode,
         route_trace=[],
+        corroboration_gates=corroboration_gates,
     )
 
 def finish_decision(
@@ -637,6 +704,19 @@ def finish_decision(
     debug_lines: list[str] | None = None,
     debug: bool = False,
 ) -> tuple[str | None, str, str, str, dict]:
+    if not env.confidence_policy_results:
+        if not env.hypotheses:
+            env.primary_hypothesis = 'unresolved_anomaly'
+            env.hypotheses = [HypothesisAssessment(hypothesis_id='unresolved_anomaly', polarity=result.polarity)]
+        result = _apply_confidence_policy(env, (), result)
+    authoritative = {item.hypothesis:item for item in env.confidence_policy_results}
+    for assessment in env.hypotheses:
+        policy = authoritative[assessment.hypothesis_id]
+        assessment.confidence_tier = policy.tier
+        assessment.confidence_policy_rule = policy.policy_rule
+        assessment.confidence_rationale = list(policy.rationale)
+    primary_policy = next(h for h in env.hypotheses if h.hypothesis_id == env.primary_hypothesis)
+    result = replace(result, confidence=primary_policy.confidence_tier)
     if debug:
         print("\n--- SYNTHESIS DEBUG REPORT ---")
         for line in debug_lines or []:
@@ -664,6 +744,8 @@ def finish_decision(
         text = append_hypothesis_evidence(text, assessment)
         if assessment.limitations:
             text += "Limitations: " + " ".join(assessment.limitations) + "\n"
+        if assessment.confidence_policy_rule:
+            text += "Confidence policy rule: " + assessment.confidence_policy_rule + "\n"
     reasoning_trace = _build_reasoning_trace(
         sections=env.sections,
         ctx=env.ctx,
@@ -682,6 +764,8 @@ def finish_decision(
         primary_hypothesis=env.primary_hypothesis,
         selection_reason=env.selection_reason,
         confidence_rationale=rationale,
+        corroboration_gates=env.corroboration_gates,
+        confidence_policy_results=env.confidence_policy_results,
     )
     return (pattern, text, result.confidence, polarity, reasoning_trace)
 
@@ -701,6 +785,7 @@ def route_real_photo_context_prior(env: DecisionEnv) -> DecisionResult | None:
             "Medium",
             "neutral",
             "real_photo_context_moderates_suspicion",
+            finding=Finding.PHOTO_CONTEXT,
         )
     return None
 
@@ -713,6 +798,7 @@ def route_boundary_support_limited(env: DecisionEnv) -> DecisionResult | None:
             "Medium",
             "neutral",
             "boundary_support_limited_localized_processing",
+            finding=Finding.BOUNDARY_LIMITED,
         )
     return None
 
@@ -727,6 +813,7 @@ def route_region_geometry_unreliable(env: DecisionEnv) -> DecisionResult | None:
             "Medium",
             "neutral",
             "region_geometry_unreliable_localized_processing",
+            finding=Finding.GEOMETRY_LIMITED,
         )
     return None
 
@@ -750,6 +837,7 @@ def route_localized_multi_mechanism(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "localized_editing_multi_mechanism",
             "DECISION: localized_editing_multi_mechanism",
+            finding=Finding.MULTI_LOCAL,
         )
     return None
 
@@ -773,6 +861,7 @@ def route_strong_local_edit(env: DecisionEnv) -> DecisionResult | None:
                 "suspicious",
                 "possible_foreground_background_processing_mismatch",
                 "DECISION: possible_foreground_background_processing_mismatch",
+                finding=Finding.BOUNDARY_DECISIVE,
             )
         confidence = "Low" if env.card.camera_counter_support else "Medium"
         polarity = "neutral" if env.card.camera_counter_support else "suspicious"
@@ -788,6 +877,7 @@ def route_strong_local_edit(env: DecisionEnv) -> DecisionResult | None:
             polarity,
             "localized_processing_inconclusive",
             "DECISION: localized_processing_inconclusive",
+            finding=Finding.LOCAL_UNCERTAIN,
         )
     return None
 
@@ -807,6 +897,7 @@ def route_clone_reuse(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "possible_clone_reuse",
             "DECISION: possible_clone_reuse",
+            finding=Finding.CLONE_DECISIVE,
         )
     return None
 
@@ -828,6 +919,7 @@ def route_moderated_local_edit(env: DecisionEnv) -> DecisionResult | None:
                 "suspicious",
                 "possible_foreground_background_processing_mismatch_moderated",
                 "DECISION: possible_foreground_background_processing_mismatch (moderated)",
+                finding=Finding.BOUNDARY_SUPPORTED,
             )
         return DecisionResult(
             "localized_editing_inconclusive",
@@ -840,6 +932,7 @@ def route_moderated_local_edit(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "localized_editing_inconclusive",
             "DECISION: localized_editing_inconclusive",
+            finding=Finding.LOCAL_WEAK,
         )
     return None
 
@@ -853,6 +946,7 @@ def route_clone_ambiguous(env: DecisionEnv) -> DecisionResult | None:
                 "neutral",
                 "clone_ambiguous → camera counterforce override",
                 "DECISION: clone_ambiguous → camera counterforce override",
+                finding=Finding.CLONE_CAMERA_AMBIGUOUS,
             )
         if env.ds.material_realism_strong:
             return DecisionResult(
@@ -862,6 +956,7 @@ def route_clone_ambiguous(env: DecisionEnv) -> DecisionResult | None:
                 "neutral",
                 "clone_ambiguous → realism override",
                 "DECISION: clone_ambiguous → realism override",
+                finding=Finding.CLONE_MATERIAL_AMBIGUOUS,
             )
         return DecisionResult(
             "possible_clone_reuse",
@@ -870,6 +965,7 @@ def route_clone_ambiguous(env: DecisionEnv) -> DecisionResult | None:
             "neutral",
             "possible_clone_reuse (ambiguous)",
             "DECISION: possible_clone_reuse (ambiguous)",
+            finding=Finding.CLONE_AMBIGUOUS,
         )
     return None
 
@@ -898,10 +994,25 @@ def route_structured_recurrence_inconclusive(env: DecisionEnv) -> DecisionResult
             "neutral",
             "structured_recurrence_inconclusive",
             "DECISION: structured_recurrence_inconclusive",
+            finding=Finding.RECURRENCE_CAUTION,
         )
     return None
 
 def route_synthetic_multi_signal(env: DecisionEnv) -> DecisionResult | None:
+    # These are compound patterns / accumulation, not separate-source tests.
+    for gate_id, keys, matched, kind in (
+        ('synthetic.fft_patch_compound', [('fft', env.ds.fft_structured), ('patch_similarity', env.ds.patch_structured)],
+            env.ds.fft_structured and env.ds.patch_structured, RequirementKind.COMPOUND),
+        ('synthetic.material_asymmetry_compound', [('subject_material_realism', env.ds.material_realism_strong), ('subject_process_asymmetry', env.ds.subject_process_asymmetry_strong)],
+            env.ds.material_realism_strong and env.ds.subject_process_asymmetry_strong and not env.ds.region_geometry_unreliable, RequirementKind.COMPOUND),
+        ('synthetic.additional_support_flag', [('metadata', env.ds.metadata_synthetic), ('osint', env.ds.osint_ai_context), ('subject_material_realism', env.ds.material_realism_strong)],
+            env.card.synthetic_supported_by_other_domains, RequirementKind.ACCUMULATION),
+    ):
+        check = evaluate_corroboration(env.sections, ['evidence:' + key for key, active in keys if active],
+            CorroborationRequirement(gate_id, 'synthetic_origin', kind, minimum_indicators=2 if kind == RequirementKind.COMPOUND else 1))
+        check.update(gate_passed=bool(matched), production_condition_changed=False,
+            interpretation='Existing compound/accumulation predicate retained; no claim of independent corroboration.')
+        record_gate(env.corroboration_gates, check)
     if (
         env.card.synthetic_boost >= 1.0
         and env.card.suspicious_score >= 5.0
@@ -926,6 +1037,7 @@ def route_synthetic_multi_signal(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "synthetic_multi_signal_convergence",
             "DECISION: synthetic_multi_signal_convergence",
+            finding=Finding.VISUAL_GENERATION,
         )
     return None
 
@@ -943,6 +1055,7 @@ def route_localized_processing(env: DecisionEnv) -> DecisionResult | None:
             "neutral",
             "localized_processing_inconclusive",
             "DECISION: localized_processing_inconclusive",
+            finding=Finding.LOCAL_PROCESSING,
         )
     return None
 
@@ -957,6 +1070,7 @@ def route_subject_boundary(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "possible_subject_background_segmentation_artifact",
             "DECISION: possible_subject_background_segmentation_artifact",
+            finding=Finding.SUBJECT_BOUNDARY,
         )
     return None
 
@@ -978,6 +1092,7 @@ def route_unreliable_boundary_context(env: DecisionEnv) -> DecisionResult | None
             "Medium",
             "neutral",
             "boundary_evidence_unreliable_context_moderated",
+            finding=Finding.UNRELIABLE_BOUNDARY,
         )
     return None
 
@@ -996,6 +1111,7 @@ def route_boundary_transition(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "possible_boundary_transition_inconsistency",
             "DECISION: possible_boundary_transition_inconsistency",
+            finding=Finding.BOUNDARY_TRANSITION,
         )
     return None
 
@@ -1010,6 +1126,7 @@ def route_provenance(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "provenance_supported_synthetic_context",
             "DECISION: provenance_supported_synthetic_context",
+            finding=Finding.GENERATION_DECLARATION,
         )
     if state == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION:
         return DecisionResult(
@@ -1017,6 +1134,7 @@ def route_provenance(env: DecisionEnv) -> DecisionResult | None:
             "Metadata declares enhancement or generative editing; metadata authenticity is unverified. "
             "This supports a declared processing context, not whole-image synthetic generation or a specific localized mechanism.",
             "Medium", "suspicious", "provenance_supported_enhancement_context",
+            finding=Finding.ENHANCEMENT_DECLARATION,
         )
     if env.ds.osint_ai_context:
         return DecisionResult(
@@ -1024,6 +1142,7 @@ def route_provenance(env: DecisionEnv) -> DecisionResult | None:
             "An AI-gallery source provides contextual support for synthetic origin. "
             "Source context does not authenticate this image's creation history.",
             "Low", "suspicious", "osint_synthetic_context",
+            finding=Finding.SOURCE_CONTEXT,
         )
     return None
 
@@ -1046,6 +1165,7 @@ def route_camera_like(env: DecisionEnv) -> DecisionResult | None:
             "benign",
             pattern,
             "DECISION: camera_like_acquisition_supported",
+            finding=Finding.CAMERA_COMPATIBLE,
         )
     return None
 
@@ -1078,6 +1198,7 @@ def route_multi_signal_suspicious(env: DecisionEnv) -> DecisionResult | None:
             "suspicious",
             "multi_signal_suspicious_convergence",
             "DECISION: multi_signal_suspicious_convergence",
+            finding=Finding.ANOMALY_ACCUMULATION,
         )
     return None
 
@@ -1094,6 +1215,7 @@ def route_moderate_suspicious(env: DecisionEnv) -> DecisionResult | None:
             env.confidence_tier,
             "suspicious",
             "moderate_suspicious_convergence",
+            finding=Finding.GENERAL_ANOMALY,
         )
     return None
 
@@ -1113,6 +1235,7 @@ def route_photo_like_consistency(env: DecisionEnv) -> DecisionResult | None:
             "benign",
             "photo_like_consistency_supported",
             "DECISION: photo_like_consistency_supported",
+            finding=Finding.PHOTO_CONSISTENCY,
         )
     return None
 
@@ -1135,6 +1258,7 @@ def route_fallback(env: DecisionEnv) -> DecisionResult:
         polarity=fallback_polarity,
         branch="helper_driven_fallback",
         debug_message="DECISION: helper_driven_fallback",
+        finding=Finding.FALLBACK,
     )
 
 @dataclass(frozen=True)
@@ -1173,12 +1297,51 @@ DECISION_ROUTES = (
 
 def _specific_finding(result: DecisionResult | None) -> bool:
     return bool(result and result.polarity == "suspicious"
-                and result.confidence in {"Medium", "High"}
-                and "inconclusive" not in (result.pattern or ""))
+                and result.specificity in {Specificity.SPECIFIC, Specificity.DECISIVE})
+
+
+def _apply_confidence_policy(env, candidates, selected):
+    findings = {}
+    for spec, result in candidates:
+        findings.setdefault(spec.hypothesis_id, []).append(result.finding)
+    facts = snapshot_confidence_facts(env.sections, env.card, env.ds, env.corroboration_gates, findings,
+        coverage=env.coverage_limitations)
+    policy_results = []
+    for assessment in env.hypotheses:
+        policy = evaluate_confidence(AssessmentEvidence.from_assessment(assessment), facts)
+        assessment.confidence_tier = policy.tier
+        assessment.confidence_policy_rule = policy.policy_rule
+        assessment.confidence_rationale = list(policy.rationale)
+        assessment.limitations = list(policy.reliability_limitations)
+        policy_results.append(policy)
+    env.confidence_policy_results = policy_results
+    by_hypothesis = {item.hypothesis:item for item in policy_results}
+    for item in env.route_trace or []:
+        if item.matched:
+            item.legacy_confidence = item.confidence
+            policy = by_hypothesis.get(item.hypothesis_id)
+            item.confidence = policy.tier if policy else None
+            item.confidence_source = policy.policy_rule if policy else 'legacy_alternative_not_assessed'
+    return replace(selected, confidence=by_hypothesis[env.primary_hypothesis].tier)
 
 
 def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     """Evaluate every candidate, then apply scoped safeguards and synthesis rules."""
+    # Retain the confidence gate that established env.confidence_tier; rebuild
+    # candidate-specific audits so a reused environment cannot retain old gates.
+    env.corroboration_gates[:] = [entry for entry in env.corroboration_gates
+        if entry['gate_id'] == 'confidence.strong_source_diversity']
+    env.confidence_policy_results = []
+    if not env.card.is_valid:
+        explanation = "Scorecard calculation is invalid; a forensic conclusion is withheld. " + "; ".join(env.card.validation_errors)
+        env.primary_hypothesis = "unresolved_anomaly"
+        env.selection_reason = explanation
+        env.route_trace = []
+        env.hypotheses = [HypothesisAssessment(
+            hypothesis_id=name, explanation="Assessment withheld because scorecard integrity failed.",
+            limitations=list(env.card.validation_errors), decision_branch="scorecard_integrity_failure",
+        ) for name in ("synthetic_origin", "localized_editing", "camera_acquisition", "unresolved_anomaly")]
+        return _apply_confidence_policy(env, (), DecisionResult("scorecard_invalid", explanation, "Inconclusive", "neutral", "scorecard_integrity_failure", finding=Finding.INVALID))
     candidates: list[tuple[DecisionRoute, DecisionResult]] = []
     env.route_trace = []
     for spec in DECISION_ROUTES if routes is None else routes:
@@ -1201,8 +1364,8 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     local = group("localized_editing")
     safeguards = [(s, r) for s, r in local if s.boundary_safeguard]
     if safeguards:
-        independent_clone = [(s, r) for s, r in local if s.evaluate == route_clone_reuse]
-        local_choice = (independent_clone or safeguards)[0]
+        clone_specific = [(s, r) for s, r in local if s.evaluate == route_clone_reuse]
+        local_choice = (clone_specific or safeguards)[0]
     else:
         local_choice = local[0] if local else None
     synthetic = group("synthetic_origin")
@@ -1216,7 +1379,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
 
     # Evidence of a specific local mechanism has priority over unverified metadata;
     # supported visual generation can lead when local corroboration is weaker.
-    if _specific_finding(local_result) and local_result.confidence == "High":
+    if _specific_finding(local_result) and local_result.specificity == Specificity.DECISIVE:
         chosen = local_choice
         why = "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately."
     elif _specific_finding(synthetic_result) and synthetic_choice[0].evaluate == route_synthetic_multi_signal:
@@ -1227,7 +1390,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
         why = "A supported localized mechanism leads over unverified generation context; neither establishes the other."
     elif _specific_finding(synthetic_result):
         chosen = synthetic_choice
-        why = "An explicit unverified declaration supports AI-mediated creation independently of inconclusive localized editing."
+        why = "An explicit unverified declaration supports AI-mediated creation without requiring a conclusive localized-editing result."
     elif local_choice:
         chosen = local_choice
         why = "Localized evidence remains limited by its own corroboration or reliability safeguards."
@@ -1277,7 +1440,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
         HypothesisAssessment(
             hypothesis_id="synthetic_origin",
             polarity=synthetic_result.polarity if synthetic_result else "neutral",
-            confidence_tier=synthetic_result.confidence if synthetic_result else "Inconclusive",
+            confidence_tier="Inconclusive",  # Placeholder until scoped policy evaluation.
             limitations=synthetic_limits,
             decision_branch=synthetic_result.branch if synthetic_result else None,
             explanation=synthetic_result.text if synthetic_result else "Synthetic origin is not established by the available evidence.",
@@ -1285,14 +1448,14 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
         HypothesisAssessment(
             hypothesis_id="localized_editing",
             polarity=local_result.polarity if local_result else "neutral",
-            confidence_tier=local_result.confidence if local_result else "Inconclusive",
+            confidence_tier="Inconclusive",
             limitations=local_limits,
             decision_branch=local_result.branch if local_result else None,
             explanation=local_result.text if local_result else "A specific localized-editing mechanism is not established.",
         ),
         HypothesisAssessment(
             hypothesis_id="camera_acquisition", polarity="benign" if camera_ids else "neutral",
-            confidence_tier="Medium" if camera_ids else "Inconclusive",
+            confidence_tier="Inconclusive",
             limitations=["Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing."],
             decision_branch="camera_acquisition_compatibility" if camera_ids else None,
             explanation="Camera-like acquisition evidence is present." if camera_ids else "Camera acquisition is not established.",
@@ -1301,13 +1464,12 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     if chosen[0].hypothesis_id == "unresolved_anomaly":
         env.hypotheses.append(HypothesisAssessment(
             hypothesis_id="unresolved_anomaly", polarity=chosen[1].polarity,
-            confidence_tier=chosen[1].confidence, decision_branch=chosen[1].branch,
+            confidence_tier="Inconclusive", decision_branch=chosen[1].branch,
             explanation=chosen[1].text,
             limitations=["An unresolved anomaly is not evidence of a particular origin or editing mechanism."],
         ))
     elif chosen[0].hypothesis_id == "camera_acquisition":
         camera_assessment = env.hypotheses[2]
-        camera_assessment.confidence_tier = chosen[1].confidence
         camera_assessment.polarity = chosen[1].polarity
         camera_assessment.decision_branch = chosen[1].branch
         camera_assessment.explanation = chosen[1].text
@@ -1335,7 +1497,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
                                     local_choice[0].evaluate.__name__ if local_choice else "",
                                     synthetic_choice[0].evaluate.__name__ if synthetic_choice else "",
                                 } else "alternative_candidate; scoped safeguards and specificity rules apply")
-    return chosen[1]
+    return _apply_confidence_policy(env, candidates, chosen[1])
 
 
 def synthesize_overall(
@@ -1343,6 +1505,9 @@ def synthesize_overall(
     scene_context: dict | None = None, 
     debug: bool = False, 
     analysis_mode: str | None = None,
+    *,
+    evidence_dependency_shadow: bool = False,
+    analysis_coverage: dict | None = None,
     ) -> tuple[str | None, str, str, str, dict]:
     """
     Overall synthesis, returns: overall_pattern, overall_text, overall_confidence, overall_polarity, decision
@@ -1354,9 +1519,11 @@ def synthesize_overall(
         scene_context=scene_context,
         analysis_mode=analysis_mode,
     )
-    base_suspicious_score, base_benign_score, suspicious_domains, benign_domains = (
-        compute_base_scores(sections)
-    )
+    env.coverage_limitations = coverage_limitations(analysis_coverage)
+    if env.card.is_valid:
+        base_suspicious_score, base_benign_score, suspicious_domains, benign_domains = compute_base_scores(sections)
+    else:
+        base_suspicious_score, base_benign_score, suspicious_domains, benign_domains = 0.0, 0.0, set(), set()
     debug_lines: list[str] = [
         f"camera_like_support={env.ds.camera_like_support}",
         f"sensor_trace_inconsistency={env.ds.sensor_trace_inconsistency}",
@@ -1388,4 +1555,10 @@ def synthesize_overall(
     result = evaluate_hypotheses(env)
     debug_lines.append(f"PRIMARY HYPOTHESIS: {env.primary_hypothesis}")
     debug_lines.append(f"SELECTION: {env.selection_reason}")
-    return finish_decision(env, result, debug_lines=debug_lines, debug=debug)
+    finished = finish_decision(env, result, debug_lines=debug_lines, debug=debug)
+    if evidence_dependency_shadow:
+        from evidence_dependency_analysis import safe_dependency_analysis
+        finished[4]['evidence_dependency_analysis'] = safe_dependency_analysis(
+            sections, env.card, env.ds, context=env.ctx, hypotheses=env.hypotheses,
+        )
+    return finished

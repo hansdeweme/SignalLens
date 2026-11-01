@@ -70,7 +70,7 @@ def build_context_info(scene_context: dict | None) -> str:
         f"{context_str}."
     )
 
-def build_summary_result(state, osint_result=None, scene_context: dict | None = None) -> SummaryResult:
+def build_summary_result(state, osint_result=None, scene_context: dict | None = None, *, evidence_dependency_shadow: bool = False) -> SummaryResult:
     """
     Main orchestration entrypoint for building a full SummaryResult.
     Responsibilities:
@@ -141,23 +141,14 @@ def build_summary_result(state, osint_result=None, scene_context: dict | None = 
     result.module_scores = extract_module_scores(result.sections)
     # Overall decision
     analysis_mode=getattr(state, "analysis_mode", None)
-    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, )    # Rendered outputs
     coverage = getattr(state, "analysis_coverage", {})
+    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, evidence_dependency_shadow=evidence_dependency_shadow, analysis_coverage=coverage)    # Rendered outputs
     if coverage:
         result.reasoning_trace["pipeline_status"] = {
             "coverage": coverage, "mask_diagnostics": getattr(state, "mask_diagnostics", {}), "stages": statuses,
         }
-        if coverage.get("status") == "partial":
-            limitation = (
-                "Analysis coverage is incomplete. Unavailable stages: "
-                + ", ".join(coverage.get("unavailable_stages", []))
-                + ". Missing regional evidence supports neither authenticity nor synthetic origin."
-            )
-            result.overall_text = result.overall_text.rstrip() + "\n\nCoverage limitation: " + limitation + "\n"
-            result.reasoning_trace["decision"]["overall_text"] = result.overall_text
-            result.reasoning_trace["decision"]["limitations"].append(limitation)
-            for assessment in result.reasoning_trace.get("hypothesis_assessments", []):
-                assessment["limitations"].append(limitation)
+        # Coverage limitations already passed through the authoritative policy;
+        # do not mutate hypothesis limitations independently after synthesis.
     result.full_text = render_summary_text(result)
     result.full_html = render_summary_html(result)
     return result

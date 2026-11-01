@@ -311,6 +311,63 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
     derived = reasoning_trace.get("derived_signals", {}) or {}
     sections = reasoning_trace.get("section_snapshot", {}) or {}
     pipeline = reasoning_trace.get("pipeline_status", {})
+    policy = reasoning_trace.get('confidence_policy')
+    if policy:
+        _add_heading(lines, 'Confidence Policy')
+        _add_kv(lines, 'Version', policy.get('version'))
+        _add_kv(lines, 'Primary Hypothesis', policy.get('primary_hypothesis'))
+        for assessment in policy.get('assessments', []):
+            _add_kv(lines, assessment['hypothesis'], assessment['tier'] + ' / ' + assessment['policy_rule'])
+            _add_list(lines, 'Policy Rationale', assessment['rationale'])
+            _add_list(lines, 'Policy Limitations', assessment['reliability_limitations'])
+        lines.append('')
+    corroboration = reasoning_trace.get('corroboration_audit')
+    if corroboration:
+        _add_heading(lines, 'Production Corroboration Audit')
+        _add_kv(lines, 'Version', corroboration.get('version'))
+        for gate in corroboration.get('evaluated_gates', []):
+            lines.append(f"- {gate['gate_id']}: passed={gate.get('gate_passed', gate['requirement_satisfied'])}; {gate['explanation']}")
+            _add_kv(lines, '  Eligible Evidence', gate['eligible_evidence'])
+            _add_kv(lines, '  Distinct Ancestry Groups', gate['distinct_ancestry_groups'])
+            _add_kv(lines, '  Shared Ancestry', gate['shared_ancestry'])
+        _add_list(lines, 'Corroboration Limitations', corroboration.get('limitations'))
+        lines.append('')
+    dependency = reasoning_trace.get('evidence_dependency_analysis')
+    if dependency:
+        _add_heading(lines, 'Evidence Dependency Analysis (Shadow Only)')
+        for key in ('lineage_version', 'status', 'policy', 'production_score_unchanged', 'comparison', 'families', 'shared_ancestry'):
+            _add_kv(lines, key, dependency.get(key))
+        _add_list(lines, 'Shadow Limitations', dependency.get('limitations'))
+        _add_list(lines, 'Shadow Errors', dependency.get('errors'))
+        lines.append('No shadow confidence tier or forensic decision is assigned.')
+        lines.append('')
+    calculation = reasoning_trace.get("scorecard_calculation")
+    if calculation:
+        _add_heading(lines, "Scorecard Calculation")
+        _add_kv(lines, "Version", calculation.get("calculation_version"))
+        _add_kv(lines, "Status", calculation.get("status"))
+        for key in ("base_suspicious", "base_benign", "raw_contributions", "final_contributions", "reliability_adjustments", "aggregate_transforms", "aggregate_scores"):
+            if key in calculation:
+                _add_kv(lines, key, calculation[key])
+        _add_list(lines, "Calculation Errors", calculation.get("errors"))
+        numerical = calculation.get('numerical_deduplication')
+        if numerical:
+            _add_heading(lines, 'Production Numerical Evidence Allocation')
+            _add_kv(lines, 'Version', numerical.get('version'))
+            _add_kv(lines, 'Base/domain reconciliation', numerical.get('aggregate_reconciliation'))
+            for item in numerical.get('contributions', []):
+                lines.append(
+                    f"- {item['evidence_id']} [{item['classification']}]: "
+                    f"raw={item['raw_contribution']}; credited={item['credited_contribution']}; "
+                    f"suppressed={item['suppressed_contribution']}; {item['reason']}"
+                )
+            _add_list(lines, 'Unresolved numerical relationships', numerical.get('unresolved_relationships'))
+            for item in numerical.get('component_allocations', []):
+                lines.append(f"- {item['field']} / {item['evidence_id']}: raw={item['raw_contribution']}; suppressed={item['suppressed_contribution']}; multiplier={item['reliability_multiplier']}; {item['reason']}")
+            lines.append('Base allocations precede aggregate attenuation, penalties and floor; shared ancestry does not establish independence.')
+        for operation in calculation.get("component_operations", []):
+            lines.append(f"- {operation['field']} {operation['operation']} {operation['operand']}: {operation['reason']}")
+        lines.append("")
     if pipeline:
         _add_heading(lines, "Pipeline Coverage")
         _add_kv(lines, "Coverage", pipeline.get("coverage", {}).get("status"))
