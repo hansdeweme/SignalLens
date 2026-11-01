@@ -1,7 +1,11 @@
+# metadata_evidence.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 """Shared metadata semantics. Presence and declarations are not authentication."""
 
 from enum import Enum
-
 
 class ProvenanceState(str, Enum):
     VERIFIED_GENERATION_ASSERTION = "verified_generation_assertion"

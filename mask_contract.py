@@ -1,9 +1,13 @@
+# mask_contract.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 """Mask availability and geometry contracts; no forensic scoring or calibration."""
 
 from enum import Enum
 from pathlib import Path
 import math
-
 import cv2
 import numpy as np
 
@@ -16,18 +20,14 @@ class MaskStatus(str, Enum):
     ERROR = "error"
     APPROXIMATE = "approximate"
 
-
 class StageUnavailable(Exception):
     """An expected lack of usable evidence, not an execution error."""
-
 
 class InvalidMaskPayload(ValueError):
     """A producer returned an incomplete or inconsistent mask contract."""
 
-
 PERSON_MASK_STATUSES = {MaskStatus.RELIABLE.value, MaskStatus.LIMITED.value}
 MASK_PATHS = ("subject_mask_path", "boundary_band_path", "background_mask_path")
-
 
 def person_mask_diagnostics(payload: dict | None, execution_error: str | None = None) -> dict:
     block = (payload or {}).get("person_subject_mask", {})
@@ -82,7 +82,6 @@ def person_mask_diagnostics(payload: dict | None, execution_error: str | None = 
         "disabled_stages": [],
     }
 
-
 def normalize_region_masks(
     payload: dict, *, mask_source: str, mask_reliability: str,
     mask_status: str, person_specific: bool, fallback_used: bool = False,
@@ -113,7 +112,6 @@ def normalize_region_masks(
     result = {**payload, "region_masks": masks}
     validate_region_masks(result, inspect_files=False)
     return result
-
 
 def validate_region_masks(payload: dict, *, inspect_files: bool = True) -> dict:
     if not isinstance(payload, dict) or not isinstance(payload.get("region_masks"), dict):
@@ -156,7 +154,6 @@ def validate_region_masks(payload: dict, *, inspect_files: bool = True) -> dict:
     if masks["subject_ratio"] <= 0 or masks["background_ratio"] <= 0 or masks["boundary_ratio"] <= 0:
         raise InvalidMaskPayload("Region masks require nonempty foreground, background and boundary.")
     return masks
-
 
 def require_person_geometry(payload: dict | None) -> dict:
     if payload is None:

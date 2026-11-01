@@ -1,4 +1,10 @@
 """Explicit evidence relationships for reporting; never changes scores or tiers."""
+# hypothesis_evidence.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
+
 
 from dataclasses import dataclass
 from typing import Literal
@@ -71,7 +77,6 @@ CAMERA_SUPPORT = {
     "sensor_origin": ("camera_like_acquisition_supported", "weak_camera_pipeline_supported"),
     "cfa_demosaic": ("camera_like_cfa_supported", "weak_camera_cfa_supported"),
 }
-
 
 def _rules() -> dict[tuple[str, str], tuple[EvidenceUse, ...]]:
     rules = {}
@@ -147,7 +152,6 @@ def _rules() -> dict[tuple[str, str], tuple[EvidenceUse, ...]]:
 
 
 EVIDENCE_RELATIONSHIPS = _rules()
-
 
 def scope_hypothesis_evidence(
     sections: dict[str, ModuleSummary], assessments: list[HypothesisAssessment], *,
@@ -263,7 +267,6 @@ def scope_hypothesis_evidence(
         for role in ROLE_TITLES:
             getattr(assessment, role).sort()
 
-
 def evidence_presentation(assessment: HypothesisAssessment | dict | None) -> dict:
     """Shared projection for JSON, GUI narrative and text reports."""
     data = assessment if isinstance(assessment, dict) else vars(assessment) if assessment else {}
@@ -281,7 +284,6 @@ def evidence_presentation(assessment: HypothesisAssessment | dict | None) -> dic
     result["limitations"] = list(data.get("limitations", []))
     result["evidence_details"] = details
     return result
-
 
 def append_hypothesis_evidence(text: str, assessment: HypothesisAssessment) -> str:
     presentation = evidence_presentation(assessment)

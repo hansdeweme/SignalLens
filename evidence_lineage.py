@@ -1,5 +1,10 @@
-"""Versioned, immutable measurement ancestry. A family is not independence.
+# evidence_lineage.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 
+"""Versioned, immutable measurement ancestry. A family is not independence.
 Registry follows the Phase 2B.1 code audit. Measurement IDs denote distinguishable
 feature extractions, not statistically independent samples or sensor attribution.
 """
@@ -7,10 +12,8 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from types import MappingProxyType
 
-
 class LineageError(ValueError):
     pass
-
 
 class Family(str, Enum):
     PROVENANCE = 'provenance'
@@ -25,12 +28,10 @@ class Family(str, Enum):
     CONTEXT = 'analyst_context'
     UNKNOWN = 'unknown'
 
-
 class Kind(str, Enum):
     PRIMARY = 'primary'
     DERIVED = 'derived'
     COMPOSITE = 'composite'
-
 
 class Addition(str, Enum):
     OBSERVATION = 'new_measurement'
@@ -39,7 +40,6 @@ class Addition(str, Enum):
     INTERPRETATION = 'interpretation'
     RESTATEMENT = 'restatement'
     CONTROL = 'reliability_or_context'
-
 
 @dataclass(frozen=True)
 class EvidenceSpec:
@@ -63,7 +63,6 @@ class EvidenceSpec:
                 raise LineageError('Evidence collections must be immutable unique text tuples: '+name)
         if self.addition==Addition.RESTATEMENT and self.measurements:
             raise LineageError('A pure restatement cannot declare a new measurement.')
-
 
 @dataclass(frozen=True)
 class LineageRecord:
@@ -130,7 +129,6 @@ _SPECS = (
     EvidenceSpec('scene_context','hypothesis_engine.build_context',Family.CONTEXT,(),addition=Addition.CONTROL),
 )
 
-
 def validate_registry(specs):
     records = tuple(specs)
     mapping = {s.key: s for s in records}
@@ -157,13 +155,10 @@ def validate_registry(specs):
         visit(key)
     return MappingProxyType(mapping)
 
-
 REGISTRY = validate_registry(_SPECS)
-
 
 def numerical_restatement_sources(key, pattern):
     """Pattern-specific equivalence, not a family-wide suppression rule.
-
     The fragment/partial fallback in classify_boundary_convergence only tests
     existing overlap thresholds. The contour-positive branch adds measured
     topology and deliberately is NOT in this contract. Cross and boundary are
@@ -175,10 +170,8 @@ def numerical_restatement_sources(key, pattern):
         return ('cross_signal',)
     return ()
 
-
 def build_lineage(sections, *, context=None, registry=REGISTRY):
     """Snapshot status/ancestry only; never retain summaries, details or arrays.
-
     Inconclusive detector interpretation can still provide a measured upstream
     feature (e.g. ELA/noise maps). It has no status-weighted scoring credit.
     Missing optional payloads do not invalidate a detector's own measurements.

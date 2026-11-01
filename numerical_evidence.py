@@ -1,5 +1,10 @@
-"""Production base-credit identity/restatement correction, without reweighting.
+# numerical_evidence.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 
+"""Production base-credit identity/restatement correction, without reweighting.
 Reuse the existing lineage graph. Shared ancestry alone never suppresses new
 localization or a related measurement. Component formulas keep their explicit
 scoring roles; this allocator does not treat them as independent observations.

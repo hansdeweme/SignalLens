@@ -1,7 +1,13 @@
+# marginal_corroboration.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 """Pure structural credit allocation; no learned weights or default family caps."""
+
 from dataclasses import asdict, dataclass
 from math import isfinite
-
+# local imports
 from evidence_lineage import Addition, Kind, LineageError
 
 

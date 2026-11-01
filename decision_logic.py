@@ -40,7 +40,7 @@ from hypothesis_evidence import scope_hypothesis_evidence, evidence_presentation
 from signal_language import humanize_signal
 
 #=============================================
-# Helpers tructured reasoning trace
+# Helpers structured reasoning trace
 #=============================================
 def _section_snapshot(sections: dict[str, ModuleSummary]) -> dict[str, dict]:
     snapshot: dict[str, dict] = {}

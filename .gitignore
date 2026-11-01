@@ -27,6 +27,12 @@ analyzed/
 prepared_images/
 exif_signals.json
 
+# Local validation artifacts relocated under documentation
+/doc/*_validation/
+/doc/final_acceptance_audit/
+/doc/git_baseline_review/
+/doc/phase2b_audit_protected_hashes.json
+
 # Local logs and temporary files
 *.log
 *.tmp

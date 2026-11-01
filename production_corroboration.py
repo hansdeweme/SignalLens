@@ -1,5 +1,10 @@
-"""Production corroboration semantics over Phase 2B.2 lineage.
+# production_corroboration.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 
+"""Production corroboration semantics over Phase 2B.2 lineage.
 Measurement-disjoint witnesses are a structural diversity check, never a test
 of statistical independence. Compound mechanisms retain related interpretations.
 """

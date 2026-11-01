@@ -1,5 +1,10 @@
-"""Hypothesis-scoped confidence policy, version 3 (heuristic, not probability).
+# confidence_policy.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 
+"""Hypothesis-scoped confidence policy, version 3 (heuristic, not probability).
 Route tiers/names and narrative text are deliberately absent from policy inputs.
 Rules consolidate existing mechanism constraints and generic 2B.3 corroboration.
 """

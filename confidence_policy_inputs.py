@@ -1,3 +1,9 @@
+# confidence_policy_inputs.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
+
 """Adapter from existing typed score/derived/gate data to immutable policy facts."""
 from confidence_policy import ConfidenceFacts
 from metadata_evidence import ProvenanceState

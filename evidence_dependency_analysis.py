@@ -1,5 +1,10 @@
-"""Optional shadow diagnostics over existing summaries and Phase 2A arithmetic.
+# evidence_dependency_analysis.py
+# Copyright (c) 2025, 2026 Hans De Weme
+# Licensed under the MIT License (https://opensource.org/licenses/MIT).
+#Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
+#
 
+"""Optional shadow diagnostics over existing summaries and Phase 2A arithmetic.
 No detector execution, production card mutation, routing or shadow confidence.
 """
 from collections import defaultdict
@@ -7,11 +12,10 @@ from dataclasses import asdict
 from math import fsum, isclose
 from hashlib import sha256
 import re
-
+# local imports
 from evidence_lineage import Addition, Family, Kind, LineageError, REGISTRY, build_lineage, lineage_to_json
 from marginal_corroboration import Contribution, allocate_marginal
 from scorecard_integrity import COMPONENT_FIELDS, reconstruct_scorecard_calculation
-
 
 # Exact aliases from derive_signals/compute_scorecard, not guessed detector edges.
 _SIGNAL_GROUPS = {
