@@ -1,0 +1,20 @@
+{
+  "instagram": {
+    "suspicious_score": true,
+    "benign_score": true,
+    "pattern": true,
+    "confidence": true,
+    "hypotheses": true,
+    "sha256_before": true,
+    "sha256_after": true
+  },
+  "midjourney": {
+    "suspicious_score": true,
+    "benign_score": true,
+    "pattern": true,
+    "confidence": true,
+    "hypotheses": true,
+    "sha256_before": true,
+    "sha256_after": true
+  }
+}

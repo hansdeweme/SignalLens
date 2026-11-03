@@ -1,0 +1,49 @@
+{
+  "stage": "person_subject_mask",
+  "image_path": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_backend_exception_inside_0\\synthetic.png",
+  "output_dir": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_backend_exception_inside_0\\out",
+  "frozen": false,
+  "executable": "C:\\Users\\hans\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "cwd": "D:\\Coding\\SignalLens",
+  "app_dir": "D:\\Coding\\SignalLens",
+  "_MEIPASS": "",
+  "selfie_segmenter_resource_path": "D:\\Coding\\SignalLens\\selfie_segmenter.tflite",
+  "selfie_segmenter_resource_exists": true,
+  "detection_backend": "fallback_center_subject",
+  "backend_error": "synthetic backend exception",
+  "person_detected": false,
+  "person_count": 0,
+  "detector_confidence": 0.0,
+  "mask_shape": [
+    64,
+    64
+  ],
+  "mask_nonzero": 2422,
+  "mask_area_ratio": 0.59130859375,
+  "quality": {
+    "pattern": "person_subject_mask_unreliable",
+    "person_detected": false,
+    "detector_confidence": 0.0,
+    "subject_area_ratio": 0.59130859375,
+    "largest_component_ratio": 1.0,
+    "component_count": 1,
+    "mask_reliability": "low",
+    "quality_reasons": [
+      "No detected person supports this mask."
+    ],
+    "person_instance_count": 0,
+    "backend_error": "synthetic backend exception"
+  },
+  "backend_version": "4.13.0",
+  "mask_status": "error",
+  "rejection_reasons": [
+    "No detected person supports this mask.",
+    "Segmentation backend execution failed and no usable person mask was produced."
+  ],
+  "backend_errors": [
+    {
+      "backend": "mediapipe_tasks_image_segmenter",
+      "error": "synthetic backend exception"
+    }
+  ]
+}

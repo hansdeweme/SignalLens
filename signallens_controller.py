@@ -100,11 +100,14 @@ class SignalLensController:
         status_fn: StatusFn | None = None,
         summary_update_fn: Callable[[], None] | None = None,
         use_legacy_region_masks: bool | None = None,
+        settings_snapshot: dict | None = None,
     ) -> None:
         self.log_fn = log_fn or (lambda msg, level="info": None)
         self.status_fn = status_fn or (lambda msg: None)
         self.summary_update_fn = summary_update_fn
         self.perf = PERFCOUNT
+        from copy import deepcopy
+        self.settings_snapshot = deepcopy(settings_snapshot)
         self.use_legacy_region_masks = RUN_LEGACY_REGION_MASKS if use_legacy_region_masks is None else use_legacy_region_masks
 
     def log(self, message: str, level: str = "info") -> None:
@@ -484,7 +487,9 @@ class SignalLensController:
             status_success="FFT analysis done",
         )
         # Stage 11: Patch similarity 
-        patch_params = get_patch_profile(state.analysis_mode)
+        patch_params = (get_patch_profile(state.analysis_mode) if self.settings_snapshot is None else
+                        self.settings_snapshot.get("patch_similarity_profiles", {}).get(state.analysis_mode,
+                            self.settings_snapshot.get("patch_similarity_profiles", {}).get("normal", {})))
         self.run_stage(
             state=state,
             name="Patch similarity analysis",
@@ -623,7 +628,9 @@ class SignalLensController:
             status_success="Subject texture consistency analysis done",
         )
         # Stage 17: Subject-Process Asymmetry
-        patch_params = get_subject_background_profile(state.analysis_mode)
+        patch_params = (get_subject_background_profile(state.analysis_mode) if self.settings_snapshot is None else
+                        self.settings_snapshot.get("subject_background_profiles", {}).get(state.analysis_mode,
+                            self.settings_snapshot.get("subject_background_profiles", {}).get("normal", {})))
         self.run_stage(
             state=state, 
             name="Subject process asymmetry analysis",

@@ -46,11 +46,13 @@ def persist_summary_result(summary_result: Any, output_dir: str | Path) -> Dict[
         encoding="utf-8",
     )
     # Plain text
-    full_text = getattr(summary_result, "full_text", "") or ""
+    full_text = (summary_result.get("full_text", "") if isinstance(summary_result, dict)
+                 else getattr(summary_result, "full_text", "")) or ""
     full_text = _append_generator_to_text(full_text, summary_result)
     txt_path.write_text(full_text, encoding="utf-8")
     # HTML
-    full_html = getattr(summary_result, "full_html", "") or ""
+    full_html = (summary_result.get("full_html", "") if isinstance(summary_result, dict)
+                 else getattr(summary_result, "full_html", "")) or ""
     full_html = _append_generator_to_html(full_html, summary_result)
     html_path.write_text(full_html, encoding="utf-8")
     return {
@@ -60,11 +62,13 @@ def persist_summary_result(summary_result: Any, output_dir: str | Path) -> Dict[
     }
     
 def _get_generator_text(summary_result: Any) -> str:
-    generator = getattr(summary_result, "generator", None)
+    generator = (summary_result.get("generator") if isinstance(summary_result, dict)
+                 else getattr(summary_result, "generator", None))
     if generator:
         return str(generator)
 
-    app_metadata = getattr(summary_result, "app_metadata", None)
+    app_metadata = (summary_result.get("app_metadata") if isinstance(summary_result, dict)
+                    else getattr(summary_result, "app_metadata", None))
     if isinstance(app_metadata, dict):
         generator = app_metadata.get("generator")
         if generator:
@@ -104,4 +108,4 @@ def _append_generator_to_html(html: str, summary_result: Any) -> str:
     if "</body>" in html:
         return html.replace("</body>", footer + "\n</body>")
 
-    return html.rstrip() + footer    
+    return html.rstrip() + footer

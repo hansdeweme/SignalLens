@@ -10,32 +10,56 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["GLOG_minloglevel"] = "3"
 os.environ["ABSL_LOGGING_MIN_LOG_LEVEL"] = "3"
 #
-import sys, time
+import sys
 import platform
 import subprocess
+import json
+from copy import deepcopy
+from types import SimpleNamespace
+from uuid import uuid4
+from html import escape
 from   pathlib import Path
 # PyQt6 GUI
-from PyQt6.QtCore    import Qt, QThread, QTimer
+from PyQt6.QtCore    import Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtGui     import QGuiApplication, QDragEnterEvent, QDropEvent, QTextCharFormat, QColor, QTextCursor, QAction, QIcon
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QTextBrowser, QPushButton, QMessageBox, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, 
+from PyQt6.QtWidgets import (QMainWindow, QDialog, QVBoxLayout, QTextBrowser, QPushButton, QMessageBox, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget,
                              QGroupBox,QListWidgetItem, QTextEdit, QCheckBox, QComboBox, QLabel, QFileDialog, QLineEdit, QGridLayout, QMenuBar)
 # local imports
 from signallens_settings   import load_settings
-from osint_reverse_search  import add_manual_match, build_osint_summary_text, delete_match, format_match_label, initialize_osint_for_image
+from osint_reverse_search  import add_manual_match, build_osint_summary_text, delete_match, format_match_label
 from osint_reverse_search  import load_osint_result, mark_reviewed_no_match, open_reverse_search, replace_match, save_osint_result
 from osint_dialogs         import OSINTFindingDialog
 from summary_synthesizer   import build_summary_result
-from analysis_worker       import AnalysisWorker
-from gui_semantics         import color_for_log_level
-from summary_persistence   import persist_summary_result
-from reasoning_persistence import persist_reasoning_trace, persist_reasoning_trace_text
+from gui_design_system import apply_theme, log_color, display_html, GEOMETRY
+from gui_workspace import WorkspaceShell
+from gui_workspace_state import default_settings, restore_workspace, save_workspace, ensure_visible
 from audit_manager         import AuditManager
 from settings_dialog       import SettingsDialog 
 from signallens_version    import VERSION, APP_VERSION, FEEDBACK_URL
+from investigation_session import InvestigationSession, InvestigationState, json_snapshot
+from investigation_presenters import build_presentation
+from investigation_reports import (annotation_appendix, annotations_object, create_report_snapshot,
+                                   persist_report_snapshot, load_investigation, forensic_html)
+from investigation_workers import InvestigationWorkers
 
-class SignalLensGui(QWidget):
-    def __init__(self) -> None:
+class SignalLensGui(QMainWindow):
+    session_changed = pyqtSignal(object)
+    snapshot_changed = pyqtSignal(object)
+
+    def __init__(self, *, ui_settings=None) -> None:
         super().__init__()
+        self.ui_settings = ui_settings if ui_settings is not None else default_settings()
+        self.session = InvestigationSession()
+        self.workers = InvestigationWorkers(self)
+        self.workers.completed.connect(self.on_analysis_finished)
+        self.workers.failed.connect(self.on_analysis_error)
+        self.workers.status_changed.connect(self._on_worker_status)
+        self.workers.logged.connect(self._on_worker_log)
+        self.workers.idle.connect(self._workers_idle)
+        self._closing = False
+        self._report_snapshot = None
+        self._report_paths = {}
+        self._session_dir = None
         self.settings = load_settings()
         if self.settings is None:
             QMessageBox.warning(self, "Settings.json Not Found", "Cannot Start Application!")
@@ -66,10 +90,14 @@ class SignalLensGui(QWidget):
         self.subject_process_asymmetry_payload = None
         self.subject_material_realism_payload = None
         self.analysis_mode = "normal"       # default or subject_based patch profile for patch-based analyses, can be extended in the future with more options
-        self.start = 0.0
         self.setWindowIcon(QIcon("signallens.png"))
         self._build_ui()  # creates the layout 
-        self.resize(700, 360)
+        self.setMinimumSize(GEOMETRY.minimum_width, GEOMETRY.minimum_height)
+        self.resize(GEOMETRY.normal_width, GEOMETRY.normal_height)
+        apply_theme(self)
+        restore_workspace(self, self.ui_settings)
+        self.refresh_osint_ui()
+        self._publish_snapshot()
 
     def place_window_above_taskbar(self, margin: int = 18):
         screen = self.screen() or QGuiApplication.primaryScreen()
@@ -98,10 +126,151 @@ class SignalLensGui(QWidget):
             y = available.top() + margin
         self.move(x, y)
 
+    def _publish_snapshot(self):
+        self.view_snapshot = build_presentation(self.session)
+        snapshot = self.view_snapshot
+        lifecycle = (self.session.session_id, self.session.state.value, snapshot.analysis_id)
+        self.run_button.setEnabled(not self._closing and bool(self.session.image_path)
+                                   and self.session.state != InvestigationState.ANALYZING)
+        complete = self.session.state == InvestigationState.COMPLETED
+        self.decision_trace_action.setEnabled(complete and self.has_decision_trace())
+        self.open_json_button.setEnabled(complete and self.session.report_current)
+        self.open_latest_audit_action.setEnabled(complete and self.current_analysis_dir is not None
+                                                 and self.current_analysis_dir.is_dir())
+        for action in self._archive_actions:
+            action.setEnabled(not self.workers.busy and self.session.state != InvestigationState.ANALYZING)
+        # Direct signal listeners may change selection. No widget mutations may
+        # follow emission of this point-in-time snapshot.
+        self.session_changed.emit(lifecycle)
+        self.snapshot_changed.emit(snapshot)
+
+    @pyqtSlot(object, str)
+    def _on_worker_status(self, invocation, message):
+        if not self._closing and self.session.accepts(invocation):
+            self.status_label.setText(message)
+
+    @pyqtSlot(object, str, str)
+    def _on_worker_log(self, invocation, message, level):
+        if not self._closing and self.session.accepts(invocation):
+            self.log(message, level)
+
+    def _commit_osint(self, session_id, draft):
+        if self._closing or session_id != self.session.session_id:
+            return False
+        try:
+            if json_snapshot(draft) == self.session.annotations_json:
+                return False
+            staging = self._session_dir / f'.annotation-{uuid4().hex}'
+            saved = save_osint_result(draft, staging)
+            payload = json.loads(saved.read_text(encoding='utf-8'))
+            payload['investigation'] = {'session_id': session_id,
+                                       'annotation_revision': self.session.annotation_revision + 1}
+            saved.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding='utf-8')
+            saved.replace(self._session_dir / 'osint_results.json')
+            try:
+                staging.rmdir()  # empty staging directory; cleanup is not publication
+            except OSError:
+                pass
+        except Exception as exc:
+            self.status_label.setText(f'Annotations not saved: {exc}')
+            self.log(str(exc), 'error')
+            return False
+        self.session.commit_annotations(draft)
+        self.osint_result = annotations_object(json.loads(self.session.annotations_json))
+        self.refresh_osint_ui()
+        self.update_summary()
+        if self.session.session_id != session_id:
+            return True
+        if self.session.state == InvestigationState.COMPLETED:
+            self.status_label.setText('OSINT annotations updated; forensic findings remain frozen.')
+            self.refresh_report_snapshot()
+        return True
+
+    def refresh_report_snapshot(self):
+        if self._closing or self.session.state != InvestigationState.COMPLETED:
+            return False
+        try:
+            snapshot = create_report_snapshot(self.session)
+            self._report_paths = persist_report_snapshot(self.session, snapshot, self.current_analysis_dir)
+            self._report_snapshot = snapshot
+            recorder = getattr(self.session.analysis_result, 'run_recorder', None)
+            if recorder:
+                recorder.add_artifact('summary_outputs', self._report_paths)
+                recorder.add_artifact('investigation', snapshot.payload()['investigation'])
+            self.log(f'Report snapshot synchronized: annotation revision {self.session.annotation_revision}')
+        except Exception as exc:
+            self.session.report_revision = None
+            self._report_snapshot = None
+            self.status_label.setText(f'Report not synchronized: {exc}. Use Open Results Folder to retry.')
+            self.log(str(exc), 'error')
+            self._publish_snapshot()
+            # Keep the existing results button available as an explicit retry.
+            self.open_json_button.setEnabled(True)
+            return False
+        self._publish_snapshot()
+        return (self.session.session_id == snapshot.session_id
+                and self.session.revision_key == (snapshot.result_id, snapshot.annotation_revision))
+
+    def open_stored_summary(self):
+        path, _ = QFileDialog.getOpenFileName(self, 'Open stored SignalLens summary', '', 'JSON files (*.json)')
+        if path:
+            self.load_stored_summary(Path(path))
+
+    def load_stored_summary(self, path):
+        if self._closing:
+            return False
+        try:
+            imported = load_investigation(path)
+            annotations = annotations_object(json.loads(imported.annotations_json))
+        except Exception as exc:
+            QMessageBox.warning(self, 'Stored result could not be loaded', str(exc))
+            return False
+        self.session.cancel()
+        self.session = imported
+        self.clear_analysis_state()
+        self.selected_file = self.current_image_path = Path(imported.image_path) if imported.image_path else None
+        self._session_dir = (Path(load_settings()['output_root']).resolve()
+                             / (self.selected_file.stem if self.selected_file else 'imported') / imported.session_id)
+        self.current_analysis_dir = self._session_dir / imported.result_id
+        self.output_json = None
+        self.osint_result = annotations
+        self.file_edit.setText(imported.image_path or 'Source path not recorded in stored result')
+        self.drop_label.setText('Stored result loaded — new import identity; no analysis executed')
+        self.log_box.clear()
+        self.refresh_osint_ui()
+        self.update_summary()
+        if self.session.session_id != imported.session_id:
+            return False
+        self.status_label.setText('Stored result loaded. Historical findings preserved; report export creates a new snapshot.')
+        self.open_json_button.setEnabled(True)
+        return True
+
+    @pyqtSlot()
+    def _workers_idle(self):
+        if self._closing:
+            QTimer.singleShot(0, self.close)
+        else:
+            self._publish_snapshot()
+
+    def closeEvent(self, event):
+        if self.workers.busy:
+            self._closing = True
+            self.session.cancel()
+            self.setEnabled(False)
+            self.status_label.setText('Closing: waiting for analysis workers to finish safely…')
+            self._publish_snapshot()
+            event.ignore()
+            return
+        save_workspace(self, self.ui_settings)
+        event.accept()
+
     def _create_menu_bar(self):
         self.menu_bar = QMenuBar(self)
         # File
         file_menu = self.menu_bar.addMenu("File")
+        load_action = QAction("Open Stored Summary…", self)
+        load_action.triggered.connect(self.open_stored_summary)
+        file_menu.addAction(load_action)
         
         exit_action = QAction("Exit", self)
         exit_action.triggered.connect(self.close)
@@ -140,6 +309,7 @@ class SignalLensGui(QWidget):
         remove_visuals_action = QAction("Remove Visual Artifacts Only", self)
         remove_visuals_action.triggered.connect(self.remove_visual_audit_artifacts)
         tools_menu.addAction(remove_visuals_action)                   
+        self._archive_actions = [cleanup_audit_action, delete_old_action, remove_visuals_action]
         # Help
         help_menu = self.menu_bar.addMenu("Help")
         
@@ -159,91 +329,11 @@ class SignalLensGui(QWidget):
 
     
     def _build_ui(self) -> None:
-        layout = QVBoxLayout(self)
-        self.drop_label = QLabel("Drag and drop an image here, or use 'Choose Image'")
         self._create_menu_bar()
-        layout.setMenuBar(self.menu_bar)                
-        self.drop_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.drop_label.setStyleSheet(
-            """
-            QLabel {
-                border: 2px dashed #888;
-                padding: 18px;
-                border-radius: 8px;
-            }
-            """
-        )
-        layout.addWidget(self.drop_label)
-        file_row = QHBoxLayout()
-        self.file_edit = QLineEdit()
-        self.file_edit.setReadOnly(True)
-        self.file_edit.setPlaceholderText("No file selected...")
-        file_row.addWidget(self.file_edit)
-        self.pick_button = QPushButton("Choose Image")
-        self.pick_button.clicked.connect(self.pick_file)
-        file_row.addWidget(self.pick_button)
-        layout.addLayout(file_row)       
-        self.context_group = QGroupBox("Scene Context (optional)")
-        context_layout = QGridLayout()
-        self.chk_natural = QCheckBox("Naturally repetitive scene content")
-        self.chk_decorative = QCheckBox("Decorative / geometric repetition")
-        self.chk_smartphone = QCheckBox("Smartphone computational-photo conditions")
-        self.chk_screen = QCheckBox("Screenshot / display-origin candidate")
-        context_layout.addWidget(self.chk_natural, 0, 0)
-        context_layout.addWidget(self.chk_decorative, 0, 1)
-        context_layout.addWidget(self.chk_smartphone, 1, 0)
-        context_layout.addWidget(self.chk_screen, 1, 1)
-        context_layout.setHorizontalSpacing(18)
-        context_layout.setVerticalSpacing(6)
-        self.analysis_mode_combo = QComboBox()
-        self.analysis_mode_combo.addItems(["normal", "subject_based"])
-        self.analysis_mode_combo.setCurrentText("normal")
-        self.analysis_mode_combo.currentTextChanged.connect(self.on_analysis_mode_changed)        
-        profile_row = QHBoxLayout()
-        profile_row.addWidget(QLabel("Patch profile:"))
-        profile_row.addWidget(self.analysis_mode_combo)
-        profile_row.addStretch()
-        layout.addLayout(profile_row)                
-        self.context_group.setLayout(context_layout)
-        layout.addWidget(self.context_group)                        
-        action_row = QHBoxLayout()
-        self.summary_box = QTextEdit()
-        self.summary_box.setReadOnly(True)
-        self.summary_box.setMinimumHeight(160)
-        self.summary_box.setMaximumHeight(220)
-        self.summary_box.setPlaceholderText("Analysis summary will appear here...")
-        self.summary_box.setStyleSheet("""
-        QTextEdit {
-            background-color: #1f2937;
-            color: #d1d5db;
-            border: 1px solid #374151;
-            padding: 8px;
-        }
-        """)
-        layout.addWidget(self.summary_box)        
-        self.run_button = QPushButton("Run Analysis")
-        self.run_button.clicked.connect(self.run_analysis)
-        self.run_button.setEnabled(False)
-        action_row.addWidget(self.run_button)
-        self.open_json_button = QPushButton("Open Results Folder")
-        self.open_json_button.clicked.connect(self.open_output_folder)
-        self.open_json_button.setEnabled(False)
-        action_row.addWidget(self.open_json_button)
-        layout.addLayout(action_row)        
-        self.log_box = QTextEdit()
-        self.log_box.setReadOnly(True)
-        self.log_box.setFixedHeight(100)
-        layout.addWidget(self.log_box)
-        self.status_label = QLabel("Ready.")
-        layout.addWidget(self.status_label)       
-        bottom_row = QHBoxLayout()
-        bottom_row.addStretch()
-        self.clear_button = QPushButton("Clear")
-        self.clear_button.clicked.connect(self.clear_ui)
-        bottom_row.addWidget(self.clear_button)
-        layout.addLayout(bottom_row)               
-        self.osint_group = self.build_osint_group()
-        layout.addWidget(self.osint_group)        
+        self.setMenuBar(self.menu_bar)
+        self.workspace = WorkspaceShell(self)
+        self.setCentralWidget(self.workspace)
+        self.snapshot_changed.connect(self.workspace.bind_snapshot)
 
     def build_osint_group(self) -> QGroupBox:
         group = QGroupBox("OSINT / Reverse Search")
@@ -256,14 +346,10 @@ class SignalLensGui(QWidget):
         self.btn_delete_osint = QPushButton("Delete Selected")
         self.osint_status_label = QLabel("OSINT status: no image loaded")
         self.osint_findings_list = QListWidget()
-        button_row = QHBoxLayout()
-        button_row.addWidget(self.btn_google)
-        button_row.addWidget(self.btn_yandex)
-        button_row.addWidget(self.btn_tineye)
-        button_row.addWidget(self.btn_mark_no_match)
-        button_row.addWidget(self.btn_add_osint)
-        button_row.addWidget(self.btn_edit_osint)
-        button_row.addWidget(self.btn_delete_osint)
+        button_row = QGridLayout()
+        for index, button in enumerate((self.btn_google, self.btn_yandex, self.btn_tineye,
+                self.btn_mark_no_match, self.btn_add_osint, self.btn_edit_osint, self.btn_delete_osint)):
+            button_row.addWidget(button, index // 3, index % 3)
         layout = QVBoxLayout(group)
         layout.addLayout(button_row)
         layout.addWidget(self.osint_status_label)
@@ -281,6 +367,7 @@ class SignalLensGui(QWidget):
     def show_settings_dialog(self):
         dialog = SettingsDialog(self)
         dialog.exec()
+        self.settings = deepcopy(load_settings())
 
     def show_about_dialog(self):
         version = VERSION
@@ -294,7 +381,7 @@ class SignalLensGui(QWidget):
         """
         if not hasattr(self, "log_box") or self.log_box is None:
             return
-        color = color_for_log_level(level)
+        color = log_color(level)
         cursor = self.log_box.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         fmt = QTextCharFormat()
@@ -304,97 +391,91 @@ class SignalLensGui(QWidget):
         self.log_box.ensureCursorVisible()
         
     def update_summary(self) -> None:
-        if self.analysis_state is None:
-            self.summary_result = None
+        # Rendering is a projection of the frozen analysis, never new synthesis.
+        data = self.session.summary_data()
+        self.summary_result = SimpleNamespace(**data) if data else None
+        if data:
+            self.summary_box.setHtml(display_html(forensic_html(data) + annotation_appendix(self.session)[1]))
+        else:
             self.summary_box.clear()
-            return
-        scene_context = {
-            "natural_repetition": self.chk_natural.isChecked(),
-            "decorative_geometric": self.chk_decorative.isChecked(),
-            "smartphone_computational": self.chk_smartphone.isChecked(),
-            "screen_origin": self.chk_screen.isChecked(),
-        }        
-        self.summary_result = build_summary_result(self.analysis_state, self.osint_result, scene_context=scene_context)
-        # self.summary_box.setPlainText(self.summary_result.full_text)  use html colouring instead of plain text
-        self.summary_box.setHtml(self.summary_result.full_html)
+        self._report_snapshot = None
+        self._publish_snapshot()
 
     def on_analysis_mode_changed(self, value: str) -> None:
         self.analysis_mode = value
         self.log(f"Patch profile set to: {value}")                
                 
     def clear_analysis_state(self) -> None:
-        self.exif_payload = None
-        self.ela_payload = None
-        self.noise_payload = None
-        self.cross_signal_payload = None
+        for name in tuple(vars(self)):
+            if name.endswith('_payload'):
+                setattr(self, name, None)
+        self.analysis_state = self.summary_result = None
         self.osint_result = None
-        self.fft_payload = None
-        self.analysis_state = None
-        self.sensor_origin_payload = None
-        self.subject_boundary_payload = None
-        self.compression_history_payload = None      
-        self.cfa_demosaic_payload = None
-        self.region_masks_payload = None
-        self.region_fft_payload = None        
-        self.boundary_focus_payload = None
-        self.patch_spatial_payload = None
-        self.subject_texture_consistency_payload = None
-        self.subject_process_asymmetry_payload = None
-        self.subject_material_realism_payload = None
-        self.summary_result = None       
-    
-    def clear_ui(self) -> None:
-        self.selected_file = None
-        self.file_edit.clear()
-        self.clear_analysis_state()
-        self.clear_summary()
-        self.refresh_osint_ui()
-        self.log_box.clear()
-        self.chk_natural.setChecked(False)
-        self.chk_decorative.setChecked(False)   
-        self.chk_smartphone.setChecked(False)
-        self.chk_screen.setChecked(False)                               
-        self.current_image_path = None
-        self.current_analysis_dir = None
-        self.output_json = None
-        self.run_button.setEnabled(False)
-        self.open_json_button.setEnabled(False)
-        self.drop_label.setText("Drag and drop an image here, or use 'Choose Image'")
-        self.status_label.setText("Ready.")
-        self.log("Cleared interface.")
+        self._report_snapshot = None
+        self._report_paths = {}
         self.decision_trace_action.setEnabled(False)
         self.open_latest_audit_action.setEnabled(False)
+        self.open_json_button.setEnabled(False)
+    
+    def clear_ui(self) -> None:
+        self.session.cancel()
+        self.session = InvestigationSession()
+        self.clear_analysis_state()
+        self.selected_file = self.current_image_path = self.current_analysis_dir = self.output_json = None
+        self._session_dir = None
+        self.file_edit.clear()
+        self.summary_box.clear()
+        self.log_box.clear()
+        for checkbox in (self.chk_natural, self.chk_decorative, self.chk_smartphone, self.chk_screen):
+            checkbox.setChecked(False)
+        self.drop_label.setText("Drag and drop an image here, or use 'Choose Image'")
+        self.status_label.setText('Ready. Previous invocation superseded.' if self.workers.busy else 'Ready.')
+        self.refresh_osint_ui()
+        self._publish_snapshot()
     
     def is_supported_image(self, path: Path) -> bool:
         return path.is_file() and path.suffix.lower() in self.settings.get("supported_extensions")
 
     def set_selected_file(self, path: Path) -> None:
-        self.analysis_state = None
-        self.selected_file = path
+        if self._closing:
+            return
+        try:
+            self.settings = deepcopy(load_settings())
+            path = Path(path).resolve()
+            if not self.is_supported_image(path):
+                raise ValueError('Select an existing supported image file.')
+            from PIL import Image
+            with Image.open(path) as image:
+                image.verify()
+            from osint_reverse_search import create_empty_osint_result
+            annotations = create_empty_osint_result(path)
+            # Legacy stem folders may collide. Import annotations only when their
+            # canonical file hash matches this source; never merge by filename alone.
+            legacy = Path(self.settings['output_root']) / path.stem / 'osint_results.json'
+            if legacy.is_file():
+                candidate = load_osint_result(legacy)
+                if candidate.image_sha256 == annotations.image_sha256:
+                    annotations = candidate
+            session = InvestigationSession.selected(path, annotations)
+        except Exception as exc:
+            QMessageBox.warning(self, 'Image selection failed', str(exc))
+            return
+        self.session.cancel()
+        self.session = session
+        self.clear_analysis_state()
+        self.selected_file = self.current_image_path = path
+        self._session_dir = Path(self.settings['output_root']).resolve() / path.stem / session.session_id
+        self.current_analysis_dir = self._session_dir
+        self.output_json = None
+        self.osint_result = annotations_object(json.loads(session.annotations_json))
         self.file_edit.setText(str(path))
-        self.run_button.setEnabled(True)
-        self.open_json_button.setEnabled(False)
-        self.status_label.setText("File selected.")
-        self.drop_label.setText(f"Selected:\n{path.name}")
-        self.clear_summary()
+        self.drop_label.setText(f'Selected:\n{path.name}')
+        self.summary_box.clear()
         self.log_box.clear()
-        self.log(f"Selected file: {path}")       
-        self.current_image_path = self.selected_file
-        output_root = Path(self.settings.get("output_root"))
-        output_dir = output_root / self.selected_file.stem
-        output_dir.mkdir(parents=True, exist_ok=True)
-        self.current_analysis_dir = output_dir         
-        output_json = Path(self.selected_file.stem + "_exif_signals.json")          
-        self.output_json = output_dir / output_json
-        osint_json = Path(self.current_analysis_dir) / "osint_results.json"
-        if osint_json.exists():
-            self.osint_result = load_osint_result(osint_json)
-            self.log("Loaded existing OSINT record.")
-            self.refresh_osint_ui()
-        else:
-            self.osint_result = initialize_osint_for_image(self.selected_file, output_dir)
-            self.log("Initialized OSINT record.")
-            self.refresh_osint_ui()
+        self.log(f'Selected file: {path} — investigation {session.session_id}')
+        self.status_label.setText('File selected. No active result.')
+        self.refresh_osint_ui()
+        self._publish_snapshot()
           
     def pick_file(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
@@ -469,86 +550,53 @@ class SignalLensGui(QWidget):
     def open_osint_engine(self, provider: str) -> None:
         if not self.ensure_osint_ready():
             return
-        try:            
-            open_reverse_search(provider, self.osint_result)
-            save_osint_result(self.osint_result, self.current_analysis_dir)
-            self.log(f"Opened reverse-search engine: {provider}")
-            self.refresh_osint_ui()
-            QMessageBox.information(self, "Reverse Search", "Perform your search in the browser, then click 'Add Finding' to record results.")
-        except Exception as e:
-            QMessageBox.critical(self, "OSINT Error", str(e))    
+        session_id = self.session.session_id
+        draft = deepcopy(self.osint_result)
+        try:
+            open_reverse_search(provider, draft)
+            self._commit_osint(session_id, draft)
+            QMessageBox.information(self, 'Reverse Search', "Perform your search in the browser, then click 'Add Finding' to record results.")
+        except Exception as exc:
+            QMessageBox.critical(self, 'OSINT Error', str(exc))
 
     def add_osint_finding(self) -> None:
         if not self.ensure_osint_ready():
             return
-        dlg = OSINTFindingDialog(self)
-        if dlg.exec():
-            data = dlg.get_data()
-            add_manual_match(
-                self.osint_result,
-                provider=data["provider"],
-                page_url=data["page_url"],
-                title=data["title"],
-                image_url=data["image_url"],
-                similarity_score=data["similarity_score"],
-                first_seen_estimate=data["first_seen_estimate"],
-                source_type=data["source_type"],
-                notes=data["notes"],
-            )
-            save_osint_result(self.osint_result, self.current_analysis_dir)
-            self.log("Added OSINT finding.")
-            self.refresh_osint_ui()
-            self.update_summary()
+        session_id = self.session.session_id
+        draft = deepcopy(self.osint_result)
+        dialog = OSINTFindingDialog(self)
+        if dialog.exec():
+            add_manual_match(draft, **dialog.get_data())
+            self._commit_osint(session_id, draft)
 
     def edit_selected_osint_finding(self) -> None:
         if not self.ensure_osint_ready():
             return
         row = self.osint_findings_list.currentRow()
-        if row < 0 or row >= len(self.osint_result.matches):
-            QMessageBox.information(self, "Edit OSINT Finding", "No finding selected. Add a finding first or select one from the list.")
+        if not 0 <= row < len(self.osint_result.matches):
             return
-        existing_match = self.osint_result.matches[row]
-        dlg = OSINTFindingDialog(self, existing_match=existing_match)
-        if dlg.exec():
-            data = dlg.get_data()
-            replace_match(
-                self.osint_result,
-                index=row,
-                provider=data["provider"],
-                page_url=data["page_url"],
-                title=data["title"],
-                image_url=data["image_url"],
-                similarity_score=data["similarity_score"],
-                first_seen_estimate=data["first_seen_estimate"],
-                source_type=data["source_type"],
-                notes=data["notes"],
-            )
-            save_osint_result(self.osint_result, self.current_analysis_dir)
-            self.log("Updated OSINT finding.")
-            self.refresh_osint_ui()
-            self.update_summary()
+        session_id = self.session.session_id
+        draft = deepcopy(self.osint_result)
+        dialog = OSINTFindingDialog(self, existing_match=draft.matches[row])
+        if dialog.exec():
+            replace_match(draft, index=row, **dialog.get_data())
+            self._commit_osint(session_id, draft)
 
     def delete_selected_osint_finding(self) -> None:
         if not self.ensure_osint_ready():
             return
+        draft = deepcopy(self.osint_result)
         row = self.osint_findings_list.currentRow()
-        if row < 0 or row >= len(self.osint_result.matches):
-            QMessageBox.information(self, "Delete OSINT Finding", "Select a finding first.")
-            return
-        delete_match(self.osint_result, row)
-        save_osint_result(self.osint_result, self.current_analysis_dir)
-        self.log("Deleted OSINT finding.")
-        self.refresh_osint_ui()
-        self.update_summary()
+        if 0 <= row < len(draft.matches):
+            delete_match(draft, row)
+            self._commit_osint(self.session.session_id, draft)
 
     def mark_osint_reviewed_no_match(self) -> None:
         if not self.ensure_osint_ready():
             return
-        mark_reviewed_no_match(self.osint_result)
-        save_osint_result(self.osint_result, self.current_analysis_dir)
-        self.log("Marked OSINT review as completed with no documented match.")
-        self.refresh_osint_ui()
-        self.update_summary()
+        draft = deepcopy(self.osint_result)
+        mark_reviewed_no_match(draft)
+        self._commit_osint(self.session.session_id, draft)
 
     def refresh_osint_ui(self) -> None:
         self.osint_findings_list.clear()
@@ -572,12 +620,11 @@ class SignalLensGui(QWidget):
         self.update_osint_buttons()
     
     def ensure_osint_ready(self) -> bool:
-        if self.current_image_path is None or self.current_analysis_dir is None:
-            QMessageBox.information(self, "OSINT", "Load or drop an image first.")
+        if self._closing or self.current_image_path is None or self._session_dir is None:
+            QMessageBox.information(self, 'OSINT', 'Load an image with an available source first.')
             return False
-        if self.osint_result is None:
-            self.osint_result = initialize_osint_for_image(self.current_image_path, self.current_analysis_dir)
-        return True
+        self.osint_result = annotations_object(json.loads(self.session.annotations_json))
+        return self.osint_result is not None
     
     #----------------------------------------------------------------
     # This method runs the analysis pipeline: EXIF analysis, ELA, noise analysis, cross-signal analysis, and FFT analysis. 
@@ -585,89 +632,91 @@ class SignalLensGui(QWidget):
     # It updates the summary and log with results.
     #----------------------------------------------------------------
     def run_analysis(self) -> None:
-        if self.selected_file is None:
-            QMessageBox.warning(self, "No file", "Please choose or drop an image first.")
+        if self._closing or not self.session.image_path:
             return
-        self.start = time.perf_counter()
-        self.run_button.setEnabled(False)
-        self.status_label.setText("Running analysis...")
-        self.thread = QThread()
-        self.worker = AnalysisWorker(
-            selected_file=self.selected_file,
-            output_dir=self.current_analysis_dir,
-            output_json=self.output_json,
-            analysis_mode=self.analysis_mode,            
-        )
-        self.worker.moveToThread(self.thread)
-        # --- wiring ---
-        self.thread.started.connect(self.worker.run)
-        self.worker.log.connect(self.log)
-        self.worker.status.connect(self.status_label.setText)
-        self.worker.finished.connect(self.on_analysis_finished)
-        self.worker.error.connect(self.on_analysis_error)
-        # cleanup
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        self.thread.start()                    
+        if not Path(self.session.image_path).is_file():
+            self.session.cancel()
+            self.session.state = InvestigationState.FAILED
+            self.session.error = 'Selected source file no longer exists.'
+            self.session.summary_json = self.session.result_id = None
+            self.session.analysis_result = None
+            self.session.report_revision = None
+            self.clear_analysis_state()
+            self.update_summary()
+            self.status_label.setText(self.session.error)
+            return
+        self.settings = deepcopy(load_settings())
+        from osint_reverse_search import sha256_of_file
+        try:
+            source_changed = (self.session.source_sha256 is not None
+                              and sha256_of_file(self.session.image_path) != self.session.source_sha256)
+        except OSError as exc:
+            self.clear_ui()
+            self.status_label.setText(f'Source file could not be read: {exc}')
+            return
+        if source_changed:
+            self.clear_ui()
+            self.status_label.setText('Source file changed. Select it again to begin a new investigation.')
+            return
+        context = {'natural_repetition': self.chk_natural.isChecked(),
+                   'decorative_geometric': self.chk_decorative.isChecked(),
+                   'smartphone_computational': self.chk_smartphone.isChecked(),
+                   'screen_origin': self.chk_screen.isChecked()}
+        invocation = self.session.begin_analysis(self.analysis_mode, context, self.settings, self.settings['output_root'])
+        self.current_analysis_dir = Path(invocation.output_dir)
+        self._session_dir = self.current_analysis_dir.parent
+        self.output_json = self.current_analysis_dir / f'{Path(invocation.image_path).stem}_exif_signals.json'
+        self.clear_analysis_state()
+        self.osint_result = annotations_object(json.loads(self.session.annotations_json))
+        self.summary_box.clear()
+        self.status_label.setText('Running analysis…')
+        self._publish_snapshot()
+        try:
+            if not self.session.accepts(invocation):
+                return
+            self.workers.start(invocation)
+        except Exception as exc:
+            self.on_analysis_error(invocation, str(exc))
 
-    def on_analysis_finished(self, state):
-        self.analysis_state = state
-        self.exif_payload = state.exif_payload
-        self.ela_payload = state.ela_payload
-        self.noise_payload = state.noise_payload
-        self.sensor_origin_payload = state.sensor_origin_payload
-        self.subject_boundary_payload = state.subject_boundary_payload
-        self.cross_signal_payload = state.cross_signal_payload
-        self.fft_payload = state.fft_payload
-        self.patch_similarity_payload = state.patch_similarity_payload
-        self.compression_history_payload = state.compression_history_payload
-        self.cfa_demosaic_payload = state.cfa_demosaic_payload
-        self.region_masks_payload = state.region_masks_payload
-        self.region_fft_payload = state.region_fft_payload        
-        self.boundary_focus_payload = state.boundary_focus_payload
-        self.patch_spatial_payload = state.patch_spatial_payload
-        self.subject_texture_consistency_payload = state.subject_texture_consistency_payload
-        self.subject_process_asymmetry_payload = state.subject_process_asymmetry_payload
-        self.subject_material_realism_payload = state.subject_material_realism_payload
-        self.open_json_button.setEnabled(self.exif_payload is not None)
-        self.status_label.setText("Analysis completed")
-        duration = time.perf_counter() - self.start
-        self.log(f"Total Analysis took {duration:.2f}s")
-        self.run_button.setEnabled(True)
+    @pyqtSlot(object, object)
+    def on_analysis_finished(self, invocation, state):
+        if self._closing or not self.session.accepts(invocation):
+            return
+        try:
+            from osint_reverse_search import sha256_of_file
+            if invocation.source_sha256 and sha256_of_file(invocation.image_path) != invocation.source_sha256:
+                raise ValueError('Source file changed during analysis; result was not published.')
+            if (Path(state.selected_file).resolve() != Path(invocation.image_path).resolve()
+                    or Path(state.output_dir).resolve() != Path(invocation.output_dir).resolve()):
+                raise ValueError('Worker result does not match its invocation source/output.')
+            # This is the existing, authoritative synthesis operation, invoked once
+            # using launch-time context and annotations. Post-run edits do not call it.
+            summary = build_summary_result(state,
+                annotations_object(json.loads(invocation.annotations_json)),
+                scene_context=dict(invocation.scene_context))
+            if not self.session.complete(invocation, state, summary):
+                return
+        except Exception as exc:
+            self.on_analysis_error(invocation, str(exc))
+            return
+        self.analysis_state = self.session.analysis_result
+        for name in tuple(vars(self)):
+            if name.endswith('_payload'):
+                setattr(self, name, getattr(state, name, None))
         self.update_summary()
-        summary_result = getattr(self, "summary_result", None)
-        reasoning_trace = getattr(summary_result, "reasoning_trace", None)        
-        if summary_result is None:
-            return        
-        summary_paths = persist_summary_result(self.summary_result, state.output_dir)
-        reasoning_trace_path = persist_reasoning_trace(
-            getattr(summary_result, "reasoning_trace", None),
-            state.output_dir,
-        )        
-        reasoning_trace_txt_path = persist_reasoning_trace_text(
-            reasoning_trace,
-            state.output_dir,
-        )                
-        if getattr(state, "run_recorder", None):
-            if reasoning_trace_path:
-                state.run_recorder.add_artifact("reasoning_trace_json", reasoning_trace_path)        
-        if getattr(state, "run_recorder", None):
-            state.run_recorder.add_artifact("summary_outputs", summary_paths)
-            if reasoning_trace_path:
-                state.run_recorder.add_artifact("reasoning_trace_json", reasoning_trace_path)            
-            if reasoning_trace_txt_path:
-                state.run_recorder.add_artifact("reasoning_trace_txt", reasoning_trace_txt_path)
-            state.run_recorder.log("Persisted final summary outputs", "success")
-        if self.has_decision_trace():
-            self.status_label.setText("Analysis completed - Decision Trace available")
-            self.decision_trace_action.setEnabled(True)    
-            self.open_latest_audit_action.setEnabled(True)  
+        if self.session.session_id != invocation.session_id or self.session.result_id != invocation.analysis_id:
+            return
+        self.status_label.setText('Analysis completed. Findings frozen to this invocation.')
+        self.refresh_report_snapshot()
   
-    def on_analysis_error(self, message: str):
-        QMessageBox.critical(self, "Analysis error", message)
-        self.status_label.setText("Error")
-        self.run_button.setEnabled(True)
+    @pyqtSlot(object, str)
+    def on_analysis_error(self, invocation, message: str):
+        if self._closing or not self.session.fail(invocation, message):
+            return
+        self.clear_analysis_state()
+        self.status_label.setText(f'Analysis failed: {message}')
+        self.log(message, 'error')
+        self.update_summary()
   
 
     def open_latest_audit_folder(self):
@@ -675,8 +724,7 @@ class SignalLensGui(QWidget):
         from pathlib import Path
         from PyQt6.QtWidgets import QMessageBox
 
-        state = getattr(self, "analysis_state", None)
-        output_dir = getattr(state, "output_dir", None) if state else None
+        output_dir = self.current_analysis_dir if self.session.state == InvestigationState.COMPLETED else None
 
         if not output_dir:
             QMessageBox.information(
@@ -703,27 +751,22 @@ class SignalLensGui(QWidget):
     # This method attempts to open the output folder containing the analysis results, and selects the JSON file if possible. It handles different operating systems and provides user feedback if the file or folder cannot be opened.
     #--------------------------------------------------
     def open_output_folder(self) -> None:
-        if self.selected_file is None:
+        if self.session.state != InvestigationState.COMPLETED:
+            QMessageBox.information(self, 'Results', 'No completed active result is available.')
             return
-        output_root = Path(self.settings.get("output_root"))
-        output_dir  = output_root / self.selected_file.stem
-        json_path   = output_dir / f"{self.selected_file.stem}_exif_signals.json"
-        if not json_path.exists():
-            QMessageBox.warning(self, "File not found",  f"JSON output file does not exist yet:\n{json_path}")
+        if not self.refresh_report_snapshot():
             return
+        path = Path(self._report_paths['final_summary_json']).resolve()
         try:
             system = platform.system()
-            if system == "Windows":
-                subprocess.run(
-                    ["explorer", "/select,", str(json_path)],
-                    check=False
-                )
-            elif system == "Darwin":
-                subprocess.run(["open", "-R", str(json_path)], check=False)
-            else:  # Linux
-                subprocess.run(["xdg-open", str(json_path.parent)], check=False)
+            if system == 'Windows':
+                subprocess.run(['explorer', '/select,', str(path)], check=False)
+            elif system == 'Darwin':
+                subprocess.run(['open', '-R', str(path)], check=False)
+            else:
+                subprocess.run(['xdg-open', str(path.parent)], check=False)
         except Exception as exc:
-            QMessageBox.warning(self, "Could not open folder", str(exc))          
+            QMessageBox.warning(self, 'Could not open folder', str(exc))
 
     #====================================================
     # show to decision trace
@@ -749,7 +792,7 @@ class SignalLensGui(QWidget):
                 return f"{value:.4f}"
             if value is None:
                 return ""
-            return str(value)
+            return escape(str(value))
 
         html = [
             """
@@ -767,7 +810,7 @@ class SignalLensGui(QWidget):
         html.append("<h3>Contextual Priors</h3><ul>")
         if priors:
             for k, v in priors.items():
-                html.append(f"<li><b>{k}:</b> {fmt(v)}</li>")
+                html.append(f"<li><b>{escape(str(k))}:</b> {fmt(v)}</li>")
         else:
             html.append("<li>No contextual priors recorded.</li>")
         html.append("</ul>")
@@ -843,7 +886,7 @@ class SignalLensGui(QWidget):
         dialog.resize(1050, 750)
         layout = QVBoxLayout(dialog)
         viewer = QTextBrowser(dialog)
-        viewer.setHtml("\n".join(html))
+        viewer.setHtml(display_html("\n".join(html)))
         layout.addWidget(viewer)
         close_btn = QPushButton("Close", dialog)
         close_btn.clicked.connect(dialog.accept)
@@ -900,7 +943,7 @@ class SignalLensGui(QWidget):
         dialog.resize(900, 650)
         layout = QVBoxLayout(dialog)
         viewer = QTextBrowser(dialog)
-        viewer.setHtml(html)
+        viewer.setHtml(display_html(html))
         layout.addWidget(viewer)
         close_btn = QPushButton("Close", dialog)
         close_btn.clicked.connect(dialog.accept)
@@ -1022,7 +1065,7 @@ def main() -> None:
     app = QApplication(sys.argv)
     window = SignalLensGui()
     window.show()
-    QTimer.singleShot(150, window.place_window_above_taskbar)
+    QTimer.singleShot(150, lambda: ensure_visible(window))
     sys.exit(app.exec())
 
 if __name__ == "__main__":

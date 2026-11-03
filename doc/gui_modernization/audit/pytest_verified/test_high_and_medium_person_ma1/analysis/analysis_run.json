@@ -1,0 +1,318 @@
+{
+  "app": "SignalLens",
+  "version": "0.0.1-Beta",
+  "run_id": "20261103_131005_d8457600",
+  "started_at": "2026-11-03T13:10:05+01:00",
+  "finished_at": "2026-11-03T13:10:05+01:00",
+  "status": "completed",
+  "input": {
+    "selected_file": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_high_and_medium_person_ma1\\synthetic_input.png",
+    "input_name": "synthetic_input.png"
+  },
+  "stages": [
+    {
+      "name": "Prepared image gatekeeper",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "EXIF analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0029,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "ELA analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Noise analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Sensor-origin analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "CFA / demosaicing analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-aware subject mask",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-derived region masks",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0366,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person mask reliability",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject-boundary analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Region segmentation analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "FFT analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Patch similarity analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Cross-signal analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Boundary-focused analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Region-aware FFT analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Segmentation alignment analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0006,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject texture consistency analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject process asymmetry analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject material realism analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Patch spatial analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Compression-history analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Shared boundary overlays",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    }
+  ],
+  "artifacts": {
+    "output_dir": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_high_and_medium_person_ma1\\analysis",
+    "output_json": null
+  },
+  "errors": [],
+  "warnings": [],
+  "diagnostics": {
+    "mask": {
+      "mask_status": "limited",
+      "mask_source": "mediapipe_tasks_image_segmenter",
+      "mask_reliability": "medium",
+      "person_specific": true,
+      "person_mask_reliability": "medium",
+      "person_mask_reliable": true,
+      "fallback_used": false,
+      "fallback_reason": null,
+      "rejection_reasons": [
+        "Usable with limitations: the existing high-quality area/component criteria were not all met."
+      ],
+      "backend": "mediapipe_tasks_image_segmenter",
+      "backend_version": null,
+      "model_name": null,
+      "model_version": null,
+      "confidence_kind": "backend-specific proxy, not a calibrated probability",
+      "detection_confidence": 0.9,
+      "foreground_area_ratio": 0.87890625,
+      "mask_coverage": 0.87890625,
+      "quality": {
+        "pattern": "person_subject_mask_generated_low_confidence",
+        "person_detected": true,
+        "detector_confidence": 0.9,
+        "subject_area_ratio": 0.87890625,
+        "largest_component_ratio": 1.0,
+        "component_count": 1,
+        "mask_reliability": "medium",
+        "quality_reasons": [
+          "Usable with limitations: the existing high-quality area/component criteria were not all met."
+        ]
+      },
+      "mask_dimensions": {
+        "width": 64,
+        "height": 64
+      },
+      "backend_errors": [],
+      "disabled_stages": [],
+      "segmentation_outcome": {
+        "mask_status": "limited",
+        "mask_source": "mediapipe_tasks_image_segmenter",
+        "mask_reliability": "medium",
+        "person_specific": true,
+        "person_mask_reliability": "medium",
+        "person_mask_reliable": true,
+        "fallback_used": false,
+        "fallback_reason": null,
+        "rejection_reasons": [
+          "Usable with limitations: the existing high-quality area/component criteria were not all met."
+        ],
+        "backend": "mediapipe_tasks_image_segmenter",
+        "backend_version": null,
+        "model_name": null,
+        "model_version": null,
+        "confidence_kind": "backend-specific proxy, not a calibrated probability",
+        "detection_confidence": 0.9,
+        "foreground_area_ratio": 0.87890625,
+        "mask_coverage": 0.87890625,
+        "quality": {
+          "pattern": "person_subject_mask_generated_low_confidence",
+          "person_detected": true,
+          "detector_confidence": 0.9,
+          "subject_area_ratio": 0.87890625,
+          "largest_component_ratio": 1.0,
+          "component_count": 1,
+          "mask_reliability": "medium",
+          "quality_reasons": [
+            "Usable with limitations: the existing high-quality area/component criteria were not all met."
+          ]
+        },
+        "mask_dimensions": {
+          "width": 64,
+          "height": 64
+        },
+        "backend_errors": [],
+        "disabled_stages": []
+      }
+    },
+    "coverage": {
+      "status": "complete",
+      "stage_counts": {
+        "success": 23,
+        "skipped": 0,
+        "unavailable": 0,
+        "failed": 0
+      },
+      "elapsed_seconds": 0.0512,
+      "unavailable_stages": []
+    }
+  }
+}

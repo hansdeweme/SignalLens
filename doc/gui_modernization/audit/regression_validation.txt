@@ -1,0 +1,19 @@
+UI-0 baseline validation record — 3 November 2026
+
+Command:
+py -3.13 -B -m pytest -q -p no:cacheprovider --basetemp=doc/gui_modernization/audit/pytest_verified
+
+Observed tool result:
+334 passed in 4.18s
+exit_code: 0
+
+The initial sandbox attempt used pytest_tmp and failed with Windows access denied
+on that temporary directory. The approved rerun above completed successfully.
+No tests were changed. Tests exercise backend regressions, not full GUI coverage.
+
+Artifact validation:
+8 required documents present; 58 source file references resolve; all audited
+component classes exist; 6 SVGs parse; 6 PNG wireframes visually reviewed after
+correcting the audit renderer's font setup; 4 real application captures saved.
+167 tracked files matched audit-start SHA-256 hashes. Existing user modifications
+and untracked task/lock files remain preserved. No stage/commit/push performed.

@@ -1,0 +1,1735 @@
+{
+  "analysis_worker.py": {
+    "classes": [
+      {
+        "name": "AnalysisWorker",
+        "line": 14,
+        "bases": [
+          "QObject"
+        ],
+        "methods": {
+          "__init__": 20,
+          "run": 27
+        }
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from PyQt6.QtCore import QObject, pyqtSignal",
+      "from signallens_controller import SignalLensController"
+    ]
+  },
+  "app_paths.py": {
+    "classes": [],
+    "functions": {
+      "app_dir": 11,
+      "resource_path": 20
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import sys",
+      "from pathlib import Path"
+    ]
+  },
+  "audit_manager.py": {
+    "classes": [
+      {
+        "name": "AuditRunInfo",
+        "line": 14,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "AuditManager",
+        "line": 23,
+        "bases": [],
+        "methods": {
+          "__init__": 24,
+          "_folder_size_and_counts": 27,
+          "list_runs": 42,
+          "get_archive_stats": 68,
+          "delete_all_runs": 83,
+          "delete_runs_older_than": 93,
+          "delete_runs_older_than_days": 107,
+          "remove_visual_artifacts_only": 110
+        }
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from __future__ import annotations",
+      "import shutil",
+      "from dataclasses import dataclass, asdict",
+      "from pathlib import Path",
+      "from datetime import datetime, timedelta"
+    ]
+  },
+  "confidence_policy.py": {
+    "classes": [
+      {
+        "name": "Finding",
+        "line": 18,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "Specificity",
+        "line": 49,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "VerifiedGenerationAssertion",
+        "line": 65,
+        "bases": [],
+        "methods": {
+          "__post_init__": 77
+        }
+      },
+      {
+        "name": "ConfidenceFacts",
+        "line": 83,
+        "bases": [],
+        "methods": {
+          "__post_init__": 107,
+          "for_hypothesis": 118
+        }
+      },
+      {
+        "name": "AssessmentEvidence",
+        "line": 123,
+        "bases": [],
+        "methods": {
+          "__post_init__": 131,
+          "from_assessment": 137
+        }
+      },
+      {
+        "name": "ConfidencePolicyResult",
+        "line": 144,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "finding_specificity": 55,
+      "generic_confidence": 156,
+      "_synthetic": 167,
+      "_localized": 187,
+      "evaluate_confidence": 230
+    },
+    "imports": [
+      "from dataclasses import dataclass",
+      "from enum import Enum",
+      "from math import isfinite",
+      "from metadata_evidence import ProvenanceState"
+    ]
+  },
+  "confidence_policy_inputs.py": {
+    "classes": [],
+    "functions": {
+      "coverage_limitations": 12,
+      "snapshot_confidence_facts": 20
+    },
+    "imports": [
+      "from confidence_policy import ConfidenceFacts",
+      "from metadata_evidence import ProvenanceState"
+    ]
+  },
+  "decision_logic.py": {
+    "classes": [
+      {
+        "name": "DecisionRouteTraceItem",
+        "line": 463,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "DecisionEnv",
+        "line": 477,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "DecisionResult",
+        "line": 496,
+        "bases": [],
+        "methods": {
+          "specificity": 506
+        }
+      },
+      {
+        "name": "DecisionRoute",
+        "line": 1265,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "_section_snapshot": 45,
+      "_object_to_dict": 60,
+      "_jsonable_scalar": 79,
+      "_build_reasoning_trace": 98,
+      "determine_dominant_pattern": 174,
+      "determine_confidence": 295,
+      "extract_secondary_patterns": 324,
+      "append_secondary_patterns": 365,
+      "extract_contradicting_patterns": 376,
+      "append_contradicting_patterns": 401,
+      "build_confidence_rationale": 412,
+      "append_confidence_rationale": 448,
+      "_contextual_support_notes": 512,
+      "enrich_text_with_context": 548,
+      "_boundary_corroborated": 562,
+      "_photo_like_clean_signals": 615,
+      "build_decision_env": 664,
+      "finish_decision": 701,
+      "route_real_photo_context_prior": 775,
+      "route_boundary_support_limited": 792,
+      "route_region_geometry_unreliable": 805,
+      "route_localized_multi_mechanism": 820,
+      "route_strong_local_edit": 844,
+      "route_clone_reuse": 884,
+      "route_moderated_local_edit": 904,
+      "route_clone_ambiguous": 939,
+      "route_structured_recurrence_inconclusive": 972,
+      "route_synthetic_multi_signal": 1001,
+      "route_localized_processing": 1044,
+      "route_subject_boundary": 1062,
+      "route_unreliable_boundary_context": 1077,
+      "route_boundary_transition": 1099,
+      "route_provenance": 1118,
+      "route_camera_like": 1149,
+      "route_multi_signal_suspicious": 1172,
+      "route_moderate_suspicious": 1205,
+      "route_photo_like_consistency": 1222,
+      "route_fallback": 1242,
+      "_specific_finding": 1298,
+      "_apply_confidence_policy": 1303,
+      "evaluate_hypotheses": 1328,
+      "synthesize_overall": 1503
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from dataclasses import dataclass, field, replace",
+      "from typing import Any, Callable",
+      "from math import isfinite",
+      "from gui_semantics import ModuleSummary",
+      "from hypothesis_engine import build_context, build_evidence_snapshot, compute_base_scores, compute_scorecard, derive_signals, is_suspicious, is_benign, weight, HypothesisAssessment, DerivedSignals, ScoreCard, has_real_photo_context_prior",
+      "from scorecard_integrity import ScorecardIntegrityError, available_sections",
+      "from confidence_policy import Finding, Specificity, finding_specificity, AssessmentEvidence, ConfidencePolicyResult, evaluate_confidence, generic_confidence",
+      "from confidence_policy_inputs import snapshot_confidence_facts, coverage_limitations",
+      "from production_corroboration import CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate",
+      "from metadata_evidence import ProvenanceState, metadata_provenance_state",
+      "from hypothesis_evidence import scope_hypothesis_evidence, evidence_presentation, append_hypothesis_evidence",
+      "from signal_language import humanize_signal"
+    ]
+  },
+  "evidence_dependency_analysis.py": {
+    "classes": [],
+    "functions": {
+      "_operation_sources": 42,
+      "_operation_records": 90,
+      "_corroboration": 119,
+      "_gate_diagnostics": 140,
+      "_aggregates": 166,
+      "build_dependency_analysis": 178,
+      "safe_dependency_analysis": 246
+    },
+    "imports": [
+      "from collections import defaultdict",
+      "from dataclasses import asdict",
+      "from math import fsum, isclose",
+      "from hashlib import sha256",
+      "import re",
+      "from evidence_lineage import Addition, Family, Kind, LineageError, REGISTRY, build_lineage, lineage_to_json",
+      "from marginal_corroboration import Contribution, allocate_marginal",
+      "from scorecard_integrity import COMPONENT_FIELDS, reconstruct_scorecard_calculation"
+    ]
+  },
+  "evidence_lineage.py": {
+    "classes": [
+      {
+        "name": "LineageError",
+        "line": 15,
+        "bases": [
+          "ValueError"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "Family",
+        "line": 18,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "Kind",
+        "line": 31,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "Addition",
+        "line": 36,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "EvidenceSpec",
+        "line": 45,
+        "bases": [],
+        "methods": {
+          "__post_init__": 57
+        }
+      },
+      {
+        "name": "LineageRecord",
+        "line": 68,
+        "bases": [],
+        "methods": {
+          "__post_init__": 85
+        }
+      }
+    ],
+    "functions": {
+      "validate_registry": 132,
+      "numerical_restatement_sources": 160,
+      "build_lineage": 173,
+      "lineage_to_json": 212,
+      "lineage_from_json": 216
+    },
+    "imports": [
+      "from dataclasses import asdict, dataclass",
+      "from enum import Enum",
+      "from types import MappingProxyType"
+    ]
+  },
+  "exif_config.py": {
+    "classes": [],
+    "functions": {
+      "load_exif_rules": 12
+    },
+    "imports": [
+      "from pathlib import Path",
+      "import json"
+    ]
+  },
+  "exiftool_backend.py": {
+    "classes": [
+      {
+        "name": "Signal",
+        "line": 53,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "ExtractorInfo",
+        "line": 62,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "max_rule_confidence": 71,
+      "max_rule_severity": 76,
+      "utc_now_iso": 90,
+      "sha256_file": 93,
+      "normalize_text": 103,
+      "safe_float": 113,
+      "ensure_exiftool_available": 119,
+      "split_group_and_tag": 126,
+      "is_text_like_tag": 137,
+      "_is_embedded_metadata_entry": 142,
+      "contains_any": 150,
+      "deduplicate_match_items": 157,
+      "run_hidden_subprocess": 178,
+      "get_exiftool_version": 204,
+      "run_exiftool_json": 213,
+      "extract_watchlist_hits": 251,
+      "assess_camera_metadata_richness": 336,
+      "collect_textual_evidence": 386,
+      "find_term_matches": 405,
+      "_explicit_generation_workflow": 461,
+      "_source_type_declarations": 481,
+      "build_signals": 496,
+      "_has_meaningful_value": 698,
+      "_count_semantic_hits": 712,
+      "assess_metadata_sparsity": 739,
+      "derive_classification": 860,
+      "build_output_payload": 871,
+      "analyze_file_with_exiftool": 900,
+      "main": 943
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import hashlib",
+      "import shutil",
+      "import re",
+      "import sys, subprocess",
+      "from dataclasses import dataclass, asdict",
+      "from datetime import datetime, timezone",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Optional, Tuple",
+      "from exif_config import WATCH_TAGS, TOOL_RULES, DECLARATIVE_GENERATION_TERMS, DECLARATIVE_ENHANCEMENT_TERMS, TEXT_LIKE_TAG_HINTS, GENERATION_PROMPT_TAGS",
+      "from metadata_evidence import classify_metadata_signals, DIGITAL_SOURCE_TYPE_DECLARATIONS"
+    ]
+  },
+  "gui_semantics.py": {
+    "classes": [
+      {
+        "name": "LogLevel",
+        "line": 12,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "SignalPolarity",
+        "line": 19,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "SignalStrength",
+        "line": 24,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "ModuleSummary",
+        "line": 111,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "color_for_log_level": 56,
+      "color_for_signal": 66,
+      "color_for_confidence": 89
+    },
+    "imports": [
+      "from enum import Enum",
+      "from dataclasses import dataclass, field",
+      "from typing import Optional, Any"
+    ]
+  },
+  "hypothesis_engine.py": {
+    "classes": [
+      {
+        "name": "HypothesisContext",
+        "line": 29,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "EvidenceSnapshot",
+        "line": 36,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "DerivedSignals",
+        "line": 58,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "ScoreCard",
+        "line": 118,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "HypothesisAssessment",
+        "line": 142,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "weight": 157,
+      "is_suspicious": 162,
+      "is_benign": 166,
+      "detail": 170,
+      "build_context": 176,
+      "build_evidence_snapshot": 185,
+      "derive_signals": 209,
+      "compute_base_scores": 313,
+      "_allocate_base_scores": 319,
+      "_base_totals": 328,
+      "compute_scorecard": 336,
+      "has_real_photo_context_prior": 738
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from dataclasses import dataclass, field, replace",
+      "from math import fsum",
+      "from typing import Optional",
+      "from gui_semantics import ModuleSummary",
+      "from numerical_evidence import allocate_base_evidence, add_fragment_component, finalize_component_allocations",
+      "from metadata_evidence import ProvenanceState, MISSING_METADATA_PATTERNS, metadata_provenance_state",
+      "from scorecard_integrity import STATUS_WEIGHTS, COMPONENT_FIELDS, BOOST_FIELDS, ComponentLedger, available_sections, usable_observation, validate_score_inputs, validate_derived_signals, validate_scorecard, camera_attenuation, ScorecardIntegrityError, validate_score_context"
+    ]
+  },
+  "hypothesis_evidence.py": {
+    "classes": [
+      {
+        "name": "EvidenceUse",
+        "line": 37,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "_rules": 81,
+      "scope_hypothesis_evidence": 156,
+      "evidence_presentation": 270,
+      "append_hypothesis_evidence": 288
+    },
+    "imports": [
+      "from dataclasses import dataclass",
+      "from typing import Literal",
+      "from gui_semantics import ModuleSummary",
+      "from hypothesis_engine import HypothesisAssessment",
+      "from metadata_evidence import GENERATION_PATTERNS, ENHANCEMENT_PATTERNS, MISSING_METADATA_PATTERNS, GENERATION_SIGNAL_IDS, ENHANCEMENT_SIGNAL_IDS",
+      "from signal_language import humanize_signal",
+      "from scorecard_integrity import usable_observation"
+    ]
+  },
+  "image_gatekeeper.py": {
+    "classes": [
+      {
+        "name": "PreparedImageInfo",
+        "line": 17,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "_fit_size": 26,
+      "_save_prepared_variant": 35,
+      "prepare_analysis_images": 60
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from dataclasses import asdict, dataclass",
+      "from pathlib import Path",
+      "from typing import Any, Dict, Optional",
+      "from PIL import Image"
+    ]
+  },
+  "marginal_corroboration.py": {
+    "classes": [
+      {
+        "name": "Contribution",
+        "line": 15,
+        "bases": [],
+        "methods": {
+          "__post_init__": 28
+        }
+      },
+      {
+        "name": "ExperimentalCredits",
+        "line": 36,
+        "bases": [],
+        "methods": {
+          "__post_init__": 41
+        }
+      }
+    ],
+    "functions": {
+      "allocate_marginal": 51
+    },
+    "imports": [
+      "from dataclasses import asdict, dataclass",
+      "from math import isfinite",
+      "from evidence_lineage import Addition, Kind, LineageError"
+    ]
+  },
+  "mask_contract.py": {
+    "classes": [
+      {
+        "name": "MaskStatus",
+        "line": 15,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "StageUnavailable",
+        "line": 23,
+        "bases": [
+          "Exception"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "InvalidMaskPayload",
+        "line": 26,
+        "bases": [
+          "ValueError"
+        ],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "person_mask_diagnostics": 32,
+      "normalize_region_masks": 85,
+      "validate_region_masks": 116,
+      "require_person_geometry": 158
+    },
+    "imports": [
+      "from enum import Enum",
+      "from pathlib import Path",
+      "import math",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "metadata_evidence.py": {
+    "classes": [
+      {
+        "name": "ProvenanceState",
+        "line": 10,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "classify_metadata_signals": 46,
+      "metadata_provenance_state": 88
+    },
+    "imports": [
+      "from enum import Enum"
+    ]
+  },
+  "narrative_builder.py": {
+    "classes": [],
+    "functions": {
+      "render_summary_text": 36,
+      "format_overall_text_html": 58,
+      "render_summary_html": 99
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from html import escape",
+      "from gui_semantics import color_for_confidence, color_for_signal",
+      "from summary_types import SummaryResult"
+    ]
+  },
+  "numerical_evidence.py": {
+    "classes": [],
+    "functions": {
+      "allocate_base_evidence": 20,
+      "add_fragment_component": 130,
+      "finalize_component_allocations": 152
+    },
+    "imports": [
+      "from math import fsum",
+      "from evidence_lineage import Addition, Kind, build_lineage, numerical_restatement_sources",
+      "from scorecard_integrity import ScorecardIntegrityError, finite_number"
+    ]
+  },
+  "osint_dialogs.py": {
+    "classes": [
+      {
+        "name": "OSINTFindingDialog",
+        "line": 12,
+        "bases": [
+          "QDialog"
+        ],
+        "methods": {
+          "__init__": 13,
+          "set_from_match": 72,
+          "_set_combo_value": 82,
+          "_on_accept": 89,
+          "get_data": 95
+        }
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from __future__ import annotations",
+      "from typing import Optional",
+      "from PyQt6.QtCore import Qt",
+      "from PyQt6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit, QMessageBox, QPlainTextEdit, QVBoxLayout",
+      "from osint_reverse_search import ReverseSearchMatch"
+    ]
+  },
+  "osint_reverse_search.py": {
+    "classes": [
+      {
+        "name": "ReverseSearchMatch",
+        "line": 23,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "ReverseSearchQueryLinks",
+        "line": 37,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "ReverseSearchResult",
+        "line": 46,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "utc_now_iso": 90,
+      "sha256_of_file": 94,
+      "guess_mime_type": 105,
+      "ensure_dir": 110,
+      "save_json": 116,
+      "load_json": 121,
+      "domain_from_url": 126,
+      "classify_source_type": 133,
+      "_sort_key": 170,
+      "summarize_matches": 174,
+      "dataclass_to_jsonable": 266,
+      "create_empty_osint_result": 274,
+      "save_osint_result": 295,
+      "load_osint_result": 303,
+      "initialize_osint_for_image": 348,
+      "open_reverse_search": 354,
+      "mark_reviewed_no_match": 377,
+      "add_manual_match": 384,
+      "replace_match": 421,
+      "delete_match": 460,
+      "_apply_summary_fields": 470,
+      "format_match_label": 488,
+      "build_osint_summary_text": 496
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import hashlib",
+      "import json",
+      "import mimetypes",
+      "import os",
+      "import webbrowser",
+      "from dataclasses import asdict, dataclass, field",
+      "from datetime import datetime, timezone",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Optional",
+      "from urllib.parse import urlparse"
+    ]
+  },
+  "production_corroboration.py": {
+    "classes": [
+      {
+        "name": "RequirementKind",
+        "line": 19,
+        "bases": [
+          "str",
+          "Enum"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "CorroborationRequirement",
+        "line": 26,
+        "bases": [],
+        "methods": {
+          "__post_init__": 34
+        }
+      }
+    ],
+    "functions": {
+      "_valid_observation": 45,
+      "_disjoint_witnesses": 52,
+      "evaluate_corroboration": 78,
+      "record_gate": 164
+    },
+    "imports": [
+      "from dataclasses import dataclass",
+      "from enum import Enum",
+      "from math import isfinite",
+      "from numbers import Real",
+      "from evidence_lineage import Addition, Family, Kind, LineageError, build_lineage, lineage_from_json, lineage_to_json"
+    ]
+  },
+  "py_sources_to_txt.py": {
+    "classes": [],
+    "functions": {},
+    "imports": []
+  },
+  "reasoning_persistence.py": {
+    "classes": [],
+    "functions": {
+      "persist_reasoning_trace": 13,
+      "_fmt_scalar": 35,
+      "_filter_supporting_for_trace": 44,
+      "_add_heading": 59,
+      "_add_kv": 63,
+      "_add_list": 67,
+      "_build_decision_win_explanation": 79,
+      "build_reasoning_trace_text": 299,
+      "persist_reasoning_trace_text": 482
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from hypothesis_evidence import ROLE_TITLES, evidence_presentation",
+      "import json",
+      "from pathlib import Path",
+      "from typing import Any"
+    ]
+  },
+  "run_reporting.py": {
+    "classes": [
+      {
+        "name": "RunRecorder",
+        "line": 29,
+        "bases": [],
+        "methods": {
+          "__post_init__": 43,
+          "log": 52,
+          "record_stage_start": 57,
+          "record_stage_finish": 68,
+          "record_error": 79,
+          "add_artifact": 87,
+          "finalize": 91,
+          "as_dict": 96,
+          "flush_manifest": 115
+        }
+      }
+    ],
+    "functions": {
+      "_now_iso": 18,
+      "_safe_jsonable": 21
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "from dataclasses import dataclass, field",
+      "from datetime import datetime, timezone",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Optional",
+      "from uuid import uuid4",
+      "from signallens_version import APP_VERSION"
+    ]
+  },
+  "scorecard_integrity.py": {
+    "classes": [
+      {
+        "name": "ScorecardIntegrityError",
+        "line": 13,
+        "bases": [
+          "ValueError"
+        ],
+        "methods": {}
+      },
+      {
+        "name": "ComponentLedger",
+        "line": 98,
+        "bases": [],
+        "methods": {
+          "__init__": 101,
+          "apply": 105,
+          "add": 123,
+          "multiply": 126,
+          "maximum": 129
+        }
+      }
+    ],
+    "functions": {
+      "finite_number": 37,
+      "usable_observation": 43,
+      "camera_attenuation": 47,
+      "available_sections": 54,
+      "validate_score_inputs": 58,
+      "validate_derived_signals": 80,
+      "validate_score_context": 92,
+      "replay_components": 133,
+      "reconstruct_scorecard_calculation": 157,
+      "validate_numerical_allocation": 195,
+      "validate_scorecard": 261
+    },
+    "imports": [
+      "from math import fsum, isclose, isfinite",
+      "from numbers import Real"
+    ]
+  },
+  "settings_dialog.py": {
+    "classes": [
+      {
+        "name": "SettingsDialog",
+        "line": 18,
+        "bases": [
+          "QDialog"
+        ],
+        "methods": {
+          "__init__": 31,
+          "_build_ui": 49,
+          "_build_general_tab": 77,
+          "_build_patch_profiles_tab": 105,
+          "_build_region_profiles_tab": 136,
+          "_build_json_preview_tab": 161,
+          "_make_int_spinbox": 179,
+          "_make_float_spinbox": 186,
+          "_load_values_into_ui": 198,
+          "_set_spin": 226,
+          "_collect_settings_from_ui": 232,
+          "_parse_extensions": 266,
+          "_validate_settings": 284,
+          "_browse_output_root": 325,
+          "_refresh_from_ui_and_preview": 336,
+          "_update_json_preview_from_ui_quietly": 340,
+          "_update_json_preview": 348,
+          "_save_and_accept": 357,
+          "_reset_to_defaults": 375,
+          "_open_settings_file": 396
+        }
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import os",
+      "from copy import deepcopy",
+      "from pathlib import Path",
+      "from typing import Any",
+      "from PyQt6.QtCore import Qt",
+      "from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox, QDoubleSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget",
+      "from signallens_settings import SETTINGS_FILE, load_settings, save_settings, reset_settings_to_defaults"
+    ]
+  },
+  "signal_language.py": {
+    "classes": [],
+    "functions": {
+      "humanize_signal": 8,
+      "explain_pattern": 14
+    },
+    "imports": []
+  },
+  "signallens_controller.py": {
+    "classes": [
+      {
+        "name": "AnalysisState",
+        "line": 50,
+        "bases": [],
+        "methods": {
+          "has_errors": 87
+        }
+      },
+      {
+        "name": "SignalLensController",
+        "line": 96,
+        "bases": [],
+        "methods": {
+          "__init__": 97,
+          "log": 110,
+          "set_status": 113,
+          "update_summary": 116,
+          "run_stage": 120,
+          "_select_region_masks": 219,
+          "_cross_signal": 262,
+          "run_analysis": 309
+        }
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from __future__ import annotations",
+      "from dataclasses import dataclass, field",
+      "from pathlib import Path",
+      "from typing import Callable, Any",
+      "import json",
+      "import time",
+      "from PIL import Image",
+      "from mask_contract import StageUnavailable, InvalidMaskPayload, person_mask_diagnostics, validate_region_masks, require_person_geometry, PERSON_MASK_STATUSES",
+      "from signallens_settings import get_patch_profile, get_subject_background_profile",
+      "from run_reporting import RunRecorder",
+      "from image_gatekeeper import prepare_analysis_images",
+      "from exiftool_backend import analyze_file_with_exiftool",
+      "from vf_ela import run_ela",
+      "from vf_noise import run_noise_analysis",
+      "from vf_fft import run_fft_analysis",
+      "from vf_cross_signal import compute_cross_signal_payload",
+      "from vf_person_subject_mask import run_person_subject_mask_analysis, derive_region_masks_from_person_mask",
+      "from vf_overlay import create_shared_boundary_overlays",
+      "from vf_patch_similarity import run_patch_similarity_analysis",
+      "from vf_sensor_origin import run_sensor_origin_analysis",
+      "from vf_subject_boundary import run_subject_boundary_analysis",
+      "from vf_compression_history import run_compression_history_analysis",
+      "from vf_cfa_demosaic import run_cfa_demosaic_analysis",
+      "from vf_region_masks import run_region_mask_analysis",
+      "from vf_region_fft import run_region_fft_analysis",
+      "from vf_boundary_focus import run_boundary_focus_analysis",
+      "from vf_patch_spatial import run_patch_spatial_analysis",
+      "from vf_subject_texture_consistency import run_subject_texture_consistency_analysis",
+      "from vf_subject_process_asymmetry import run_subject_process_asymmetry_analysis",
+      "from vf_subject_material_realism import run_subject_material_realism_analysis",
+      "from vf_region_segmentation import run_region_segmentation_analysis",
+      "from vf_segmentation_alignment import compute_segmentation_boundary_alignment"
+    ]
+  },
+  "signallens_gui.py": {
+    "classes": [
+      {
+        "name": "SignalLensGui",
+        "line": 36,
+        "bases": [
+          "QWidget"
+        ],
+        "methods": {
+          "__init__": 37,
+          "place_window_above_taskbar": 74,
+          "_create_menu_bar": 101,
+          "_build_ui": 161,
+          "build_osint_group": 248,
+          "show_settings_dialog": 281,
+          "show_about_dialog": 285,
+          "log": 290,
+          "update_summary": 306,
+          "on_analysis_mode_changed": 321,
+          "clear_analysis_state": 325,
+          "clear_ui": 346,
+          "is_supported_image": 368,
+          "set_selected_file": 371,
+          "pick_file": 399,
+          "dragEnterEvent": 414,
+          "dragLeaveEvent": 429,
+          "dropEvent": 436,
+          "clear_summary": 452,
+          "update_osint_buttons": 459,
+          "open_osint_engine": 469,
+          "add_osint_finding": 481,
+          "edit_selected_osint_finding": 503,
+          "delete_selected_osint_finding": 531,
+          "mark_osint_reviewed_no_match": 544,
+          "refresh_osint_ui": 553,
+          "ensure_osint_ready": 574,
+          "run_analysis": 587,
+          "on_analysis_finished": 614,
+          "on_analysis_error": 667,
+          "open_latest_audit_folder": 673,
+          "open_output_folder": 705,
+          "show_decision_trace_dialog": 731,
+          "has_decision_trace": 853,
+          "show_audit_trail_overview": 865,
+          "cleanup_audit_trails": 910,
+          "delete_audit_trails_older_than_30_days": 932,
+          "remove_visual_audit_artifacts": 948,
+          "show_known_limitations_dialog": 968,
+          "send_feedback": 999
+        }
+      }
+    ],
+    "functions": {
+      "main": 1021
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import os",
+      "import sys, time",
+      "import platform",
+      "import subprocess",
+      "from pathlib import Path",
+      "from PyQt6.QtCore import Qt, QThread, QTimer",
+      "from PyQt6.QtGui import QGuiApplication, QDragEnterEvent, QDropEvent, QTextCharFormat, QColor, QTextCursor, QAction, QIcon",
+      "from PyQt6.QtWidgets import QDialog, QVBoxLayout, QTextBrowser, QPushButton, QMessageBox, QApplication, QWidget, QVBoxLayout, QHBoxLayout, QListWidget, QGroupBox, QListWidgetItem, QTextEdit, QCheckBox, QComboBox, QLabel, QFileDialog, QLineEdit, QGridLayout, QMenuBar",
+      "from signallens_settings import load_settings",
+      "from osint_reverse_search import add_manual_match, build_osint_summary_text, delete_match, format_match_label, initialize_osint_for_image",
+      "from osint_reverse_search import load_osint_result, mark_reviewed_no_match, open_reverse_search, replace_match, save_osint_result",
+      "from osint_dialogs import OSINTFindingDialog",
+      "from summary_synthesizer import build_summary_result",
+      "from analysis_worker import AnalysisWorker",
+      "from gui_semantics import color_for_log_level",
+      "from summary_persistence import persist_summary_result",
+      "from reasoning_persistence import persist_reasoning_trace, persist_reasoning_trace_text",
+      "from audit_manager import AuditManager",
+      "from settings_dialog import SettingsDialog",
+      "from signallens_version import VERSION, APP_VERSION, FEEDBACK_URL"
+    ]
+  },
+  "signallens_settings.py": {
+    "classes": [],
+    "functions": {
+      "_merge_defaults": 50,
+      "load_settings": 60,
+      "save_settings": 68,
+      "reload_settings": 75,
+      "reset_settings_to_defaults": 79,
+      "get_patch_profile": 83,
+      "get_subject_background_profile": 90,
+      "get_output_root": 97,
+      "get_supported_extensions": 100,
+      "get_file_masks": 103
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from functools import lru_cache",
+      "from copy import deepcopy",
+      "import json"
+    ]
+  },
+  "signallens_version.py": {
+    "classes": [],
+    "functions": {},
+    "imports": []
+  },
+  "summary_persistence.py": {
+    "classes": [],
+    "functions": {
+      "_to_jsonable": 14,
+      "persist_summary_result": 28,
+      "_get_generator_text": 62,
+      "_append_generator_to_text": 75,
+      "_append_generator_to_html": 91
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "from dataclasses import asdict, is_dataclass",
+      "from pathlib import Path",
+      "from typing import Any, Dict"
+    ]
+  },
+  "summary_sections.py": {
+    "classes": [],
+    "functions": {
+      "build_osint_section": 15,
+      "build_metadata_section": 54,
+      "build_ela_section": 172,
+      "build_noise_section": 187,
+      "build_sensor_origin_section": 202,
+      "build_cfa_demosaic_section": 250,
+      "build_region_mask_section": 291,
+      "build_segmentation_alignment_section": 347,
+      "build_region_segmentation_section": 385,
+      "build_cross_signal_section": 419,
+      "build_boundary_section": 444,
+      "build_boundary_focus_section": 470,
+      "build_fft_section": 554,
+      "build_region_fft_section": 603,
+      "build_patch_spatial_section": 689,
+      "build_subject_texture_consistency_section": 818,
+      "build_subject_boundary_section": 886,
+      "build_patch_similarity_section": 919,
+      "build_subject_process_asymmetry_section": 960,
+      "build_subject_material_realism_section": 1034,
+      "build_compression_history_section": 1078,
+      "extract_overlay_paths": 1116,
+      "extract_module_scores": 1121
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from typing import Optional",
+      "from gui_semantics import ModuleSummary",
+      "from metadata_evidence import GENERATION_PATTERNS, ENHANCEMENT_PATTERNS, classify_metadata_signals"
+    ]
+  },
+  "summary_synthesizer.py": {
+    "classes": [],
+    "functions": {
+      "build_context_info": 44,
+      "build_summary_result": 73
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from decision_logic import synthesize_overall",
+      "from narrative_builder import render_summary_html, render_summary_text",
+      "from summary_types import SummaryResult",
+      "from summary_sections import build_boundary_focus_section, build_boundary_section, build_compression_history_section, build_cross_signal_section, build_ela_section, build_fft_section, build_region_fft_section, build_region_fft_section, build_region_mask_section, build_metadata_section, build_noise_section, build_osint_section, build_patch_similarity_section, build_sensor_origin_section, build_subject_boundary_section, build_cfa_demosaic_section, build_subject_texture_consistency_section, extract_module_scores, extract_overlay_paths, build_patch_spatial_section, build_subject_process_asymmetry_section, build_subject_material_realism_section, build_segmentation_alignment_section"
+    ]
+  },
+  "summary_types.py": {
+    "classes": [
+      {
+        "name": "SummaryResult",
+        "line": 15,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {},
+    "imports": [
+      "from __future__ import annotations",
+      "from dataclasses import dataclass, field",
+      "from typing import Optional",
+      "from gui_semantics import ModuleSummary",
+      "from signallens_version import APP_NAME, APP_VERSION, APP_STAGE, APP_GENERATOR_TEXT"
+    ]
+  },
+  "vf_boundary_focus.py": {
+    "classes": [],
+    "functions": {
+      "_load_mask": 13,
+      "_safe_mean": 19,
+      "_safe_std": 25,
+      "_safe_ratio": 31,
+      "_normalize_to_u8": 34,
+      "_extract_ela_map": 44,
+      "_extract_noise_map": 70,
+      "_resize_to_mask_shape": 94,
+      "_make_preview": 100,
+      "run_boundary_focus_analysis": 124
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Dict",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "vf_cfa_demosaic.py": {
+    "classes": [],
+    "functions": {
+      "clamp01": 26,
+      "ensure_bgr": 29,
+      "normalize_map": 35,
+      "highpass_residual": 45,
+      "block_view_shape": 52,
+      "checkerboard_phase_means": 55,
+      "phase_periodicity_score": 70,
+      "demosaic_directionality_score": 83,
+      "build_top_blocks": 97,
+      "create_overlay": 112,
+      "compute_block_maps": 133,
+      "interpret_cfa_demosaic": 176,
+      "run_cfa_demosaic_analysis": 211
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any",
+      "import math",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "vf_compression_history.py": {
+    "classes": [],
+    "functions": {
+      "clamp01": 14,
+      "ensure_bgr": 17,
+      "ensure_gray": 23,
+      "normalize_map": 26,
+      "block_view_shape": 36,
+      "jpeg_boundary_maps": 39,
+      "offgrid_boundary_maps": 61,
+      "local_std_map": 80,
+      "compute_block_score_map": 87,
+      "build_top_blocks": 101,
+      "create_compression_overlay": 114,
+      "estimate_double_jpeg_likelihood": 132,
+      "interpret_compression_history": 150,
+      "run_compression_history_analysis": 189
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "vf_cross_signal.py": {
+    "classes": [],
+    "functions": {
+      "classify_cross_signal_overlap": 18,
+      "merge_block_lists": 51,
+      "classify_boundary_convergence": 62,
+      "compute_cross_signal_payload": 153,
+      "blocks_to_mask": 210,
+      "compute_spatial_overlap": 224,
+      "find_connected_clusters": 268,
+      "score_contour_shape": 300
+    },
+    "imports": [
+      "from collections import deque",
+      "import numpy as np"
+    ]
+  },
+  "vf_ela.py": {
+    "classes": [
+      {
+        "name": "ElaMetrics",
+        "line": 103,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "estimate_jpeg_quality": 19,
+      "load_rgb_image": 116,
+      "compute_diff_array": 120,
+      "compute_ela_scale_factor": 125,
+      "create_ela_visual": 131,
+      "compute_blockwise_ela_stats": 137,
+      "classify_ela_pattern": 232,
+      "compute_ela_metrics": 263,
+      "run_ela": 306
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "from dataclasses import asdict, dataclass",
+      "from pathlib import Path",
+      "import numpy as np",
+      "import math",
+      "from typing import Any, Dict, List",
+      "from PIL import Image, ImageChops, ImageEnhance",
+      "from vf_overlay import create_hotspot_overlay"
+    ]
+  },
+  "vf_fft.py": {
+    "classes": [
+      {
+        "name": "PeakPoint",
+        "line": 36,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "GridHypothesis",
+        "line": 44,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "MultiGridHypothesis",
+        "line": 54,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "pair_symmetric_peaks": 62,
+      "select_dominant_grid_hypothesis": 96,
+      "build_spatial_grid_response": 139,
+      "gaussian_blur_separable": 158,
+      "save_grid_response_image": 171,
+      "save_grid_overlay_image": 178,
+      "summarize_grid_hypothesis": 298,
+      "blend_heatmap_on_grayscale": 330,
+      "select_top_grid_hypotheses": 364,
+      "build_multi_grid_response": 423,
+      "summarize_multi_grid_hypothesis": 445,
+      "run_fft_analysis": 472,
+      "load_grayscale_image": 664,
+      "apply_hann_window": 681,
+      "compute_fft_log_magnitude": 696,
+      "normalize_to_u8": 707,
+      "compute_radial_profile": 722,
+      "moving_average_1d": 744,
+      "compute_radial_features": 754,
+      "detect_offcenter_peaks": 814,
+      "compute_peak_features": 888,
+      "compute_anisotropy_features": 942,
+      "combine_fft_scores": 995,
+      "interpret_fft_pattern": 1010,
+      "save_spectrum_image": 1064,
+      "save_peakmap_image": 1068,
+      "save_radial_profile_plot": 1090,
+      "clamp01": 1124,
+      "robust_ratio": 1128,
+      "save_json": 1132
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import math",
+      "from dataclasses import dataclass",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Tuple",
+      "import numpy as np",
+      "from PIL import Image, ImageDraw, ImageColor",
+      "from matplotlib.figure import Figure",
+      "from matplotlib.backends.backend_agg import FigureCanvasAgg"
+    ]
+  },
+  "vf_noise.py": {
+    "classes": [
+      {
+        "name": "NoiseMetrics",
+        "line": 23,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "load_rgb_image": 35,
+      "rgb_to_luminance_array": 39,
+      "compute_residual_array": 45,
+      "compute_scale_factor": 55,
+      "create_residual_visual": 61,
+      "compute_noise_metrics": 65,
+      "compute_blockwise_residual_stats": 90,
+      "classify_noise_pattern": 164,
+      "run_noise_analysis": 194
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import math",
+      "from dataclasses import asdict, dataclass",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List",
+      "import numpy as np",
+      "from PIL import Image, ImageDraw, ImageFilter",
+      "from vf_overlay import create_hotspot_overlay"
+    ]
+  },
+  "vf_overlay.py": {
+    "classes": [],
+    "functions": {
+      "create_shared_boundary_overlays": 16,
+      "_normalize_block_coords": 82,
+      "create_hotspot_overlay": 100,
+      "draw_cluster_overlay": 134
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Iterable",
+      "from PIL import Image, ImageDraw, ImageColor"
+    ]
+  },
+  "vf_patch_similarity.py": {
+    "classes": [
+      {
+        "name": "PatchDescriptor",
+        "line": 40,
+        "bases": [],
+        "methods": {}
+      },
+      {
+        "name": "PatchPair",
+        "line": 46,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "run_patch_similarity_analysis": 57,
+      "load_images": 176,
+      "extract_patch_descriptors": 204,
+      "patch_to_descriptor": 227,
+      "descriptor_to_bucket_key": 245,
+      "build_descriptor_buckets": 257,
+      "find_similar_patches_accelerated": 276,
+      "find_similar_patch_pairs_bucketed": 342,
+      "find_similar_patch_pairs_bruteforce": 417,
+      "cosine_similarity": 457,
+      "build_recurrence_map": 463,
+      "compute_similarity_features": 480,
+      "interpret_patch_similarity": 555,
+      "save_patch_similarity_overlay": 592,
+      "save_recurrence_heatmap": 629,
+      "clamp01": 645,
+      "save_json": 648
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "import json",
+      "import math",
+      "import numpy as np",
+      "import cv2",
+      "from dataclasses import dataclass",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Tuple",
+      "from PIL import Image, ImageDraw",
+      "from sklearn.neighbors import NearestNeighbors"
+    ]
+  },
+  "vf_patch_spatial.py": {
+    "classes": [],
+    "functions": {
+      "_load_mask": 15,
+      "_safe_ratio": 21,
+      "_point_region": 24,
+      "_pair_category": 37,
+      "_remap_point_to_mask_space": 43,
+      "run_patch_spatial_analysis": 64
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Dict, Tuple",
+      "import cv2",
+      "import numpy as np",
+      "from vf_patch_similarity import DEFAULT_MAX_PAIRS_TO_KEEP"
+    ]
+  },
+  "vf_person_subject_mask.py": {
+    "classes": [],
+    "functions": {
+      "suppress_native_stderr": 25,
+      "_write_person_mask_debug": 54,
+      "_detect_person_mask_mediapipe_tasks": 70,
+      "_refine_mediapipe_mask_from_confidence": 108,
+      "_ensure_2d_mask": 129,
+      "_clean_mask": 141,
+      "_safe_area_ratio": 150,
+      "_largest_component_stats": 153,
+      "_make_bbox_mask": 174,
+      "_detect_person_bbox_hog": 186,
+      "_fallback_center_subject_mask": 207,
+      "_quality_from_mask": 222,
+      "_save_mask": 267,
+      "_save_overlay": 271,
+      "run_person_subject_mask_analysis": 294,
+      "derive_region_masks_from_person_mask": 447
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Dict, Tuple",
+      "import cv2",
+      "import json",
+      "import numpy as np",
+      "import sys",
+      "import contextlib",
+      "import os",
+      "from importlib.metadata import version, PackageNotFoundError",
+      "from app_paths import app_dir, resource_path",
+      "from mask_contract import normalize_region_masks, person_mask_diagnostics"
+    ]
+  },
+  "vf_region_fft.py": {
+    "classes": [],
+    "functions": {
+      "_load_mask": 15,
+      "_extract_fft_metrics": 21,
+      "_mask_bbox": 32,
+      "_expand_bbox": 40,
+      "_soften_mask": 53,
+      "_extract_soft_region_crop": 63,
+      "_align_mask_to_image": 94,
+      "run_region_fft_analysis": 103
+    },
+    "imports": [
+      "import numpy as np",
+      "import cv2",
+      "from pathlib import Path",
+      "from typing import Any, Dict, Tuple",
+      "from vf_fft import run_fft_analysis"
+    ]
+  },
+  "vf_region_masks.py": {
+    "classes": [],
+    "functions": {
+      "_normalize_to_u8": 12,
+      "_largest_connected_component": 19,
+      "_create_boundary_band": 27,
+      "_create_preview": 35,
+      "run_region_mask_analysis": 52
+    },
+    "imports": [
+      "import numpy as np",
+      "import cv2",
+      "from pathlib import Path",
+      "from typing import Any, Dict",
+      "from mask_contract import normalize_region_masks, StageUnavailable"
+    ]
+  },
+  "vf_region_segmentation.py": {
+    "classes": [],
+    "functions": {
+      "run_region_segmentation_analysis": 11
+    },
+    "imports": [
+      "import cv2",
+      "from vf_subject_process_asymmetry import _load_mask"
+    ]
+  },
+  "vf_segmentation_alignment.py": {
+    "classes": [],
+    "functions": {
+      "_overlap_ratio": 10,
+      "_load_bin_mask": 20,
+      "compute_segmentation_boundary_alignment": 26
+    },
+    "imports": [
+      "import numpy as np",
+      "import cv2"
+    ]
+  },
+  "vf_sensor_origin.py": {
+    "classes": [],
+    "functions": {
+      "clamp01": 23,
+      "ensure_uint8_gray": 26,
+      "highpass_residual": 32,
+      "block_view_shape": 38,
+      "compute_block_maps": 41,
+      "normalize_map": 73,
+      "build_top_blocks": 82,
+      "create_sensor_overlay": 95,
+      "interpret_sensor_origin": 113,
+      "run_sensor_origin_analysis": 148
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "import math",
+      "from typing import Any",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "vf_subject_boundary.py": {
+    "classes": [],
+    "functions": {
+      "clamp01": 14,
+      "ensure_bgr": 17,
+      "ensure_gray": 23,
+      "normalize_map": 27,
+      "local_std_map": 37,
+      "gradient_map": 44,
+      "estimate_sensor_like_map": 50,
+      "make_boundary_mask": 61,
+      "ring_masks": 72,
+      "masked_mean": 81,
+      "color_diff_across_rings": 87,
+      "build_top_blocks": 99,
+      "block_score_map": 112,
+      "create_boundary_overlay": 127,
+      "interpret_subject_boundary": 136,
+      "region_masks": 170,
+      "local_contrast_map": 184,
+      "run_subject_boundary_analysis": 190
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any",
+      "import cv2",
+      "import numpy as np"
+    ]
+  },
+  "vf_subject_material_realism.py": {
+    "classes": [],
+    "functions": {
+      "_sigmoid": 22,
+      "_clamp01": 25,
+      "_build_subject_variance_heatmap": 28,
+      "run_subject_material_realism_analysis": 64
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Dict, Any",
+      "import cv2",
+      "import numpy as np",
+      "from vf_subject_process_asymmetry import _load_mask, _resize_mask, _load_bgr_image_exact, _validate_region_geometry, _sample_region_patches, _aggregate_region_metrics, _write_overlay, _sample_single_region_with_retries"
+    ]
+  },
+  "vf_subject_process_asymmetry.py": {
+    "classes": [
+      {
+        "name": "PatchCandidate",
+        "line": 157,
+        "bases": [],
+        "methods": {}
+      }
+    ],
+    "functions": {
+      "_load_bgr_image_exact": 19,
+      "_resize_mask": 28,
+      "_validate_region_geometry": 35,
+      "_load_mask": 55,
+      "_safe_float": 61,
+      "_normalize_map": 67,
+      "_sigmoid": 75,
+      "_clamp01": 79,
+      "_ratio": 82,
+      "_hist_distance": 85,
+      "_patch_entropy_u8": 103,
+      "_patch_dct_vector": 112,
+      "_extract_patch_features": 125,
+      "_collect_region_patch_candidates": 164,
+      "_select_stratified_candidates": 200,
+      "_sample_region_patches": 254,
+      "_aggregate_region_metrics": 291,
+      "_sample_regions_with_retries": 364,
+      "_sample_single_region_with_retries": 475,
+      "_comparative_features": 544,
+      "_compute_baseline_reliability": 591,
+      "_compute_scores": 622,
+      "_interpret_pattern": 695,
+      "_build_asymmetry_heatmap": 764,
+      "_write_overlay": 793,
+      "run_subject_process_asymmetry_analysis": 803
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Tuple",
+      "import math",
+      "import cv2",
+      "import numpy as np",
+      "from dataclasses import dataclass"
+    ]
+  },
+  "vf_subject_texture_consistency.py": {
+    "classes": [],
+    "functions": {
+      "_analyze_subject_surface_regime": 157,
+      "_get_cfg_value": 209,
+      "_build_subject_texture_runtime_config": 213,
+      "_load_mask": 227,
+      "_load_gray_image_exact": 233,
+      "_load_rgb_image_exact": 243,
+      "_validate_analysis_geometry": 253,
+      "_largest_connected_component": 270,
+      "_build_subject_surface_focus_mask": 287,
+      "_save_mask_overlay": 336,
+      "_resize_mask": 351,
+      "_patch_to_descriptor": 358,
+      "_extract_masked_patch_descriptors": 421,
+      "_build_background_texture_focus_mask": 452,
+      "_cap_mask_area": 507,
+      "_compute_region_texture_scores": 568,
+      "_cosine_from_unit_vectors": 674,
+      "_build_subject_similarity_map": 677,
+      "_normalize_to_u8": 687,
+      "_save_subject_similarity_overlay": 696,
+      "run_subject_texture_consistency_analysis": 718
+    },
+    "imports": [
+      "from __future__ import annotations",
+      "from pathlib import Path",
+      "from typing import Any, Dict, List, Tuple",
+      "import cv2",
+      "import numpy as np",
+      "from sklearn.neighbors import NearestNeighbors"
+    ]
+  }
+}

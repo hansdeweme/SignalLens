@@ -8,10 +8,12 @@ from typing import Optional
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit, QMessageBox, QPlainTextEdit, QVBoxLayout
 from osint_reverse_search import ReverseSearchMatch
+from gui_design_system import apply_theme
 
 class OSINTFindingDialog(QDialog):
     def __init__(self, parent=None, existing_match: Optional[ReverseSearchMatch] = None) -> None:
         super().__init__(parent)
+        apply_theme(self)
         self.setWindowTitle("OSINT Finding")
         self.setModal(True)
         self.resize(520, 420)

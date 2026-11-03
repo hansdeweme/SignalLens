@@ -50,3 +50,19 @@ Thumbs.db
 !signallens_settings.json
 !exif_rules.json
 !*.spec
+
+# UI-1 validation: keep generated forensic images and pytest workspaces local.
+/doc/gui_modernization/ui1/reference_*/
+/doc/gui_modernization/ui1/baseline_tmp/
+/doc/gui_modernization/ui1/baseline_run/
+/doc/gui_modernization/ui1/baseline_inherited_acl/
+/doc/gui_modernization/ui1/core_tests/
+/doc/gui_modernization/ui1/new_tests_*/
+/doc/gui_modernization/ui1/test_runs/
+
+# UI-2 local workspace preferences and generated visual/forensic validation.
+/signallens_workspace.ini
+/signallens_workspace.ini.*
+/doc/gui_modernization/ui2/test_runs/
+/doc/gui_modernization/ui2/reference_runs/
+/doc/gui_modernization/ui2/native_run/

@@ -17,12 +17,14 @@ class AnalysisWorker(QObject):
     log = pyqtSignal(str, str)           # message, level
     status = pyqtSignal(str)
 
-    def __init__(self, selected_file, output_dir, output_json, analysis_mode):
+    def __init__(self, selected_file, output_dir, output_json, analysis_mode, *, settings_snapshot=None):
         super().__init__()
         self.selected_file = selected_file
         self.output_dir = output_dir
         self.output_json = output_json
         self.analysis_mode = analysis_mode
+        from copy import deepcopy
+        self.settings_snapshot = deepcopy(settings_snapshot)
 
     def run(self):
         try:
@@ -30,6 +32,7 @@ class AnalysisWorker(QObject):
                 log_fn=self.log.emit,
                 status_fn=self.status.emit,
                 summary_update_fn=None,
+                settings_snapshot=self.settings_snapshot,
             )
             state = controller.run_analysis(
                 selected_file=self.selected_file,

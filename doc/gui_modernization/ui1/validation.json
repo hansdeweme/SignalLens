@@ -1,0 +1,76 @@
+{
+  "branch": "main",
+  "head": "00c5eb2ea179470fcde7f4bf25a704feaa8b28fd",
+  "baseline_head_unchanged": true,
+  "tracked_files_changed_by_ui1": [
+    ".gitignore",
+    "analysis_worker.py",
+    "signallens_controller.py",
+    "signallens_gui.py",
+    "summary_persistence.py"
+  ],
+  "unexpected_tracked_changes": [],
+  "inherited_modified_docx_preserved": true,
+  "reasoning_modules_unchanged": true,
+  "original_test_files_unchanged": true,
+  "syntax_checked": [
+    "investigation_presenters.py",
+    "investigation_reports.py",
+    "investigation_session.py",
+    "investigation_workers.py",
+    "presentation_models.py",
+    "signallens_gui.py",
+    "analysis_worker.py",
+    "signallens_controller.py",
+    "summary_persistence.py",
+    "tests\\test_investigation_contracts.py",
+    "tests\\test_investigation_gui.py"
+  ],
+  "tests": {
+    "tests": 378,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reference_equivalence": {
+    "instagram": {
+      "suspicious_score": true,
+      "benign_score": true,
+      "pattern": true,
+      "confidence": true,
+      "hypotheses": true,
+      "sha256_before": true,
+      "sha256_after": true
+    },
+    "midjourney": {
+      "suspicious_score": true,
+      "benign_score": true,
+      "pattern": true,
+      "confidence": true,
+      "hypotheses": true,
+      "sha256_before": true,
+      "sha256_after": true
+    }
+  },
+  "required_documents_present": true,
+  "staged_diff": "",
+  "git_status": [
+    " M .gitignore",
+    " M analysis_worker.py",
+    " M \"doc/SignalLens - Modernizing the Forensic Reasoning Engine.docx\"",
+    " M signallens_controller.py",
+    " M signallens_gui.py",
+    " M summary_persistence.py",
+    "?? \"SignalLens GUI Modernization Phase UI-0  Architecture & Design Audit.md\"",
+    "?? \"SignalLens UI-1 Investigation Session Integrity & Presentation Contracts.md\"",
+    "?? doc/gui_modernization/",
+    "?? \"doc/~$gnalLens - Modernizing the Forensic Reasoning Engine.docx\"",
+    "?? investigation_presenters.py",
+    "?? investigation_reports.py",
+    "?? investigation_session.py",
+    "?? investigation_workers.py",
+    "?? presentation_models.py",
+    "?? tests/test_investigation_contracts.py",
+    "?? tests/test_investigation_gui.py"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "branch": "main",
+  "head": "00c5eb2ea179470fcde7f4bf25a704feaa8b28fd",
+  "ui2_existing_files_changed": [
+    ".gitignore",
+    "osint_dialogs.py",
+    "settings_dialog.py",
+    "signallens_gui.py"
+  ],
+  "unexpected_inherited_changes": [],
+  "new_ui2_source_files": [
+    "gui_design_system.py",
+    "gui_components.py",
+    "gui_workspace.py",
+    "gui_workspace_state.py",
+    "tests/test_workspace_shell.py"
+  ],
+  "ui1_core_modules_unchanged": true,
+  "inherited_test_files_unchanged": true,
+  "inherited_documents_unchanged": true,
+  "settings_and_dependencies_unchanged": true,
+  "required_documents_present": true,
+  "tests": {
+    "tests": 406,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "offscreen_captures": 13,
+  "native_captures": 5,
+  "reference_verification_present": true,
+  "staged_diff": "",
+  "git_status": [
+    " M .gitignore",
+    " M analysis_worker.py",
+    " M \"doc/SignalLens - Modernizing the Forensic Reasoning Engine.docx\"",
+    " M osint_dialogs.py",
+    " M settings_dialog.py",
+    " M signallens_controller.py",
+    " M signallens_gui.py",
+    " M summary_persistence.py",
+    "?? \"SignalLens GUI Modernization Phase UI-0  Architecture & Design Audit.md\"",
+    "?? \"SignalLens UI-1 Investigation Session Integrity & Presentation Contracts.md\"",
+    "?? \"SignalLens UI-2 Visual Design System & Workspace Shell.md\"",
+    "?? doc/gui_modernization/",
+    "?? \"doc/~$gnalLens - Modernizing the Forensic Reasoning Engine.docx\"",
+    "?? gui_components.py",
+    "?? gui_design_system.py",
+    "?? gui_workspace.py",
+    "?? gui_workspace_state.py",
+    "?? investigation_presenters.py",
+    "?? investigation_reports.py",
+    "?? investigation_session.py",
+    "?? investigation_workers.py",
+    "?? presentation_models.py",
+    "?? tests/test_investigation_contracts.py",
+    "?? tests/test_investigation_gui.py",
+    "?? tests/test_workspace_shell.py"
+  ],
+  "whitespace_check": 0
+}

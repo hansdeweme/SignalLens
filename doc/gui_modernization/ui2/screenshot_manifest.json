@@ -1,0 +1,128 @@
+[
+  {
+    "file": "01_empty_overview_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "02_image_selected_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "03_analysis_running_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "04_completed_overview_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "05_image_forensics_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "06_evidence_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "07_reasoning_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "08_provenance_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "09_reports_offscreen.png",
+    "width": 1280,
+    "height": 900,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "10_settings_offscreen.png",
+    "width": 820,
+    "height": 720,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "11_osint_dialog_offscreen.png",
+    "width": 520,
+    "height": 420,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "12_minimum_overview_offscreen.png",
+    "width": 1040,
+    "height": 720,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "13_large_overview_offscreen.png",
+    "width": 1600,
+    "height": 1000,
+    "format": "PNG",
+    "capture": "offscreen Qt"
+  },
+  {
+    "file": "14_native_empty_maximized.jpg",
+    "width": 1920,
+    "height": 1152,
+    "format": "JPEG",
+    "capture": "native Windows"
+  },
+  {
+    "file": "15_native_empty_restored.jpg",
+    "width": 1282,
+    "height": 932,
+    "format": "JPEG",
+    "capture": "native Windows"
+  },
+  {
+    "file": "16_native_settings_owned_window.jpg",
+    "width": 1282,
+    "height": 932,
+    "format": "JPEG",
+    "capture": "native Windows"
+  },
+  {
+    "file": "17_native_settings_dialog.jpg",
+    "width": 822,
+    "height": 752,
+    "format": "JPEG",
+    "capture": "native Windows"
+  },
+  {
+    "file": "18_native_reports_keyboard_navigation.jpg",
+    "width": 1282,
+    "height": 932,
+    "format": "JPEG",
+    "capture": "native Windows"
+  }
+]

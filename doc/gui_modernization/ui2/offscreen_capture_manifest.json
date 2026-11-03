@@ -1,0 +1,106 @@
+[
+  {
+    "file": "01_empty_overview_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "02_image_selected_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "03_analysis_running_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "04_completed_overview_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "05_image_forensics_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "06_evidence_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "07_reasoning_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "08_provenance_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "09_reports_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 1280\u00d7900 requested",
+    "width": 1280,
+    "height": 900,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "10_settings_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 existing SettingsDialog",
+    "width": 820,
+    "height": 720,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "11_osint_dialog_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 existing OSINTFindingDialog",
+    "width": 520,
+    "height": 420,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "12_minimum_overview_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 minimum supported 1040\u00d7720 requested",
+    "width": 1040,
+    "height": 720,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  },
+  {
+    "file": "13_large_overview_offscreen.png",
+    "rendering": "offscreen Qt \u00b7 large window 1600\u00d71000 requested; not native maximization",
+    "width": 1600,
+    "height": 1000,
+    "device_pixel_ratio": 1.0,
+    "platform": "offscreen"
+  }
+]

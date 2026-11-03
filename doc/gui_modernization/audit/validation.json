@@ -1,0 +1,37 @@
+{
+  "date_local": "2026-11-03",
+  "branch": "main",
+  "head": "00c5eb2",
+  "missing_required_documents": [],
+  "source_references_checked": 58,
+  "unknown_source_references": [],
+  "missing_classes": [],
+  "wireframes_svg_valid": 6,
+  "wireframes_png": 6,
+  "actual_screenshots": [
+    "01_initial_normal.jpg",
+    "02_empty_maximized.jpg",
+    "04_completed_summary_replay.jpg",
+    "05_summary_evidence_scroll_replay.jpg"
+  ],
+  "contrast_on_summary_1f2937": {
+    "#d1d5db": 9.962,
+    "#b91c1c": 2.269,
+    "#4ade80": 8.424,
+    "#6b7280": 3.036
+  },
+  "tracked_files_checked": 167,
+  "changed_since_audit_start": [],
+  "git_status": [
+    " M \"doc/SignalLens - Modernizing the Forensic Reasoning Engine.docx\"",
+    "?? \"SignalLens GUI Modernization Phase UI-0  Architecture & Design Audit.md\"",
+    "?? doc/gui_modernization/",
+    "?? \"doc/~$gnalLens - Modernizing the Forensic Reasoning Engine.docx\""
+  ],
+  "regression": {
+    "command": "py -3.13 -B -m pytest -q -p no:cacheprovider --basetemp=doc/gui_modernization/audit/pytest_verified",
+    "result": "334 passed in 4.18s",
+    "exit_code": 0,
+    "note": "Approved unsandboxed rerun after first sandbox attempt failed with WinError 5 on pytest_tmp."
+  }
+}

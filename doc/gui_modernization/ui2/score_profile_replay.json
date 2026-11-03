@@ -1,0 +1,1258 @@
+{
+  "instagram": {
+    "historical_mode": "subject_based",
+    "ui1_mode": "normal",
+    "historical_saved_suspicious": 20.47705,
+    "historical_sections_current_reasoning_replay": 20.47705,
+    "ui1_normal_suspicious": 21.327049999999996,
+    "historical_patch_size": 16,
+    "ui1_patch_size": 24,
+    "historical_patch_pair_count": 500,
+    "ui1_pair_count": 300,
+    "prepared_pixel_comparison": {
+      "Curvy Leggings Outfit_ela.png": {
+        "historical": {
+          "size": [
+            720,
+            1280
+          ],
+          "rgb_sha256": "a57f05009cf69a2fc705797470a570fccbed002433b7d34b48af233ea9f17ce3"
+        },
+        "ui1": {
+          "size": [
+            720,
+            1280
+          ],
+          "rgb_sha256": "a57f05009cf69a2fc705797470a570fccbed002433b7d34b48af233ea9f17ce3"
+        },
+        "equal": true
+      },
+      "Curvy Leggings Outfit_global.png": {
+        "historical": {
+          "size": [
+            576,
+            1024
+          ],
+          "rgb_sha256": "64daf29039de2d046c7e1b216b82b0fdcf8107aa4c62b01c682e7a1d7d40f7c5"
+        },
+        "ui1": {
+          "size": [
+            576,
+            1024
+          ],
+          "rgb_sha256": "64daf29039de2d046c7e1b216b82b0fdcf8107aa4c62b01c682e7a1d7d40f7c5"
+        },
+        "equal": true
+      },
+      "Curvy Leggings Outfit_patch.png": {
+        "historical": {
+          "size": [
+            720,
+            1280
+          ],
+          "rgb_sha256": "a57f05009cf69a2fc705797470a570fccbed002433b7d34b48af233ea9f17ce3"
+        },
+        "ui1": {
+          "size": [
+            720,
+            1280
+          ],
+          "rgb_sha256": "a57f05009cf69a2fc705797470a570fccbed002433b7d34b48af233ea9f17ce3"
+        },
+        "equal": true
+      },
+      "Curvy Leggings Outfit_subject.png": {
+        "historical": {
+          "size": [
+            576,
+            1024
+          ],
+          "rgb_sha256": "64daf29039de2d046c7e1b216b82b0fdcf8107aa4c62b01c682e7a1d7d40f7c5"
+        },
+        "ui1": {
+          "size": [
+            576,
+            1024
+          ],
+          "rgb_sha256": "64daf29039de2d046c7e1b216b82b0fdcf8107aa4c62b01c682e7a1d7d40f7c5"
+        },
+        "equal": true
+      }
+    },
+    "replay_ledger": {
+      "calculation_version": "2a",
+      "status": "valid",
+      "base_suspicious": 23.0,
+      "base_benign": 2.25,
+      "base_evidence": [
+        {
+          "section": "boundary",
+          "status": "strong",
+          "polarity": "suspicious",
+          "domain": "boundary",
+          "weight": 3.0,
+          "credited_weight": 3.0
+        },
+        {
+          "section": "boundary_focus",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "boundary_focus",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "cfa_demosaic",
+          "status": "weak",
+          "polarity": "benign",
+          "domain": "sensor_cfa",
+          "weight": 0.5,
+          "credited_weight": 0.5
+        },
+        {
+          "section": "compression_history",
+          "status": "strong",
+          "polarity": "suspicious",
+          "domain": "compression",
+          "weight": 3.0,
+          "credited_weight": 3.0
+        },
+        {
+          "section": "cross_signal",
+          "status": "weak",
+          "polarity": "suspicious",
+          "domain": "cross_signal",
+          "weight": 0.5,
+          "credited_weight": 0.5
+        },
+        {
+          "section": "fft",
+          "status": "strong",
+          "polarity": "suspicious",
+          "domain": "frequency",
+          "weight": 3.0,
+          "credited_weight": 3.0
+        },
+        {
+          "section": "patch_similarity",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "patch",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "patch_spatial",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "patch_spatial",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "sensor_origin",
+          "status": "medium",
+          "polarity": "benign",
+          "domain": "sensor",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "subject_boundary",
+          "status": "strong",
+          "polarity": "suspicious",
+          "domain": "boundary_semantic",
+          "weight": 3.0,
+          "credited_weight": 3.0
+        },
+        {
+          "section": "subject_material_realism",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "subject_material",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "subject_process_asymmetry",
+          "status": "weak",
+          "polarity": "suspicious",
+          "domain": "region_asymmetry",
+          "weight": 0.5,
+          "credited_weight": 0.5
+        },
+        {
+          "section": "subject_texture_consistency",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "subject_texture",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        }
+      ],
+      "numerical_deduplication": {
+        "version": "2b4",
+        "contributions": [
+          {
+            "evidence_id": "evidence:boundary",
+            "section": "boundary",
+            "raw_contribution": 3.0,
+            "measurement_ancestry": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "interpretation",
+            "classification": "C",
+            "eligible_marginal_contribution": 3.0,
+            "credited_contribution": 3.0,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 3.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional contour/material properties retained under the existing scoring rules."
+          },
+          {
+            "evidence_id": "evidence:boundary_focus",
+            "section": "boundary_focus",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual",
+              "measurement:selected_mask_geometry"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "localization",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional measured localization/relationship retained; shared ancestry is not redundancy."
+          },
+          {
+            "evidence_id": "evidence:cfa_demosaic",
+            "section": "cfa_demosaic",
+            "raw_contribution": 0.5,
+            "measurement_ancestry": [
+              "measurement:chroma_phase_directionality"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 0.5,
+            "credited_contribution": 0.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 0.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "camera_acquisition",
+              "localized_editing"
+            ],
+            "polarity": "benign",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:compression_history",
+            "section": "compression_history",
+            "raw_contribution": 3.0,
+            "measurement_ancestry": [
+              "measurement:aligned_offgrid_boundary_energy"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 3.0,
+            "credited_contribution": 3.0,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 3.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing",
+              "camera_acquisition"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:cross_signal",
+            "section": "cross_signal",
+            "raw_contribution": 0.5,
+            "measurement_ancestry": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "cross_measurement_relationship",
+            "classification": "C",
+            "eligible_marginal_contribution": 0.5,
+            "credited_contribution": 0.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 0.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional measured localization/relationship retained; shared ancestry is not redundancy."
+          },
+          {
+            "evidence_id": "evidence:fft",
+            "section": "fft",
+            "raw_contribution": 3.0,
+            "measurement_ancestry": [
+              "measurement:global_spectral_features"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 3.0,
+            "credited_contribution": 3.0,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 3.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:patch_similarity",
+            "section": "patch_similarity",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:retained_patch_matches"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:patch_spatial",
+            "section": "patch_spatial",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:retained_patch_matches",
+              "measurement:selected_mask_geometry"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "localization",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional measured localization/relationship retained; shared ancestry is not redundancy."
+          },
+          {
+            "evidence_id": "evidence:sensor_origin",
+            "section": "sensor_origin",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:luminance_phase_residual"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "camera_acquisition",
+              "localized_editing"
+            ],
+            "polarity": "benign",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:subject_boundary",
+            "section": "subject_boundary",
+            "raw_contribution": 3.0,
+            "measurement_ancestry": [
+              "measurement:intrinsic_edge_ring_features"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 3.0,
+            "credited_contribution": 3.0,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 3.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:subject_material_realism",
+            "section": "subject_material_realism",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:selected_mask_geometry",
+              "measurement:subject_material_patch_statistics"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "interpretation",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional contour/material properties retained under the existing scoring rules."
+          },
+          {
+            "evidence_id": "evidence:subject_process_asymmetry",
+            "section": "subject_process_asymmetry",
+            "raw_contribution": 0.5,
+            "measurement_ancestry": [
+              "measurement:masked_hybrid_texture_descriptors",
+              "measurement:regional_patch_statistics",
+              "measurement:regional_spectral_features",
+              "measurement:selected_mask_geometry"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "interpretation",
+            "classification": "D",
+            "eligible_marginal_contribution": 0.5,
+            "credited_contribution": 0.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 0.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Related or unregistered observation retained provisionally; no independence claim."
+          },
+          {
+            "evidence_id": "evidence:subject_texture_consistency",
+            "section": "subject_texture_consistency",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:masked_hybrid_texture_descriptors",
+              "measurement:selected_mask_geometry"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          }
+        ],
+        "unresolved_relationships": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:cross_signal",
+          "evidence:patch_spatial",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry"
+        ],
+        "aggregate_reconciliation": {
+          "suspicious": {
+            "raw_base_weight": 20.5,
+            "credited_base_weight": 20.5,
+            "suppressed_base_weight": 0.0,
+            "raw_domain_bonus": 2.5,
+            "credited_domain_bonus": 2.5,
+            "credited_domains": [
+              "boundary",
+              "boundary_focus",
+              "boundary_semantic",
+              "compression",
+              "cross_signal",
+              "frequency",
+              "patch",
+              "patch_spatial",
+              "region_asymmetry",
+              "subject_material",
+              "subject_texture"
+            ]
+          },
+          "benign": {
+            "raw_base_weight": 2.0,
+            "credited_base_weight": 2.0,
+            "suppressed_base_weight": 0.0,
+            "raw_domain_bonus": 0.25,
+            "credited_domain_bonus": 0.25,
+            "credited_domains": [
+              "sensor",
+              "sensor_cfa"
+            ]
+          }
+        }
+      },
+      "domain_bonus": 0.25,
+      "component_operations": [
+        {
+          "field": "camera_counter_support",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "ds.camera_like_support"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 0.35,
+          "reason": "ds.camera_like_support and ds.provenance_clean"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 2.0,
+          "reason": "ds.strong_local_edit"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.75,
+          "reason": "boundary_strong"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.4,
+          "reason": "ds.compression_inconsistency"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.75,
+          "reason": "ds.subject_texture_strong"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.4,
+          "reason": "otherwise / asym_medium"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.75,
+          "reason": "otherwise / ds.material_realism_medium"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": -0.2,
+          "reason": "ds.camera_like_support"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.4,
+          "reason": "ds.subject_texture_strong"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.15,
+          "reason": "otherwise / asym_medium"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.4,
+          "reason": "otherwise / ds.material_realism_medium"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.8729999999999999,
+          "reason": "local_support_conversion"
+        },
+        {
+          "field": "clone_support_score",
+          "operation": "add",
+          "operand": -0.9,
+          "reason": "usable_observation(ev.patch_similarity) / camera_benign"
+        },
+        {
+          "field": "clone_support_score",
+          "operation": "maximum",
+          "operand": 0.0,
+          "reason": "clone_floor"
+        },
+        {
+          "field": "synthetic_boost",
+          "operation": "add",
+          "operand": 0.4,
+          "reason": "otherwise / ds.material_realism_medium"
+        },
+        {
+          "field": "compression_boost",
+          "operation": "add",
+          "operand": 0.75,
+          "reason": "ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong)"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "measured_camera_caution"
+        }
+      ],
+      "raw_operation_count": 18,
+      "raw_contributions": {
+        "camera_counter_support": 1.25,
+        "local_edit_support_score": 4.85,
+        "clone_support_score": 0.0,
+        "synthetic_boost": 0.4,
+        "edit_boost": 1.823,
+        "provenance_boost": 0.0,
+        "sensor_boost": 0.0,
+        "compression_boost": 0.75,
+        "caution_penalty": 1.6
+      },
+      "final_contributions": {
+        "camera_counter_support": 1.25,
+        "local_edit_support_score": 4.85,
+        "clone_support_score": 0.0,
+        "synthetic_boost": 0.4,
+        "edit_boost": 1.823,
+        "provenance_boost": 0.0,
+        "sensor_boost": 0.0,
+        "compression_boost": 0.75,
+        "caution_penalty": 1.6
+      },
+      "reliability_adjustments": {
+        "boundary_reliability": 1.0,
+        "boundary_adjustment_applicable": true,
+        "region_geometry_unreliable": false,
+        "geometry_mechanism_multiplier": 1.0
+      },
+      "penalties": [
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 0.35,
+          "reason": "ds.camera_like_support and ds.provenance_clean"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "measured_camera_caution"
+        }
+      ],
+      "aggregate_transforms": {
+        "measured_camera_support": 1.25,
+        "camera_multiplier": 0.85,
+        "geometry_multiplier": 1.0,
+        "photo_context_multiplier": 1.0,
+        "photo_context_prior": false,
+        "suspicious_floor": 0.0
+      },
+      "aggregate_scores": {
+        "suspicious_score": 20.47705,
+        "benign_score": 2.25
+      }
+    },
+    "historical_coverage_counts": {
+      "success": 23,
+      "skipped": 0,
+      "unavailable": 0,
+      "failed": 0
+    },
+    "ui1_coverage_counts": {
+      "success": 23,
+      "skipped": 0,
+      "unavailable": 0,
+      "failed": 0
+    },
+    "historical_raw_source_sha256": "not recorded in the inspected historical manifests"
+  },
+  "midjourney": {
+    "historical_mode": "subject_based",
+    "ui1_mode": "normal",
+    "historical_saved_suspicious": 6.0375,
+    "historical_sections_current_reasoning_replay": 5.3999999999999995,
+    "ui1_normal_suspicious": 6.674999999999999,
+    "historical_patch_size": 16,
+    "ui1_patch_size": 24,
+    "historical_patch_pair_count": 500,
+    "ui1_pair_count": 300,
+    "prepared_pixel_comparison": {
+      "theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_ela.png": {
+        "historical": {
+          "size": [
+            1232,
+            928
+          ],
+          "rgb_sha256": "850d2ee81599c978a993fe4935bec9c20f6b560d4c53fa62bd7c3df16bc1ce87"
+        },
+        "ui1": {
+          "size": [
+            1232,
+            928
+          ],
+          "rgb_sha256": "850d2ee81599c978a993fe4935bec9c20f6b560d4c53fa62bd7c3df16bc1ce87"
+        },
+        "equal": true
+      },
+      "theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_global.png": {
+        "historical": {
+          "size": [
+            1024,
+            771
+          ],
+          "rgb_sha256": "583d394b30ca2c19ce76eca31dd71fd58fa5961d212c75f0c2fad7e85d6e101f"
+        },
+        "ui1": {
+          "size": [
+            1024,
+            771
+          ],
+          "rgb_sha256": "583d394b30ca2c19ce76eca31dd71fd58fa5961d212c75f0c2fad7e85d6e101f"
+        },
+        "equal": true
+      },
+      "theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_patch.png": {
+        "historical": {
+          "size": [
+            1232,
+            928
+          ],
+          "rgb_sha256": "850d2ee81599c978a993fe4935bec9c20f6b560d4c53fa62bd7c3df16bc1ce87"
+        },
+        "ui1": {
+          "size": [
+            1232,
+            928
+          ],
+          "rgb_sha256": "850d2ee81599c978a993fe4935bec9c20f6b560d4c53fa62bd7c3df16bc1ce87"
+        },
+        "equal": true
+      },
+      "theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_subject.png": {
+        "historical": {
+          "size": [
+            1024,
+            771
+          ],
+          "rgb_sha256": "583d394b30ca2c19ce76eca31dd71fd58fa5961d212c75f0c2fad7e85d6e101f"
+        },
+        "ui1": {
+          "size": [
+            1024,
+            771
+          ],
+          "rgb_sha256": "583d394b30ca2c19ce76eca31dd71fd58fa5961d212c75f0c2fad7e85d6e101f"
+        },
+        "equal": true
+      }
+    },
+    "replay_ledger": {
+      "calculation_version": "2a",
+      "status": "valid",
+      "base_suspicious": 8.25,
+      "base_benign": 1.5,
+      "base_evidence": [
+        {
+          "section": "boundary",
+          "status": "weak",
+          "polarity": "suspicious",
+          "domain": "boundary",
+          "weight": 0.5,
+          "credited_weight": 0.0
+        },
+        {
+          "section": "cross_signal",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "cross_signal",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "fft",
+          "status": "strong",
+          "polarity": "suspicious",
+          "domain": "frequency",
+          "weight": 3.0,
+          "credited_weight": 3.0
+        },
+        {
+          "section": "metadata",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "metadata",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "patch_similarity",
+          "status": "medium",
+          "polarity": "suspicious",
+          "domain": "patch",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        },
+        {
+          "section": "sensor_origin",
+          "status": "medium",
+          "polarity": "benign",
+          "domain": "sensor",
+          "weight": 1.5,
+          "credited_weight": 1.5
+        }
+      ],
+      "numerical_deduplication": {
+        "version": "2b4",
+        "contributions": [
+          {
+            "evidence_id": "evidence:boundary",
+            "section": "boundary",
+            "raw_contribution": 0.5,
+            "measurement_ancestry": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "previously_credited_evidence": [
+              "evidence:cross_signal"
+            ],
+            "additional_information": "interpretation",
+            "classification": "B",
+            "eligible_marginal_contribution": 0.0,
+            "credited_contribution": 0.0,
+            "suppressed_contribution": 0.5,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 0.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Existing overlap/measurement already credited; this representation adds no positive measured property."
+          },
+          {
+            "evidence_id": "evidence:cross_signal",
+            "section": "cross_signal",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "cross_measurement_relationship",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": true,
+            "reason": "Additional measured localization/relationship retained; shared ancestry is not redundancy."
+          },
+          {
+            "evidence_id": "evidence:fft",
+            "section": "fft",
+            "raw_contribution": 3.0,
+            "measurement_ancestry": [
+              "measurement:global_spectral_features"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 3.0,
+            "credited_contribution": 3.0,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 3.0,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:metadata",
+            "section": "metadata",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:embedded_assertions"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "camera_acquisition"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:patch_similarity",
+            "section": "patch_similarity",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:retained_patch_matches"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "synthetic_origin",
+              "localized_editing"
+            ],
+            "polarity": "suspicious",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          },
+          {
+            "evidence_id": "evidence:sensor_origin",
+            "section": "sensor_origin",
+            "raw_contribution": 1.5,
+            "measurement_ancestry": [
+              "measurement:luminance_phase_residual"
+            ],
+            "previously_credited_evidence": [],
+            "additional_information": "new_measurement",
+            "classification": "C",
+            "eligible_marginal_contribution": 1.5,
+            "credited_contribution": 1.5,
+            "suppressed_contribution": 0.0,
+            "reliability_multiplier": 1.0,
+            "final_adjusted_contribution": 1.5,
+            "adjustment_stage": "base_before_aggregate_attenuation_penalties_and_floor",
+            "hypotheses": [
+              "camera_acquisition",
+              "localized_editing"
+            ],
+            "polarity": "benign",
+            "missing_dependencies": [],
+            "unresolved": false,
+            "reason": "Distinct primary measurement retained at its existing status weight."
+          }
+        ],
+        "unresolved_relationships": [
+          "evidence:cross_signal"
+        ],
+        "aggregate_reconciliation": {
+          "suspicious": {
+            "raw_base_weight": 8.0,
+            "credited_base_weight": 7.5,
+            "suppressed_base_weight": 0.5,
+            "raw_domain_bonus": 1.0,
+            "credited_domain_bonus": 0.75,
+            "credited_domains": [
+              "cross_signal",
+              "frequency",
+              "metadata",
+              "patch"
+            ]
+          },
+          "benign": {
+            "raw_base_weight": 1.5,
+            "credited_base_weight": 1.5,
+            "suppressed_base_weight": 0.0,
+            "raw_domain_bonus": 0.0,
+            "credited_domain_bonus": 0.0,
+            "credited_domains": [
+              "sensor"
+            ]
+          }
+        },
+        "component_allocations": [
+          {
+            "ledger_index": 1,
+            "field": "local_edit_support_score",
+            "evidence_id": "evidence:boundary",
+            "classification": "B",
+            "raw_contribution": 0.5,
+            "credited_contribution": 0.0,
+            "suppressed_contribution": 0.5,
+            "reliability_multiplier": 0.0,
+            "final_adjusted_contribution": 0.0,
+            "reason": "Fragment fallback adds no positive measurement beyond the credited cross-overlap; mechanism restatement withheld."
+          },
+          {
+            "ledger_index": 4,
+            "field": "edit_boost",
+            "evidence_id": "evidence:boundary",
+            "classification": "B",
+            "raw_contribution": 0.5,
+            "credited_contribution": 0.0,
+            "suppressed_contribution": 0.5,
+            "reliability_multiplier": 0.0,
+            "final_adjusted_contribution": 0.0,
+            "reason": "Fragment fallback adds no positive measurement beyond the credited cross-overlap; mechanism restatement withheld."
+          }
+        ]
+      },
+      "domain_bonus": 0.25,
+      "component_operations": [
+        {
+          "field": "camera_counter_support",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "ds.camera_like_support"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 0.0,
+          "reason": "otherwise / ds.fragmented_local_edit",
+          "raw_operand": 0.5,
+          "numerical_allocation": "B:overlap_restatement"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": 1.0,
+          "reason": "ds.strong_cross"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "add",
+          "operand": -0.2,
+          "reason": "ds.camera_like_support"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.0,
+          "reason": "ds.fragmented_local_edit and ds.strong_cross",
+          "raw_operand": 0.5,
+          "numerical_allocation": "B:overlap_restatement"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "add",
+          "operand": 0.144,
+          "reason": "local_support_conversion"
+        },
+        {
+          "field": "clone_support_score",
+          "operation": "add",
+          "operand": 0.35,
+          "reason": "usable_observation(ev.patch_similarity) / detail(ev.patch_similarity, 'coverage_ratio', None) is not None and ds.coverage_ratio <= 0.18"
+        },
+        {
+          "field": "clone_support_score",
+          "operation": "add",
+          "operand": -0.9,
+          "reason": "usable_observation(ev.patch_similarity) / camera_benign"
+        },
+        {
+          "field": "clone_support_score",
+          "operation": "maximum",
+          "operand": 0.0,
+          "reason": "clone_floor"
+        },
+        {
+          "field": "provenance_boost",
+          "operation": "add",
+          "operand": 0.75,
+          "reason": "otherwise / ds.metadata_synthetic or ds.metadata_enhancement"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "measured_camera_caution"
+        },
+        {
+          "field": "local_edit_support_score",
+          "operation": "multiply",
+          "operand": 0.0,
+          "reason": "boundary_reliability"
+        },
+        {
+          "field": "edit_boost",
+          "operation": "multiply",
+          "operand": 0.0,
+          "reason": "boundary_reliability"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.0,
+          "reason": "boundary_reliability_caution"
+        }
+      ],
+      "raw_operation_count": 11,
+      "raw_contributions": {
+        "camera_counter_support": 1.25,
+        "local_edit_support_score": 0.8,
+        "clone_support_score": 0.0,
+        "synthetic_boost": 0.0,
+        "edit_boost": 0.144,
+        "provenance_boost": 0.75,
+        "sensor_boost": 0.0,
+        "compression_boost": 0.0,
+        "caution_penalty": 1.25
+      },
+      "final_contributions": {
+        "camera_counter_support": 1.25,
+        "local_edit_support_score": 0.0,
+        "clone_support_score": 0.0,
+        "synthetic_boost": 0.0,
+        "edit_boost": 0.0,
+        "provenance_boost": 0.75,
+        "sensor_boost": 0.0,
+        "compression_boost": 0.0,
+        "caution_penalty": 2.25
+      },
+      "reliability_adjustments": {
+        "boundary_reliability": 0.0,
+        "boundary_adjustment_applicable": true,
+        "region_geometry_unreliable": false,
+        "geometry_mechanism_multiplier": 1.0
+      },
+      "penalties": [
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.25,
+          "reason": "measured_camera_caution"
+        },
+        {
+          "field": "caution_penalty",
+          "operation": "add",
+          "operand": 1.0,
+          "reason": "boundary_reliability_caution"
+        }
+      ],
+      "aggregate_transforms": {
+        "measured_camera_support": 1.25,
+        "camera_multiplier": 0.85,
+        "geometry_multiplier": 1.0,
+        "photo_context_multiplier": 1.0,
+        "photo_context_prior": false,
+        "suspicious_floor": 0.0
+      },
+      "aggregate_scores": {
+        "suspicious_score": 5.3999999999999995,
+        "benign_score": 1.5
+      }
+    },
+    "historical_coverage_counts": {
+      "success": 14,
+      "skipped": 8,
+      "unavailable": 1,
+      "failed": 0
+    },
+    "ui1_coverage_counts": {
+      "success": 14,
+      "skipped": 8,
+      "unavailable": 1,
+      "failed": 0
+    },
+    "historical_raw_source_sha256": "not recorded in the inspected historical manifests"
+  }
+}

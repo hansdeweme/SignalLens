@@ -1,0 +1,302 @@
+{
+  "app": "SignalLens",
+  "version": "0.0.1-Beta",
+  "run_id": "20261103_131005_b3586d4f",
+  "started_at": "2026-11-03T13:10:05+01:00",
+  "finished_at": "2026-11-03T13:10:05+01:00",
+  "status": "completed_partial",
+  "input": {
+    "selected_file": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_cross_signal_declares_ela1\\synthetic_input.png",
+    "input_name": "synthetic_input.png"
+  },
+  "stages": [
+    {
+      "name": "Prepared image gatekeeper",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "EXIF analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "ELA analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Noise analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "Noise analysis produced no evidence payload."
+    },
+    {
+      "name": "Sensor-origin analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "CFA / demosaicing analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-aware subject mask",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0005,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-derived region masks",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "unavailable",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": "unreliable: Foreground area ratio 0.937500 is outside the existing usable range [0.03, 0.90]. Legacy fallback disabled."
+    },
+    {
+      "name": "Person mask reliability",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject-boundary analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Region segmentation analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "FFT analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Patch similarity analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Cross-signal analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "Missing dependency: noise_payload"
+    },
+    {
+      "name": "Boundary-focused analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Region-aware FFT analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Segmentation alignment analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Subject texture consistency analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Subject process asymmetry analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Subject material realism analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Patch spatial analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": "No usable subject/background region masks are available."
+    },
+    {
+      "name": "Compression-history analysis",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Shared boundary overlays",
+      "started_at": "2026-11-03T13:10:05+01:00",
+      "finished_at": "2026-11-03T13:10:05+01:00",
+      "status": "skipped",
+      "elapsed_seconds": 0.0003,
+      "error": null,
+      "reason": "Missing dependency: cross_signal_payload"
+    }
+  ],
+  "artifacts": {
+    "output_dir": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\audit\\pytest_verified\\test_cross_signal_declares_ela1\\analysis",
+    "output_json": null
+  },
+  "errors": [],
+  "warnings": [],
+  "diagnostics": {
+    "mask": {
+      "mask_status": "unreliable",
+      "mask_source": "mediapipe_tasks_image_segmenter",
+      "mask_reliability": "low",
+      "person_specific": true,
+      "person_mask_reliability": "low",
+      "person_mask_reliable": false,
+      "fallback_used": false,
+      "fallback_reason": "Foreground area ratio 0.937500 is outside the existing usable range [0.03, 0.90].",
+      "rejection_reasons": [
+        "Foreground area ratio 0.937500 is outside the existing usable range [0.03, 0.90]."
+      ],
+      "backend": "mediapipe_tasks_image_segmenter",
+      "backend_version": null,
+      "model_name": null,
+      "model_version": null,
+      "confidence_kind": "backend-specific proxy, not a calibrated probability",
+      "detection_confidence": 0.9,
+      "foreground_area_ratio": 0.9375,
+      "mask_coverage": 0.9375,
+      "quality": {
+        "pattern": "person_subject_mask_unreliable",
+        "person_detected": true,
+        "detector_confidence": 0.9,
+        "subject_area_ratio": 0.9375,
+        "largest_component_ratio": 1.0,
+        "component_count": 1,
+        "mask_reliability": "low",
+        "quality_reasons": [
+          "Foreground area ratio 0.937500 is outside the existing usable range [0.03, 0.90]."
+        ]
+      },
+      "mask_dimensions": {
+        "width": 64,
+        "height": 64
+      },
+      "backend_errors": [],
+      "disabled_stages": [
+        "Region segmentation analysis",
+        "Boundary-focused analysis",
+        "Region-aware FFT analysis",
+        "Segmentation alignment analysis",
+        "Subject texture consistency analysis",
+        "Subject process asymmetry analysis",
+        "Subject material realism analysis",
+        "Patch spatial analysis"
+      ],
+      "fallback_selection": "Legacy fallback disabled."
+    },
+    "coverage": {
+      "status": "partial",
+      "stage_counts": {
+        "success": 11,
+        "skipped": 11,
+        "unavailable": 1,
+        "failed": 0
+      },
+      "elapsed_seconds": 0.0129,
+      "unavailable_stages": [
+        "Noise analysis",
+        "Person-derived region masks",
+        "Region segmentation analysis",
+        "Cross-signal analysis",
+        "Boundary-focused analysis",
+        "Region-aware FFT analysis",
+        "Segmentation alignment analysis",
+        "Subject texture consistency analysis",
+        "Subject process asymmetry analysis",
+        "Subject material realism analysis",
+        "Patch spatial analysis",
+        "Shared boundary overlays"
+      ]
+    }
+  }
+}

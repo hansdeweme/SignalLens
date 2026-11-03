@@ -13,6 +13,8 @@ from   PyQt6.QtCore import Qt
 from   PyQt6.QtWidgets import (QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
                                QMessageBox, QPushButton, QSpinBox, QDoubleSpinBox, QTabWidget, QTextEdit, QVBoxLayout, QWidget,)
 from   signallens_settings import SETTINGS_FILE, load_settings, save_settings, reset_settings_to_defaults
+from gui_design_system import apply_theme
+from gui_components import scroll_area
 
 
 class SettingsDialog(QDialog):
@@ -30,6 +32,7 @@ class SettingsDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        apply_theme(self)
         self.setWindowTitle("SignalLens Settings")
         self.resize(820, 720)
         self.settings: dict[str, Any] = deepcopy(load_settings())
@@ -55,9 +58,9 @@ class SettingsDialog(QDialog):
         description.setWordWrap(True)
         root_layout.addWidget(description)
         tabs = QTabWidget(self)
-        tabs.addTab(self._build_general_tab(), "General")
-        tabs.addTab(self._build_patch_profiles_tab(), "Patch Profiles")
-        tabs.addTab(self._build_region_profiles_tab(), "Region Sampling")
+        tabs.addTab(scroll_area(self._build_general_tab()), "General")
+        tabs.addTab(scroll_area(self._build_patch_profiles_tab()), "Patch Profiles")
+        tabs.addTab(scroll_area(self._build_region_profiles_tab()), "Region Sampling")
         tabs.addTab(self._build_json_preview_tab(), "JSON Preview")
         root_layout.addWidget(tabs)
         button_row = QHBoxLayout()

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="740" viewBox="0 0 1280 740">
+<rect width="1280" height="740" fill="#e9edf2"/>
+<g font-family="Segoe UI">
+<rect x="0" y="0" width="1280" height="70" fill="#d4dbe4"/>
+<text x="22" y="29" font-size="20" font-weight="bold" fill="#334155">SignalLens Forensic Workbench</text>
+<text x="22" y="53" font-size="13" font-weight="normal" fill="#334155">PROPOSED STATIC WIREFRAME • illustrative labels • no functioning replacement</text>
+<text x="205" y="101" font-size="19" font-weight="bold" fill="#334155">A — Application entry / empty state</text>
+<rect x="12" y="85" width="170" height="590" rx="4" fill="#f4f6f9" stroke="#8995a6"/>
+<rect x="22" y="104" width="150" height="36" rx="3" fill="#d7e0eb" stroke="#64748b"/>
+<text x="32" y="128" font-size="14" font-weight="bold" fill="#334155">Overview</text>
+<text x="32" y="176" font-size="14" font-weight="normal" fill="#334155">Image Forensics</text>
+<text x="32" y="224" font-size="14" font-weight="normal" fill="#334155">Evidence</text>
+<text x="32" y="272" font-size="14" font-weight="normal" fill="#334155">Reasoning</text>
+<text x="32" y="320" font-size="14" font-weight="normal" fill="#334155">Provenance</text>
+<text x="32" y="368" font-size="14" font-weight="normal" fill="#334155">Reports</text>
+<text x="32" y="615" font-size="13" font-weight="normal" fill="#334155">Settings / Help</text>
+<text x="32" y="644" font-size="12" font-weight="normal" fill="#334155">Archive management</text>
+<rect x="205" y="122" width="690" height="350" rx="4" fill="white" stroke="#8995a6"/>
+<text x="219" y="149" font-size="15" font-weight="bold" fill="#334155">Begin an investigation</text>
+<path d="M219 161 H881" stroke="#cbd5e1"/>
+<text x="219" y="185" font-size="13" font-weight="normal" fill="#334155">SOURCE IMAGE — EMPTY</text>
+<text x="219" y="210" font-size="13" font-weight="normal" fill="#334155">Drop a supported image here</text>
+<text x="219" y="235" font-size="13" font-weight="normal" fill="#334155">or choose Open Image</text>
+<text x="219" y="260" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="219" y="285" font-size="13" font-weight="normal" fill="#334155">No findings until analysis completes.</text>
+<text x="219" y="310" font-size="13" font-weight="normal" fill="#334155">Source files remain unchanged.</text>
+<rect x="915" y="122" width="340" height="350" rx="4" fill="white" stroke="#8995a6"/>
+<text x="929" y="149" font-size="15" font-weight="bold" fill="#334155">Analysis configuration</text>
+<path d="M929 161 H1241" stroke="#cbd5e1"/>
+<text x="929" y="185" font-size="13" font-weight="normal" fill="#334155">Profile: Standard  [v]</text>
+<text x="929" y="210" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="929" y="235" font-size="13" font-weight="normal" fill="#334155">Optional analyst context:</text>
+<text x="929" y="260" font-size="13" font-weight="normal" fill="#334155">[ ] Natural repetition</text>
+<text x="929" y="285" font-size="13" font-weight="normal" fill="#334155">[ ] Decorative geometry</text>
+<text x="929" y="310" font-size="13" font-weight="normal" fill="#334155">[ ] Smartphone processing</text>
+<text x="929" y="335" font-size="13" font-weight="normal" fill="#334155">[ ] Display-origin candidate</text>
+<text x="929" y="360" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="929" y="385" font-size="13" font-weight="normal" fill="#334155">Advanced settings…</text>
+<rect x="205" y="492" width="1050" height="170" rx="4" fill="white" stroke="#8995a6"/>
+<text x="219" y="519" font-size="15" font-weight="bold" fill="#334155">Ready to begin</text>
+<path d="M219 531 H1241" stroke="#cbd5e1"/>
+<text x="219" y="555" font-size="13" font-weight="normal" fill="#334155">1  Choose image     2  Review configuration     3  Run analysis</text>
+<text x="219" y="580" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="219" y="605" font-size="13" font-weight="normal" fill="#334155">Open Image [action]       Run [disabled]</text>
+<text x="219" y="630" font-size="13" font-weight="normal" fill="#334155">Local analysis. Reports contain forensic interpretations and limitations.</text>
+<rect x="12" y="690" width="1255" height="34" fill="#d4dbe4"/>
+<text x="24" y="712" font-size="13" font-weight="normal" fill="#334155">Source: [identity]   Run / revision: [recorded ID]      Execution: [state]      Coverage: [recorded status]</text>
+</g></svg>

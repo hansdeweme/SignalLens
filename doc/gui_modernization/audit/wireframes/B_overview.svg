@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="740" viewBox="0 0 1280 740">
+<rect width="1280" height="740" fill="#e9edf2"/>
+<g font-family="Segoe UI">
+<rect x="0" y="0" width="1280" height="70" fill="#d4dbe4"/>
+<text x="22" y="29" font-size="20" font-weight="bold" fill="#334155">SignalLens Forensic Workbench</text>
+<text x="22" y="53" font-size="13" font-weight="normal" fill="#334155">PROPOSED STATIC WIREFRAME • illustrative labels • no functioning replacement</text>
+<text x="205" y="101" font-size="19" font-weight="bold" fill="#334155">B — Investigation overview</text>
+<rect x="12" y="85" width="170" height="590" rx="4" fill="#f4f6f9" stroke="#8995a6"/>
+<rect x="22" y="104" width="150" height="36" rx="3" fill="#d7e0eb" stroke="#64748b"/>
+<text x="32" y="128" font-size="14" font-weight="bold" fill="#334155">Overview</text>
+<text x="32" y="176" font-size="14" font-weight="normal" fill="#334155">Image Forensics</text>
+<text x="32" y="224" font-size="14" font-weight="normal" fill="#334155">Evidence</text>
+<text x="32" y="272" font-size="14" font-weight="normal" fill="#334155">Reasoning</text>
+<text x="32" y="320" font-size="14" font-weight="normal" fill="#334155">Provenance</text>
+<text x="32" y="368" font-size="14" font-weight="normal" fill="#334155">Reports</text>
+<text x="32" y="615" font-size="13" font-weight="normal" fill="#334155">Settings / Help</text>
+<text x="32" y="644" font-size="12" font-weight="normal" fill="#334155">Archive management</text>
+<rect x="205" y="122" width="510" height="420" rx="4" fill="white" stroke="#8995a6"/>
+<text x="219" y="149" font-size="15" font-weight="bold" fill="#334155">Source image · illustrative file</text>
+<path d="M219 161 H701" stroke="#cbd5e1"/>
+<text x="219" y="185" font-size="13" font-weight="normal" fill="#334155">[ Source preview occupies this area ]</text>
+<text x="219" y="210" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="219" y="235" font-size="13" font-weight="normal" fill="#334155">Fit / 100%      Dimensions / prepared scale</text>
+<text x="219" y="260" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="219" y="285" font-size="13" font-weight="normal" fill="#334155">Image remains accessible across evidence views.</text>
+<text x="219" y="310" font-size="13" font-weight="normal" fill="#334155">No fabricated image or detector output.</text>
+<rect x="735" y="122" width="520" height="205" rx="4" fill="white" stroke="#8995a6"/>
+<text x="749" y="149" font-size="15" font-weight="bold" fill="#334155">Primary forensic interpretation</text>
+<path d="M749 161 H1241" stroke="#cbd5e1"/>
+<text x="749" y="185" font-size="13" font-weight="normal" fill="#334155">Localized-processing concern [example only]</text>
+<text x="749" y="210" font-size="13" font-weight="normal" fill="#334155">Hypothesis: Localized editing</text>
+<text x="749" y="235" font-size="13" font-weight="normal" fill="#334155">Confidence: [backend tier]</text>
+<text x="749" y="260" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="749" y="285" font-size="13" font-weight="normal" fill="#334155">Why this tier → Reasoning</text>
+<text x="749" y="310" font-size="13" font-weight="normal" fill="#334155">This finding does not establish generative AI.</text>
+<rect x="735" y="347" width="520" height="195" rx="4" fill="white" stroke="#8995a6"/>
+<text x="749" y="374" font-size="15" font-weight="bold" fill="#334155">Separate hypothesis assessments</text>
+<path d="M749 386 H1241" stroke="#cbd5e1"/>
+<text x="749" y="410" font-size="13" font-weight="normal" fill="#334155">Synthetic origin       [tier / explanation]</text>
+<text x="749" y="435" font-size="13" font-weight="normal" fill="#334155">Localized editing      [tier / explanation]</text>
+<text x="749" y="460" font-size="13" font-weight="normal" fill="#334155">Camera acquisition     [tier / explanation]</text>
+<text x="749" y="485" font-size="13" font-weight="normal" fill="#334155"></text>
+<text x="749" y="510" font-size="13" font-weight="normal" fill="#334155">Rows show actual returned assessments only.</text>
+<rect x="205" y="562" width="1050" height="100" rx="4" fill="white" stroke="#8995a6"/>
+<text x="219" y="589" font-size="15" font-weight="bold" fill="#334155">Coverage and limitations — always visible</text>
+<path d="M219 601 H1241" stroke="#cbd5e1"/>
+<text x="219" y="625" font-size="13" font-weight="normal" fill="#334155">[backend stage coverage]   [unavailable reasons]</text>
+<text x="219" y="650" font-size="13" font-weight="normal" fill="#334155">Camera-compatible evidence does not authenticate acquisition history.</text>
+<rect x="12" y="690" width="1255" height="34" fill="#d4dbe4"/>
+<text x="24" y="712" font-size="13" font-weight="normal" fill="#334155">Source: [identity]   Run / revision: [recorded ID]      Execution: [state]      Coverage: [recorded status]</text>
+</g></svg>
