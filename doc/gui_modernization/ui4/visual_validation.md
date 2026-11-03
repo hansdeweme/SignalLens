@@ -1,0 +1,7 @@
+# Visual validation
+
+Qt offscreen rendering on Windows, device pixel ratio 1.0, using the installed Segoe UI fonts. capture_manifest.json records exact files and sizes. These are QWidget captures, not native desktop screenshots. No 125%, 150%, multi-monitor or native maximized-window validation is claimed. Native visual acceptance remains outstanding after the declined elevation request; the work was validated within the sandbox.
+
+The screenshots directory contains an empty workspace and, for each actual Instagram/Midjourney reference: independent ELA, synchronized ELA, ELA overlay, frequency diagnostic, derived-mask/structured context, 1040×720 residual view, and a clearly identified unavailable-artifact fixture. The fixture alters only a UI descriptor; no reference file is removed. The tree exercises long detector lists and filenames.
+
+Inspected the minimum-size residual capture and Midjourney overlay capture after iteration. The initial tree inherited a white native base and narrow toolbar labels overlapped the image; theme coverage and a separate scale row corrected those issues. The final captures show readable controls, preserved image aspect ratios, independent diagnostic behavior and an explicit overlay legend. Details scroll when lengthy; tree item tooltips reveal elided names/registration. Native scrollbar behavior, drag feel and physical DPI scaling still need interactive Windows review.

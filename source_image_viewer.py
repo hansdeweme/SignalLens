@@ -4,6 +4,7 @@ Workers hold values only, never widgets. Delivery is queued to the receiver's Qt
 thread and guarded by a monotonic request plus session/invocation identity.
 """
 from dataclasses import dataclass
+from PyQt6 import sip
 import hashlib
 from pathlib import Path
 
@@ -19,7 +20,7 @@ _pool = None
 
 def preview_pool():
     global _pool
-    if _pool is None:
+    if _pool is None or sip.isdeleted(_pool):
         _pool = QThreadPool()
         _pool.setMaxThreadCount(2)
     return _pool
@@ -37,6 +38,7 @@ class PreviewResult:
     dimensions: tuple[int, int] | None
     stamp: tuple | None
     message: str
+    display_dimensions: tuple[int, int] | None = None
 
 
 def read_preview(request, path, expected_sha):
@@ -62,7 +64,8 @@ def read_preview(request, path, expected_sha):
         if fingerprint(path) != before:
             raise ValueError('Source changed during preview loading. Reselect the image.')
         # Header dimensions are the encoded source dimensions, before EXIF orientation.
-        return PreviewResult(request, image, (size.width(), size.height()), before, '')
+        display_dimensions = (size.height(),size.width()) if reader.transformation().value & 4 else (size.width(),size.height())
+        return PreviewResult(request, image, (size.width(), size.height()), before, '',display_dimensions)
     except (OSError, ValueError) as error:
         return PreviewResult(request, QImage(), None, None,
             'Source image unavailable. Locate or reselect the original image.' if isinstance(error, OSError) else str(error))
@@ -84,6 +87,11 @@ class _Load(QRunnable):
 
 class _Canvas(QGraphicsView):
     resized = pyqtSignal()
+    view_changed = pyqtSignal()
+
+    def scrollContentsBy(self, dx, dy):
+        super().scrollContentsBy(dx, dy)
+        self.view_changed.emit()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -92,6 +100,9 @@ class _Canvas(QGraphicsView):
 
 class SourceImageViewer(QWidget):
     information_changed = pyqtSignal(str)
+    image_changed = pyqtSignal()
+    image_about_to_change = pyqtSignal()
+    view_changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -115,6 +126,7 @@ class SourceImageViewer(QWidget):
         self.canvas.setMinimumSize(180, 220)
         self.canvas.setAccessibleName('Source image preview; drag to pan when zoomed')
         self.canvas.resized.connect(self._refit)
+        self.canvas.view_changed.connect(self.view_changed)
         body.addWidget(self.canvas, 1)
         self.message = label('Choose an image to begin.', 'caption')
         body.addWidget(self.message)
@@ -146,6 +158,7 @@ class SourceImageViewer(QWidget):
             item.setToolTip('Bounded preview only; zoom does not load full-resolution forensic pixels.' if enabled else 'A valid source preview is required.')
 
     def _clear(self, message):
+        self.image_about_to_change.emit()
         self._image = QPixmap()
         self.canvas.scene().clear()
         self.dimensions = None
@@ -153,6 +166,7 @@ class SourceImageViewer(QWidget):
         self._enable(False)
         self.message.setText(message)
         self.information_changed.emit(message)
+        self.image_changed.emit()
 
     def set_source(self, path, identity, expected_sha=None):
         path = str(path) if path else None
@@ -204,6 +218,7 @@ class SourceImageViewer(QWidget):
             return True
         self._image = QPixmap.fromImage(result.image)
         self.dimensions, self._stamp = result.dimensions, result.stamp
+        self.image_about_to_change.emit()
         self.canvas.scene().clear()
         self.canvas.scene().addPixmap(self._image)
         self.canvas.scene().setSceneRect(0, 0, self._image.width(), self._image.height())
@@ -214,6 +229,7 @@ class SourceImageViewer(QWidget):
             text += ' · historical source identity unrecorded'
         self.message.setText(text)
         self.information_changed.emit(text)
+        self.image_changed.emit()
         return True
 
     def check_source(self):
@@ -235,6 +251,7 @@ class SourceImageViewer(QWidget):
         if self.fit_mode and not self._image.isNull():
             self.canvas.fitInView(self.canvas.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
             self.scale_label.setText('Fit')
+            self.view_changed.emit()
 
     def zoom(self, factor):
         if self._image.isNull():
@@ -243,3 +260,4 @@ class SourceImageViewer(QWidget):
         self.canvas.scale(new / self.zoom_factor, new / self.zoom_factor)
         self.zoom_factor, self.fit_mode = new, False
         self.scale_label.setText(f'{new:.2g}× fit')
+        self.view_changed.emit()

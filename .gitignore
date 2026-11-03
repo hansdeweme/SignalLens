@@ -71,3 +71,8 @@ Thumbs.db
 /doc/gui_modernization/ui3/test_runs/
 /doc/gui_modernization/ui3/reference_runs/
 /doc/gui_modernization/ui3/native_run/
+
+# UI-4 local validation workspaces and content-free capture preferences.
+/doc/gui_modernization/ui4/test_runs/
+/doc/gui_modernization/ui4/validation_output/
+/doc/gui_modernization/ui4/capture_preferences.ini

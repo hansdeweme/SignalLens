@@ -1,0 +1,152 @@
+[
+  {
+    "file": "01_empty_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_02_side_by_side_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_03_synchronized_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_04_overlay_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_05_frequency_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_06_mask_or_structured_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_07_minimum_offscreen.png",
+    "size": [
+      1040,
+      720
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_08_unavailable_fixture_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_02_side_by_side_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_03_synchronized_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_04_overlay_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_05_frequency_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_06_mask_or_structured_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_07_minimum_offscreen.png",
+    "size": [
+      1040,
+      720
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_08_unavailable_fixture_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "platform": "offscreen",
+    "native": false,
+    "dpr": 1.0
+  }
+]

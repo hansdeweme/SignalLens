@@ -128,7 +128,10 @@ def stylesheet(c=COLORS) -> str:
     QPushButton[slNavigation="true"] {{ text-align: left; border: 1px solid transparent; padding: 10px 12px; border-radius: {g.radius}px; }}
     QPushButton[slNavigation="true"]:checked {{ background: {c.selected}; color: {c.accent}; border-left: 3px solid {c.accent}; font-weight: 600; }}
     QPushButton[slNavigation="true"]:focus {{ border: 2px solid {c.focus}; }}
-    QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser, QListWidget, QSpinBox, QDoubleSpinBox, QComboBox {{ background: {c.background}; color: {c.text}; selection-background-color: {c.selected}; selection-color: {c.text}; border: 1px solid {c.border}; border-radius: 4px; padding: 5px; }}
+    QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser, QListWidget, QTreeWidget, QSpinBox, QDoubleSpinBox, QComboBox {{ background: {c.background}; color: {c.text}; selection-background-color: {c.selected}; selection-color: {c.text}; border: 1px solid {c.border}; border-radius: 4px; padding: 5px; }}
+    QTreeWidget::item {{ padding: 5px 2px; }}
+    QTreeWidget::item:selected {{ background: {c.selected}; color: {c.text}; }}
+    QTreeWidget:focus {{ border: 2px solid {c.focus}; }}
     QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{ min-height: 22px; }}
     QComboBox QAbstractItemView {{ background: {c.panel}; color: {c.text}; selection-background-color: {c.selected}; }}
     QGroupBox {{ background: {c.panel}; border: 1px solid {c.border}; border-radius: {g.radius}px; margin-top: 12px; padding: 14px 10px 10px 10px; }}
@@ -145,6 +148,9 @@ def stylesheet(c=COLORS) -> str:
     QScrollBar:vertical {{ background: {c.navigation}; width: 12px; }}
     QScrollBar::handle:vertical {{ background: {c.border}; min-height: 24px; border-radius: 4px; }}
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0px; }}
+    QScrollBar:horizontal {{ background: {c.navigation}; height: 12px; }}
+    QScrollBar::handle:horizontal {{ background: {c.border}; min-width: 24px; border-radius: 4px; }}
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0px; }}
     QMenuBar, QMenu, QStatusBar {{ background: {c.navigation}; color: {c.text}; }}
     QMenuBar::item:selected, QMenu::item:selected {{ background: {c.selected}; }}
     QMenu::item:disabled {{ color: {c.disabled_text}; }}

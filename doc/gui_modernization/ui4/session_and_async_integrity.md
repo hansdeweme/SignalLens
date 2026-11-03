@@ -1,0 +1,9 @@
+# Session and asynchronous integrity
+
+Catalog workers receive detached JSON context plus an immutable presentation snapshot. Their completion key contains session ID, analysis ID, result ID, analysis revision and lifecycle status. Delivery checks this key against both the workspace and current session and rejects closing windows. Annotation-only refreshes do not relaunch an unchanged forensic catalog. Selection changes clear artifact pixels, comparison mode and overlay.
+
+Raster requests reuse UI-3's monotonic serial, identity and expected hash. Worker delivery checks the current request and file fingerprint. Decoding is bounded to 2048 px / 100 MP; expensive work uses the existing two-thread preview pool. Tiny raster fixtures follow UI-3's synchronous bounded fast path. The pool recreates itself if its previous Qt lifetime ended. No detector worker or second session owner is introduced.
+
+Catalog discovery verifies source SHA-256 and orientation, scoped paths, artifact readability/dimensions and content hash. Stored sidecars additionally check saved hashes. The viewer rechecks the expected artifact digest during decode and the catalog dimensions before acceptance. Source/artifact monitors clear changed or missing files. Windows background discovery uses a read handle sharing deletion, so inspecting files does not prevent user relocation. There is no filesystem image crawl or cross-run cache.
+
+Overlay items are removed on image_about_to_change, before QGraphicsScene clears and destroys their native objects. This avoids dangling Qt item wrappers and the native crash found by the source-change regression test. Linked modes immediately fall back to Independent when either preview becomes invalid. Hashes authenticate consistency with the recorded local bytes; they do not establish authenticity of an image's origin.

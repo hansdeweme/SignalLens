@@ -1,0 +1,7 @@
+# Artifact evidence mapping
+
+Evidence associations come solely from EvidenceView.source_detector, which UI-1 projects from structured `evidence_details[evidence_id].section`. An artifact receives the existing evidence IDs and hypothesis IDs whose recorded section equals its producer ID. Reliability uses explicit mask metadata first, then an existing recorded evidence reliability value. No scores or lineage are recomputed.
+
+The adapter covers ela, noise, sensor_origin, cfa_demosaic, person_subject_mask, region_masks, region_segmentation, segmentation_alignment, boundary_focus, fft, region_fft, subject_boundary, subject_texture_consistency, subject_process_asymmetry, subject_material_realism, patch_similarity, patch_spatial, compression_history and cross_signal. These producer names permit a relationship only when a structured section reference exists.
+
+Many signals have no section association, and some geometry producers have no hypothesis evidence rows. Those artifacts explicitly say no structured evidence linkage is recorded. Shared-boundary overlays from summary.overlay_paths remain compound cross-signal observations with unknown registration; their geometry and evidence identity are not reverse-engineered from filenames. Physical file reuse never adds an independent corroboration vote. Links open the existing workspace destination; Evidence Explorer row targeting belongs to UI-5.
