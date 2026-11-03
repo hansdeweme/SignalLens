@@ -1,0 +1,774 @@
+{
+  "instagram": {
+    "source": "test_images/insta_fake/Curvy Leggings Outfit.jpg",
+    "sha256": "1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9",
+    "profile": "normal",
+    "settings": {
+      "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+      "output_root": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui3\\reference_runs",
+      "patch_similarity_profiles": {
+        "normal": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 60,
+          "max_pairs_to_keep": 300,
+          "patch_size": 24,
+          "similarity_threshold": 0.965,
+          "stride": 12
+        },
+        "subject_based": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 80,
+          "max_pairs_to_keep": 500,
+          "patch_size": 16,
+          "similarity_threshold": 0.945,
+          "stride": 8
+        }
+      },
+      "subject_background_profiles": {
+        "normal": {
+          "background": 128,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 96
+        },
+        "subject_based": {
+          "background": 64,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 160
+        }
+      },
+      "supported_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".tif",
+        ".tiff",
+        ".bmp",
+        ".heic",
+        ".heif"
+      ]
+    },
+    "scene_context": {
+      "decorative_geometric": false,
+      "natural_repetition": false,
+      "screen_origin": false,
+      "smartphone_computational": false
+    },
+    "suspicious_score": 21.327049999999996,
+    "benign_score": 2.25,
+    "pattern": "possible_foreground_background_processing_mismatch",
+    "confidence": "High",
+    "hypotheses": [
+      {
+        "confidence_policy_rule": "synthetic.not_established",
+        "confidence_rationale": [
+          "Confidence policy synthetic.not_established: No specific generation interpretation is established; localized anomalies do not supply missing generation support.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "Inconclusive",
+        "contextual_evidence": [
+          "fft:possible_decoder_grid_signature",
+          "metadata:sparse_or_stripped",
+          "patch_similarity:possible_synthetic_texture_repetition",
+          "patch_spatial:subject_internal_synthetic_recurrence",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": null,
+        "evidence_details": {
+          "cfa_demosaic:weak_camera_cfa_supported": {
+            "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+            "label": "weak camera cfa supported",
+            "observations": [],
+            "observed_score": 0.08142067492008209,
+            "observed_status": "weak",
+            "pattern": "weak_camera_cfa_supported",
+            "role": "moderating_evidence",
+            "section": "cfa_demosaic"
+          },
+          "fft:possible_decoder_grid_signature": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "frequency structure suggests a grid-like or decoder-driven generation process",
+            "observations": [],
+            "observed_score": 0.6723,
+            "observed_status": "strong",
+            "pattern": "possible_decoder_grid_signature",
+            "role": "contextual_evidence",
+            "section": "fft"
+          },
+          "metadata:sparse_or_stripped": {
+            "interpretation": "Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.",
+            "label": "metadata is sparse or stripped and provides no provenance clues",
+            "observations": [
+              {
+                "provenance_keys_detected": [],
+                "technical_keys_detected_count": 43
+              }
+            ],
+            "observed_score": 0.0,
+            "observed_status": "weak",
+            "pattern": "sparse_or_stripped",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "patch_similarity:possible_synthetic_texture_repetition": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "repeated texture motifs suggest synthetic or generated content",
+            "observations": [],
+            "observed_score": 0.7821,
+            "observed_status": "medium",
+            "pattern": "possible_synthetic_texture_repetition",
+            "role": "contextual_evidence",
+            "section": "patch_similarity"
+          },
+          "patch_spatial:subject_internal_synthetic_recurrence": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "repeated patch structures are concentrated within the subject",
+            "observations": [],
+            "observed_score": 0.8852940233257629,
+            "observed_status": "medium",
+            "pattern": "subject_internal_synthetic_recurrence",
+            "role": "contextual_evidence",
+            "section": "patch_spatial"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.05393149331212044,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "moderating_evidence",
+            "section": "sensor_origin"
+          },
+          "subject_material_realism:subject_material_regularization_dominant": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "subject material appears overly regularized and lacks natural variability",
+            "observations": [],
+            "observed_score": 0.5531323697555192,
+            "observed_status": "medium",
+            "pattern": "subject_material_regularization_dominant",
+            "role": "contextual_evidence",
+            "section": "subject_material_realism"
+          },
+          "subject_process_asymmetry:subject_surface_regularization_dominant": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "subject surface shows dominant regularization effects",
+            "observations": [],
+            "observed_score": 0.6423073087214851,
+            "observed_status": "medium",
+            "pattern": "subject_surface_regularization_dominant",
+            "role": "contextual_evidence",
+            "section": "subject_process_asymmetry"
+          },
+          "subject_texture_consistency:subject_internal_stochastic_repetition": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "subject texture shows repeated stochastic patterns",
+            "observations": [],
+            "observed_score": 1.0,
+            "observed_status": "medium",
+            "pattern": "subject_internal_stochastic_repetition",
+            "role": "contextual_evidence",
+            "section": "subject_texture_consistency"
+          }
+        },
+        "explanation": "Synthetic origin is not established by the available evidence.",
+        "hypothesis_id": "synthetic_origin",
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Missing provenance coverage is a limitation, not positive generation evidence.",
+          "No substantive generation declaration or specific visual generation finding is established."
+        ],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "polarity": "neutral",
+        "supporting_evidence": []
+      },
+      {
+        "confidence_policy_rule": "localized.reliable_boundary_compound",
+        "confidence_rationale": [
+          "Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "High",
+        "contextual_evidence": [
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": "possible_foreground_background_processing_mismatch",
+        "evidence_details": {
+          "boundary:possible_foreground_background_processing_mismatch": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "foreground and background appear to have been processed differently",
+            "observations": [],
+            "observed_score": null,
+            "observed_status": "strong",
+            "pattern": "possible_foreground_background_processing_mismatch",
+            "role": "supporting_evidence",
+            "section": "boundary"
+          },
+          "boundary_focus:boundary_focused_processing_mismatch": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "boundary region shows elevated processing relative to subject and background",
+            "observations": [],
+            "observed_score": 6.711709976196289,
+            "observed_status": "medium",
+            "pattern": "boundary_focused_processing_mismatch",
+            "role": "supporting_evidence",
+            "section": "boundary_focus"
+          },
+          "cfa_demosaic:weak_camera_cfa_supported": {
+            "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+            "label": "weak camera cfa supported",
+            "observations": [],
+            "observed_score": 0.08142067492008209,
+            "observed_status": "weak",
+            "pattern": "weak_camera_cfa_supported",
+            "role": "moderating_evidence",
+            "section": "cfa_demosaic"
+          },
+          "compression_history:localized_compression_inconsistency": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "compression artifacts vary across regions",
+            "observations": [],
+            "observed_score": 0.00486650038510561,
+            "observed_status": "strong",
+            "pattern": "localized_compression_inconsistency",
+            "role": "supporting_evidence",
+            "section": "compression_history"
+          },
+          "cross_signal:partial_hotspot_convergence": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "some forensic signals converge on localized regions",
+            "observations": [],
+            "observed_score": null,
+            "observed_status": "weak",
+            "pattern": "partial_hotspot_convergence",
+            "role": "supporting_evidence",
+            "section": "cross_signal"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.05393149331212044,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "moderating_evidence",
+            "section": "sensor_origin"
+          },
+          "subject_boundary:possible_subject_background_segmentation_artifact": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "subject boundary suggests a segmentation or cutout artifact",
+            "observations": [],
+            "observed_score": 0.6771309242149195,
+            "observed_status": "strong",
+            "pattern": "possible_subject_background_segmentation_artifact",
+            "role": "supporting_evidence",
+            "section": "subject_boundary"
+          },
+          "subject_material_realism:subject_material_regularization_dominant": {
+            "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+            "label": "subject material appears overly regularized and lacks natural variability",
+            "observations": [],
+            "observed_score": 0.5531323697555192,
+            "observed_status": "medium",
+            "pattern": "subject_material_regularization_dominant",
+            "role": "contextual_evidence",
+            "section": "subject_material_realism"
+          },
+          "subject_process_asymmetry:subject_surface_regularization_dominant": {
+            "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+            "label": "subject surface shows dominant regularization effects",
+            "observations": [],
+            "observed_score": 0.6423073087214851,
+            "observed_status": "medium",
+            "pattern": "subject_surface_regularization_dominant",
+            "role": "contextual_evidence",
+            "section": "subject_process_asymmetry"
+          },
+          "subject_texture_consistency:subject_internal_stochastic_repetition": {
+            "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+            "label": "subject texture shows repeated stochastic patterns",
+            "observations": [],
+            "observed_score": 1.0,
+            "observed_status": "medium",
+            "pattern": "subject_internal_stochastic_repetition",
+            "role": "contextual_evidence",
+            "section": "subject_texture_consistency"
+          }
+        },
+        "explanation": "Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.",
+        "hypothesis_id": "localized_editing",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation."
+        ],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "polarity": "suspicious",
+        "supporting_evidence": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "boundary_focus:boundary_focused_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:partial_hotspot_convergence",
+          "subject_boundary:possible_subject_background_segmentation_artifact"
+        ]
+      },
+      {
+        "confidence_policy_rule": "camera.acquisition_compatibility",
+        "confidence_rationale": [
+          "Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "Medium",
+        "contextual_evidence": [
+          "metadata:sparse_or_stripped"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": "camera_acquisition_compatibility",
+        "evidence_details": {
+          "cfa_demosaic:weak_camera_cfa_supported": {
+            "interpretation": "Measured structure is compatible with camera acquisition; it does not authenticate the image.",
+            "label": "weak camera cfa supported",
+            "observations": [],
+            "observed_score": 0.08142067492008209,
+            "observed_status": "weak",
+            "pattern": "weak_camera_cfa_supported",
+            "role": "supporting_evidence",
+            "section": "cfa_demosaic"
+          },
+          "metadata:sparse_or_stripped": {
+            "interpretation": "Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.",
+            "label": "metadata is sparse or stripped and provides no provenance clues",
+            "observations": [
+              {
+                "provenance_keys_detected": [],
+                "technical_keys_detected_count": 43
+              }
+            ],
+            "observed_score": 0.0,
+            "observed_status": "weak",
+            "pattern": "sparse_or_stripped",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Measured structure is compatible with camera acquisition; it does not authenticate the image.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.05393149331212044,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "supporting_evidence",
+            "section": "sensor_origin"
+          }
+        },
+        "explanation": "Camera-like acquisition evidence is present.",
+        "hypothesis_id": "camera_acquisition",
+        "limitations": [
+          "Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing."
+        ],
+        "moderating_evidence": [],
+        "polarity": "benign",
+        "supporting_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ]
+      }
+    ],
+    "coverage_counts": {
+      "success": 23,
+      "skipped": 0,
+      "unavailable": 0,
+      "failed": 0
+    },
+    "source_unchanged": true,
+    "report_current": true,
+    "report_pointer": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui3\\reference_runs\\Curvy Leggings Outfit\\12c6e895237f429a907f0a1920a57fc2\\c1516789c5f14a31af13a0d8f3ce5d99\\current_report.json"
+  },
+  "midjourney": {
+    "source": "test_images/midjourney/theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0.png",
+    "sha256": "08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9",
+    "profile": "normal",
+    "settings": {
+      "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+      "output_root": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui3\\reference_runs",
+      "patch_similarity_profiles": {
+        "normal": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 60,
+          "max_pairs_to_keep": 300,
+          "patch_size": 24,
+          "similarity_threshold": 0.965,
+          "stride": 12
+        },
+        "subject_based": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 80,
+          "max_pairs_to_keep": 500,
+          "patch_size": 16,
+          "similarity_threshold": 0.945,
+          "stride": 8
+        }
+      },
+      "subject_background_profiles": {
+        "normal": {
+          "background": 128,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 96
+        },
+        "subject_based": {
+          "background": 64,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 160
+        }
+      },
+      "supported_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".tif",
+        ".tiff",
+        ".bmp",
+        ".heic",
+        ".heif"
+      ]
+    },
+    "scene_context": {
+      "decorative_geometric": false,
+      "natural_repetition": false,
+      "screen_origin": false,
+      "smartphone_computational": false
+    },
+    "suspicious_score": 6.674999999999999,
+    "benign_score": 1.5,
+    "pattern": "provenance_supported_synthetic_context",
+    "confidence": "Medium",
+    "hypotheses": [
+      {
+        "confidence_policy_rule": "synthetic.unverified_generation_declaration",
+        "confidence_rationale": [
+          "Confidence policy synthetic.unverified_generation_declaration: An explicit generation declaration supports declared creation context; metadata authenticity is unverified.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "Medium",
+        "contextual_evidence": [
+          "fft:possible_decoder_grid_signature",
+          "metadata:CREATOR_IDENTITY_PRESENT"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": "provenance_supported_synthetic_context",
+        "evidence_details": {
+          "fft:possible_decoder_grid_signature": {
+            "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+            "label": "frequency structure suggests a grid-like or decoder-driven generation process",
+            "observations": [],
+            "observed_score": 0.5974,
+            "observed_status": "strong",
+            "pattern": "possible_decoder_grid_signature",
+            "role": "contextual_evidence",
+            "section": "fft"
+          },
+          "metadata:CREATOR_IDENTITY_PRESENT": {
+            "interpretation": "Creator attribution is present but does not declare generation.",
+            "label": "creator attribution metadata",
+            "observations": [
+              {
+                "group": "PNG",
+                "raw_key": "PNG:Author",
+                "tag": "Author",
+                "value": "theart1300"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "creator_identity_present",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "metadata:DECLARED_SYNTHETIC": {
+            "interpretation": "Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+            "label": "explicit generation declaration in metadata",
+            "observations": [
+              {
+                "declaration_kind": "iptc_digital_source_type",
+                "group": "XMP-iptcExt",
+                "matched_value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                "raw_key": "XMP-iptcExt:DigitalSourceType",
+                "tag": "DigitalSourceType",
+                "value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "declared_synthetic_candidate",
+            "role": "supporting_evidence",
+            "section": "metadata"
+          },
+          "metadata:EMBEDDED_GENERATION_PROMPT": {
+            "interpretation": "Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+            "label": "embedded generation prompt or workflow",
+            "observations": [
+              {
+                "group": "PNG",
+                "raw_key": "PNG:Description",
+                "tag": "Description",
+                "value": "real portrait full body of a real model with flowers in her hand real facial expression real photo ultra realistic vogue editorial not a pretty model --chaos 10 --ar 4:3 --style raw --stylize 1000 --v 6.1 Job ID: bee230dd-b5c0-4bbb-be9a-cc1f373fd317"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "embedded_generation_prompt_detected",
+            "role": "supporting_evidence",
+            "section": "metadata"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.08440370112657547,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "moderating_evidence",
+            "section": "sensor_origin"
+          }
+        },
+        "explanation": "Metadata contains an explicit generation declaration supporting synthetic or AI-mediated creation. Metadata authenticity is unverified. This finding does not establish a localized editing mechanism.",
+        "hypothesis_id": "synthetic_origin",
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.",
+          "Coverage limitation (not negative evidence): unavailable subject_material_realism, subject_process_asymmetry."
+        ],
+        "moderating_evidence": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "polarity": "suspicious",
+        "supporting_evidence": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT"
+        ]
+      },
+      {
+        "confidence_policy_rule": "localized.not_established",
+        "confidence_rationale": [
+          "Confidence policy localized.not_established: A specific localized mechanism is not established.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "Inconclusive",
+        "contextual_evidence": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_boundary:image_edge_boundary_observation"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": null,
+        "evidence_details": {
+          "boundary:possible_boundary_fragment_convergence": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "fragmented boundary regions show signs of localized processing",
+            "observations": [],
+            "observed_score": null,
+            "observed_status": "weak",
+            "pattern": "possible_boundary_fragment_convergence",
+            "role": "supporting_evidence",
+            "section": "boundary"
+          },
+          "cross_signal:strong_hotspot_convergence": {
+            "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+            "label": "multiple forensic signals converge on the same localized regions",
+            "observations": [],
+            "observed_score": null,
+            "observed_status": "medium",
+            "pattern": "strong_hotspot_convergence",
+            "role": "supporting_evidence",
+            "section": "cross_signal"
+          },
+          "metadata:DECLARED_SYNTHETIC": {
+            "interpretation": "A generation declaration does not identify a localized editing mechanism.",
+            "label": "explicit generation declaration in metadata",
+            "observations": [
+              {
+                "declaration_kind": "iptc_digital_source_type",
+                "group": "XMP-iptcExt",
+                "matched_value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                "raw_key": "XMP-iptcExt:DigitalSourceType",
+                "tag": "DigitalSourceType",
+                "value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "declared_synthetic_candidate",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "metadata:EMBEDDED_GENERATION_PROMPT": {
+            "interpretation": "A generation declaration does not identify a localized editing mechanism.",
+            "label": "embedded generation prompt or workflow",
+            "observations": [
+              {
+                "group": "PNG",
+                "raw_key": "PNG:Description",
+                "tag": "Description",
+                "value": "real portrait full body of a real model with flowers in her hand real facial expression real photo ultra realistic vogue editorial not a pretty model --chaos 10 --ar 4:3 --style raw --stylize 1000 --v 6.1 Job ID: bee230dd-b5c0-4bbb-be9a-cc1f373fd317"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "embedded_generation_prompt_detected",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "patch_similarity:possible_clone_reuse": {
+            "interpretation": "Similar regions were detected, but spatial corroboration is insufficient to establish copy-move reuse.",
+            "label": "highly similar regions suggest possible copy-move reuse",
+            "observations": [],
+            "observed_score": 0.9085,
+            "observed_status": "strong",
+            "pattern": "possible_clone_reuse",
+            "role": "contextual_evidence",
+            "section": "patch_similarity"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.08440370112657547,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "moderating_evidence",
+            "section": "sensor_origin"
+          },
+          "subject_boundary:image_edge_boundary_observation": {
+            "interpretation": "Image-edge measurements lack validated person alignment and cannot establish person-specific segmentation artifacts.",
+            "label": "image edge boundary observation",
+            "observations": [],
+            "observed_score": 0.6617971661024624,
+            "observed_status": "weak",
+            "pattern": "image_edge_boundary_observation",
+            "role": "contextual_evidence",
+            "section": "subject_boundary"
+          }
+        },
+        "explanation": "A specific localized-editing mechanism is not established.",
+        "hypothesis_id": "localized_editing",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Boundary reliability is reduced (0.00).",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.",
+          "Coverage limitation (not negative evidence): unavailable boundary_focus, patch_spatial, region_masks, segmentation_alignment."
+        ],
+        "moderating_evidence": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "polarity": "neutral",
+        "supporting_evidence": [
+          "boundary:possible_boundary_fragment_convergence",
+          "cross_signal:strong_hotspot_convergence"
+        ]
+      },
+      {
+        "confidence_policy_rule": "camera.acquisition_compatibility",
+        "confidence_rationale": [
+          "Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ],
+        "confidence_tier": "Medium",
+        "contextual_evidence": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT"
+        ],
+        "contradicting_evidence": [],
+        "decision_branch": "camera_acquisition_compatibility",
+        "evidence_details": {
+          "metadata:DECLARED_SYNTHETIC": {
+            "interpretation": "A generation declaration can coexist with camera-compatible structure; it does not authenticate acquisition history.",
+            "label": "explicit generation declaration in metadata",
+            "observations": [
+              {
+                "declaration_kind": "iptc_digital_source_type",
+                "group": "XMP-iptcExt",
+                "matched_value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+                "raw_key": "XMP-iptcExt:DigitalSourceType",
+                "tag": "DigitalSourceType",
+                "value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "declared_synthetic_candidate",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "metadata:EMBEDDED_GENERATION_PROMPT": {
+            "interpretation": "A generation declaration can coexist with camera-compatible structure; it does not authenticate acquisition history.",
+            "label": "embedded generation prompt or workflow",
+            "observations": [
+              {
+                "group": "PNG",
+                "raw_key": "PNG:Description",
+                "tag": "Description",
+                "value": "real portrait full body of a real model with flowers in her hand real facial expression real photo ultra realistic vogue editorial not a pretty model --chaos 10 --ar 4:3 --style raw --stylize 1000 --v 6.1 Job ID: bee230dd-b5c0-4bbb-be9a-cc1f373fd317"
+              }
+            ],
+            "observed_score": 0.75,
+            "observed_status": "medium",
+            "pattern": "embedded_generation_prompt_detected",
+            "role": "contextual_evidence",
+            "section": "metadata"
+          },
+          "sensor_origin:camera_like_acquisition_supported": {
+            "interpretation": "Measured structure is compatible with camera acquisition; it does not authenticate the image.",
+            "label": "low-level signals are consistent with a camera acquisition pipeline",
+            "observations": [],
+            "observed_score": 0.08440370112657547,
+            "observed_status": "medium",
+            "pattern": "camera_like_acquisition_supported",
+            "role": "supporting_evidence",
+            "section": "sensor_origin"
+          }
+        },
+        "explanation": "Camera-like acquisition evidence is present.",
+        "hypothesis_id": "camera_acquisition",
+        "limitations": [
+          "Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin."
+        ],
+        "moderating_evidence": [],
+        "polarity": "benign",
+        "supporting_evidence": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ]
+      }
+    ],
+    "coverage_counts": {
+      "success": 14,
+      "skipped": 8,
+      "unavailable": 1,
+      "failed": 0
+    },
+    "source_unchanged": true,
+    "report_current": true,
+    "report_pointer": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui3\\reference_runs\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0\\c2f06fb8a1d441489d220b58212c8185\\90103ea3ca454a2bac818ec7b9e7366f\\current_report.json"
+  }
+}

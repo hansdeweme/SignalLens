@@ -56,6 +56,15 @@ class StageView:
 
 
 @dataclass(frozen=True)
+class SourceIdentityView:
+    path: str | None
+    sha256: str | None
+    profile: str | None
+    stored: bool
+    error: str | None
+
+
+@dataclass(frozen=True)
 class InvestigationViewSnapshot:
     session_id: str
     analysis_id: str | None
@@ -70,3 +79,4 @@ class InvestigationViewSnapshot:
     stages: tuple[StageView, ...]
     annotations_json: str
     analysis_annotation_revision: int | None
+    source: SourceIdentityView | None = None

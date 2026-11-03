@@ -1,0 +1,154 @@
+[
+  {
+    "file": "01_empty_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "02_selected_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "03_analyzing_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "04_instagram_complete_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "05_midjourney_complete_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "06_inconclusive_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "07_missing_source_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "08_failed_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "09_minimum_offscreen.png",
+    "size": [
+      1040,
+      720
+    ],
+    "native": false
+  },
+  {
+    "file": "10_large_offscreen.png",
+    "size": [
+      1600,
+      1000
+    ],
+    "native": false
+  },
+  {
+    "file": "11_long_content_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "12_evidence_scope_offscreen.png",
+    "size": [
+      1280,
+      900
+    ],
+    "native": false
+  },
+  {
+    "file": "13_narrative_offscreen.png",
+    "size": [
+      900,
+      700
+    ],
+    "native": false
+  },
+  {
+    "file": "14_empty_native.png",
+    "size": [
+      1282,
+      932
+    ],
+    "native": true
+  },
+  {
+    "file": "15_selected_native.png",
+    "size": [
+      1282,
+      932
+    ],
+    "native": true
+  },
+  {
+    "file": "16_analyzing_native.png",
+    "size": [
+      1282,
+      932
+    ],
+    "native": true
+  },
+  {
+    "file": "17_instagram_complete_native.png",
+    "size": [
+      1282,
+      932
+    ],
+    "native": true
+  },
+  {
+    "file": "18_minimum_native.png",
+    "size": [
+      1042,
+      752
+    ],
+    "native": true
+  },
+  {
+    "file": "19_maximized_native.png",
+    "size": [
+      1920,
+      1152
+    ],
+    "native": true
+  }
+]

@@ -1,0 +1,134 @@
+[
+  {
+    "file": "01_empty_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "02_selected_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "03_analyzing_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "04_instagram_complete_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "05_midjourney_complete_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "06_inconclusive_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": true
+  },
+  {
+    "file": "07_missing_source_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": true
+  },
+  {
+    "file": "08_failed_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": true
+  },
+  {
+    "file": "09_minimum_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "10_large_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1600,
+      1000
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  },
+  {
+    "file": "11_long_content_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": true
+  },
+  {
+    "file": "12_evidence_scope_offscreen.png",
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "native": false,
+    "fixture": false
+  }
+]

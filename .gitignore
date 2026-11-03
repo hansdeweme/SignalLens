@@ -66,3 +66,8 @@ Thumbs.db
 /doc/gui_modernization/ui2/test_runs/
 /doc/gui_modernization/ui2/reference_runs/
 /doc/gui_modernization/ui2/native_run/
+
+# UI-3 local test workspaces and generated detector artifacts.
+/doc/gui_modernization/ui3/test_runs/
+/doc/gui_modernization/ui3/reference_runs/
+/doc/gui_modernization/ui3/native_run/

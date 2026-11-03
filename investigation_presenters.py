@@ -2,11 +2,12 @@
 from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
+import json
 
 from investigation_session import InvestigationSession
 from presentation_models import (
     EvidenceView, HypothesisView, InvestigationSummaryView,
-    InvestigationViewSnapshot, ProvenanceView, StageView,
+    InvestigationViewSnapshot, ProvenanceView, StageView, SourceIdentityView,
 )
 
 
@@ -78,4 +79,8 @@ def build_presentation(session: InvestigationSession, result=None) -> Investigat
                        mapping(mapping(data.get('sections')).get('metadata')).get('note'), ()),
         coverage.get('status'), stages, session.annotations_json,
         session.invocation.annotation_revision if session.invocation else None,
+        SourceIdentityView(session.image_path, session.source_sha256,
+            session.invocation.profile if session.invocation else
+            mapping(json.loads(session.historical_identity_json)).get('profile') if session.historical_identity_json else None,
+            bool(session.imported_from), session.error),
     )
