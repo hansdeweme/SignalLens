@@ -107,6 +107,21 @@ def result_for(token):
     return AnalysisState(Path(token.image_path), Path(token.output_dir))
 
 
+def test_packaged_main_uses_executable_directory(tmp_path,monkeypatch):
+    import signallens_gui as gui
+    from types import SimpleNamespace
+    bundle=tmp_path/'portable';bundle.mkdir()
+    executable=bundle/'SignalLens.exe';executable.write_bytes(b'')
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(gui.sys,'frozen',True,raising=False)
+    monkeypatch.setattr(gui.sys,'executable',str(executable))
+    monkeypatch.setattr(gui,'QApplication',lambda args:SimpleNamespace(exec=lambda:0))
+    monkeypatch.setattr(gui,'SignalLensGui',lambda:SimpleNamespace(show=lambda:None))
+    monkeypatch.setattr(gui.QTimer,'singleShot',lambda *args:None)
+    with pytest.raises(SystemExit) as stopped:gui.main()
+    assert stopped.value.code==0 and Path.cwd()==bundle
+
+
 def test_new_selection_clears_every_prior_trace_result_and_late_callback(window, images):
     token = invocation(window, images[0])
     window.on_analysis_finished(token, result_for(token))

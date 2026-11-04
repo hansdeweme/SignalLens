@@ -1,0 +1,127 @@
+{
+  "startup": {
+    "seconds": 0.17417690000729635,
+    "rss_mb": 218.78
+  },
+  "typical_stored_load": {
+    "seconds": 0.14101530000334606,
+    "max_heartbeat_gap_seconds": 0.04343019996304065,
+    "rss_before_mb": 218.91,
+    "rss_after_mb": 234.36
+  },
+  "navigate_Overview": {
+    "seconds": 1.1500029359012842e-05,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 234.36,
+    "rss_after_mb": 234.36
+  },
+  "navigate_Image Forensics": {
+    "seconds": 0.008847900026012212,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 234.42,
+    "rss_after_mb": 236.53
+  },
+  "navigate_Evidence": {
+    "seconds": 0.007844700012356043,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 236.53,
+    "rss_after_mb": 236.55
+  },
+  "navigate_Reasoning": {
+    "seconds": 0.009158100001513958,
+    "max_heartbeat_gap_seconds": 0.006917699996847659,
+    "rss_before_mb": 236.55,
+    "rss_after_mb": 236.55
+  },
+  "navigate_Provenance": {
+    "seconds": 0.009936199989169836,
+    "max_heartbeat_gap_seconds": 0.0032738999580033123,
+    "rss_before_mb": 236.55,
+    "rss_after_mb": 236.57
+  },
+  "navigate_Reports": {
+    "seconds": 0.010135200049262494,
+    "max_heartbeat_gap_seconds": 0.003866500046569854,
+    "rss_before_mb": 236.57,
+    "rss_after_mb": 236.57
+  },
+  "typical_artifact_switch": {
+    "seconds": 0.013028800021857023,
+    "max_heartbeat_gap_seconds": 0.00773979997029528,
+    "rss_before_mb": 236.57,
+    "rss_after_mb": 237.67
+  },
+  "large_81mp_source_preview": {
+    "seconds": 0.05998610000824556,
+    "max_heartbeat_gap_seconds": 0.03915720002260059,
+    "rss_before_mb": 237.67,
+    "rss_after_mb": 227.54,
+    "decoded_preview_dimensions": [
+      0,
+      0
+    ],
+    "message": "Preview unavailable: Unable to read image data"
+  },
+  "large_30mp_source_preview": {
+    "seconds": 0.13546379999024794,
+    "max_heartbeat_gap_seconds": 0.043399599962867796,
+    "rss_before_mb": 227.73,
+    "rss_after_mb": 339.23,
+    "message": "6000 \u00d7 5000 encoded pixels \u00b7 bounded preview"
+  },
+  "large_trace_and_report_bind": {
+    "seconds": 0.6567809000262059,
+    "max_heartbeat_gap_seconds": 0.6124605999793857,
+    "rss_before_mb": 363.8,
+    "rss_after_mb": 324.17
+  },
+  "large_evidence_filter": {
+    "seconds": 0.010950299969408661,
+    "max_heartbeat_gap_seconds": 0.007204000023193657,
+    "rss_before_mb": 324.17,
+    "rss_after_mb": 324.18
+  },
+  "large_reasoning_route_detail": {
+    "seconds": 0.0405689999461174,
+    "max_heartbeat_gap_seconds": 0.04033490002620965,
+    "rss_before_mb": 325.44,
+    "rss_after_mb": 326.66
+  },
+  "large_metadata_bind": {
+    "seconds": 0.04644560004817322,
+    "max_heartbeat_gap_seconds": 0.04651750001357868,
+    "rss_before_mb": 331.94,
+    "rss_after_mb": 337.24
+  },
+  "large_metadata_filter": {
+    "seconds": 0.007109300000593066,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 339.34,
+    "rss_after_mb": 339.34
+  },
+  "large_automatic_report_save": {
+    "seconds": 0.21509060001699254,
+    "max_heartbeat_gap_seconds": 0.21418740000808612,
+    "rss_before_mb": 339.34,
+    "rss_after_mb": 362.0
+  },
+  "large_explicit_export": {
+    "seconds": 0.16278260003309697,
+    "max_heartbeat_gap_seconds": 0.06391189998248592,
+    "rss_before_mb": 362.0,
+    "rss_after_mb": 362.32
+  },
+  "large_fixture": {
+    "evidence_rows": 2500,
+    "route_rows": 1000,
+    "metadata_rows": 5000,
+    "narrative_characters": 2048000
+  },
+  "switch_10_investigations": {
+    "seconds": 0.10328219999792054,
+    "max_heartbeat_gap_seconds": 0.09643150004558265,
+    "rss_before_mb": 362.32,
+    "rss_after_mb": 259.54
+  },
+  "post_switch_memory_mb": 259.39
+}

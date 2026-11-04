@@ -1,0 +1,131 @@
+Overall Forensic Reading (OSINT · Metadata · ELA · Residual · Sensor Origin · CFA/Demosaicing · Compression History · Patch Similarity · Cross-Signal · Boundary Signal · Boundary Focus · Subject Boundary · Region FFT · FFT)Confidence Tier: High
+Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.
+Contextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.
+Supporting Signals:
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+Contextual Signals:
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+Evidence Limitations:
+- Localized editing evidence does not by itself establish AI generation.
+Confidence Rationale:
+- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.
+- Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.
+- Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.
+- Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
+
+synthetic_origin: Inconclusive (neutral). Synthetic origin is not established by the available evidence.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+Contextual Signals:
+- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- repeated patch structures are concentrated within the subject: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject material appears overly regularized and lacks natural variability: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- texture characteristics differ between subject and background: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject texture shows repeated stochastic patterns: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+Limitations: Heuristic support levels are not probabilities. Missing provenance coverage is a limitation, not positive generation evidence. No substantive generation declaration or specific visual generation finding is established.
+Confidence policy rule: synthetic.not_established
+
+localized_editing: High (suspicious). Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.
+Contextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.
+Supporting Signals:
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+Contextual Signals:
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+Limitations: Localized editing evidence does not by itself establish AI generation.
+Confidence policy rule: localized.reliable_boundary_compound
+
+camera_acquisition: Medium (benign). Camera-like acquisition evidence is present.
+Supporting Signals:
+- weak camera cfa supported: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+Contextual Signals:
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+Limitations: Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.
+Confidence policy rule: camera.acquisition_compatibility
+
+
+--------------------------------------------------
+
+OSINT
+No reverse-image OSINT review has yet been recorded for this image.
+
+Metadata
+Metadata is sparse or stripped, limiting provenance assessment. Absence alone does not indicate synthetic origin.
+
+Sensor Origin
+Sensor-origin analysis detects spatially coherent microstructure compatible with a camera capture pipeline. This supports a camera-like acquisition pipeline but is not definitive on its own.
+
+CFA / Demosaicing
+CFA / demosaicing traces are weak, but this remains compatible with a modern camera pipeline or downstream processing. This is a supportive camera-pipeline compatibility signal, not a definitive authenticity claim.
+
+ELA
+ELA results do not clearly indicate either a localized anomaly or a uniform pattern.
+
+Residual
+Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern.
+
+Compression History
+Compression-history analysis detects localized inconsistency in block-grid behavior, which may indicate region-specific save-history or editing differences.
+
+Subject Boundary
+Boundary-transition analysis indicates a likely subject/background segmentation or replacement artifact, with multiple cues suggesting an implausible cutout-style or background-regime transition.
+
+Region Mask
+Image was segmented into subject, boundary, and background regions (subject=0.60, boundary=0.10, background=0.40; source=person_subject_mask, person-mask reliability=high). These regions are used for localized forensic analysis.
+
+Segmentation Alignment
+Cross-signal hotspots do not meaningfully align with the subject boundary.
+
+Cross-Signal
+ELA and residual analysis show partial spatial agreement in localized regions.
+
+Boundary Signal
+ELA and residual hotspots converge in a connected, contour-like region. This is consistent with differential foreground/background processing, localized compositing, masking, or subject-specific retouching.
+
+Boundary Focus
+Processing intensity is elevated in the boundary region relative to both the subject and the background. This supports a localized boundary mismatch.Combined boundary ratio=1.646; combined boundary boost=6.712; transition anomaly score=7.875; ELA boundary ratio=1.366; residual boundary ratio=1.926.
+
+Patch Similarity
+Patch-similarity analysis reveals repeated local structures across spatially separated regions. The result is notable, though it may still reflect natural patterned content depending on scene context.
+
+Patch Spatial
+Spatial patch analysis shows repeated high-similarity patch structure concentrated within the subject region, supporting subject-internal synthetic texture recurrence. Subject density ratio=21.219; boundary density ratio=13.231; subject weight ratio=21.325; boundary weight ratio=13.282; bridge ratio=0.242; bridge weight ratio=0.242; boundary involvement ratio=0.185; boundary-correlated ratio=0.140; subject-localized ratio=0.945;subject-internal ratio=0.805; subject-internal weight ratio=0.805.
+
+Region Frequency
+Region-aware frequency analysis completed, but the difference between subject, contour band, and background is not strong enough for a specific conclusion. Subject/background FFT gap=0.208; boundary/background FFT gap=-0.032; subject grid ratio=2.100; boundary grid ratio=1.361.
+
+Frequency Domain
+Frequency-domain analysis reveals repeated off-center spectral peaks with partial symmetry and axis-aligned structure, and a reconstructable spatial grid response. This indicates structured periodicity, but such patterns can also arise from genuine repeated scene content, camera pipeline effects, or regular image geometry.
+
+Subject Texture
+Subject-only texture analysis finds elevated soft self-similarity across the texture-focused subject region. This supports subject-internal stochastic repetition consistent with diffusion-generated or AI-enhanced subject-surface structure. Soft recurrence score=1.000; mean neighbor similarity=0.928; p90 neighbor similarity=0.992; dense similarity ratio=0.750.
+
+Subject Process Asymmetry
+Meaningful subject/background texture-process asymmetry is present, but the evidence remains contextual rather than decisive. Background baseline was treated as weak or the subject was dominant in frame, so subject-internal material regularization cues were given additional weight. Asymmetry score=0.589; regularization dominance=0.416; process divergence=0.433; boundary paradox=0.650; baseline reliability=1.000.
+
+Subject Material Realism
+Subject shows moderate signs of material regularization or homogenization, consistent with synthetic or heavily processed rendering. Realism score=0.553.
+
+------------------------------------------------------------------------
+Generated by SignalLens 0.0.1-Beta

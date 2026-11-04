@@ -1,0 +1,178 @@
+{
+  "scorecard": {
+    "camera_counter_support": 1.25,
+    "suspicious_score": 7.6614,
+    "benign_score": 1.5,
+    "local_edit_support_score": 0.0,
+    "clone_support_score": 0.0,
+    "synthetic_boost": 0.0,
+    "edit_boost": 0.0,
+    "provenance_boost": 0.75,
+    "sensor_boost": 0.0,
+    "compression_boost": 0.0,
+    "caution_penalty": 2.25,
+    "clone_candidate": false,
+    "clone_ambiguous": false,
+    "contextual_false_positive_risk": false,
+    "synthetic_supported_by_other_domains": true,
+    "suspicious_domains": [
+      "boundary",
+      "cross_signal",
+      "frequency",
+      "metadata",
+      "patch"
+    ],
+    "benign_domains": [
+      "sensor"
+    ]
+  },
+  "decision": {
+    "primary_hypothesis": "synthetic_origin",
+    "selection_reason": "An explicit unverified declaration supports AI-mediated creation independently of inconclusive localized editing.",
+    "decision_branch": "provenance_supported_synthetic_context",
+    "dominant_pattern": "provenance_supported_synthetic_context",
+    "confidence_tier": "Medium",
+    "polarity": "suspicious",
+    "supporting_evidence": [
+      "metadata:DECLARED_SYNTHETIC",
+      "metadata:EMBEDDED_GENERATION_PROMPT"
+    ],
+    "supporting_signals": [
+      "declared_synthetic_candidate",
+      "embedded_generation_prompt_detected"
+    ],
+    "supporting_explanations": [
+      "explicit generation declaration in metadata: Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+      "embedded generation prompt or workflow: Embedded metadata explicitly declares generation; metadata authenticity remains unverified."
+    ],
+    "contradicting_evidence": [],
+    "contradicting_signals": [],
+    "contradicting_explanations": [],
+    "moderating_evidence": [
+      "sensor_origin:camera_like_acquisition_supported"
+    ],
+    "moderating_signals": [
+      "camera_like_acquisition_supported"
+    ],
+    "moderating_explanations": [
+      "low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration."
+    ],
+    "contextual_evidence": [
+      "fft:possible_decoder_grid_signature",
+      "metadata:CREATOR_IDENTITY_PRESENT",
+      "patch_similarity:structured_patch_recurrence"
+    ],
+    "contextual_signals": [
+      "possible_decoder_grid_signature",
+      "creator_identity_present",
+      "structured_patch_recurrence"
+    ],
+    "contextual_explanations": [
+      "frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+      "creator attribution metadata: Creator attribution is present but does not declare generation.",
+      "repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin."
+    ],
+    "limitations": [
+      "Heuristic support levels are not probabilities.",
+      "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+      "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin."
+    ],
+    "evidence_details": {
+      "fft:possible_decoder_grid_signature": {
+        "section": "fft",
+        "pattern": "possible_decoder_grid_signature",
+        "role": "contextual_evidence",
+        "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+        "observations": [],
+        "label": "frequency structure suggests a grid-like or decoder-driven generation process",
+        "observed_status": "strong",
+        "observed_score": 0.5974
+      },
+      "patch_similarity:structured_patch_recurrence": {
+        "section": "patch_similarity",
+        "pattern": "structured_patch_recurrence",
+        "role": "contextual_evidence",
+        "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+        "observations": [],
+        "label": "repeated structured patch motifs are present",
+        "observed_status": "medium",
+        "observed_score": 0.6599
+      },
+      "sensor_origin:camera_like_acquisition_supported": {
+        "section": "sensor_origin",
+        "pattern": "camera_like_acquisition_supported",
+        "role": "moderating_evidence",
+        "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+        "observations": [],
+        "label": "low-level signals are consistent with a camera acquisition pipeline",
+        "observed_status": "medium",
+        "observed_score": 0.08440370112657547
+      },
+      "metadata:CREATOR_IDENTITY_PRESENT": {
+        "section": "metadata",
+        "pattern": "creator_identity_present",
+        "role": "contextual_evidence",
+        "interpretation": "Creator attribution is present but does not declare generation.",
+        "observations": [
+          {
+            "raw_key": "PNG:Author",
+            "group": "PNG",
+            "tag": "Author",
+            "value": "theart1300"
+          }
+        ],
+        "label": "creator attribution metadata",
+        "observed_status": "medium",
+        "observed_score": 0.75
+      },
+      "metadata:DECLARED_SYNTHETIC": {
+        "section": "metadata",
+        "pattern": "declared_synthetic_candidate",
+        "role": "supporting_evidence",
+        "interpretation": "Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+        "observations": [
+          {
+            "raw_key": "XMP-iptcExt:DigitalSourceType",
+            "group": "XMP-iptcExt",
+            "tag": "DigitalSourceType",
+            "value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia",
+            "declaration_kind": "iptc_digital_source_type",
+            "matched_value": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+          }
+        ],
+        "label": "explicit generation declaration in metadata",
+        "observed_status": "medium",
+        "observed_score": 0.75
+      },
+      "metadata:EMBEDDED_GENERATION_PROMPT": {
+        "section": "metadata",
+        "pattern": "embedded_generation_prompt_detected",
+        "role": "supporting_evidence",
+        "interpretation": "Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+        "observations": [
+          {
+            "raw_key": "PNG:Description",
+            "group": "PNG",
+            "tag": "Description",
+            "value": "real portrait full body of a real model with flowers in her hand real facial expression real photo ultra realistic vogue editorial not a pretty model --chaos 10 --ar 4:3 --style raw --stylize 1000 --v 6.1 Job ID: bee230dd-b5c0-4bbb-be9a-cc1f373fd317"
+          }
+        ],
+        "label": "embedded generation prompt or workflow",
+        "observed_status": "medium",
+        "observed_score": 0.75
+      }
+    },
+    "confidence_rationale": [
+      "An explicit unverified declaration supports AI-mediated creation independently of inconclusive localized editing.",
+      "Confidence concerns generation-relevant evidence; unverified declarations do not authenticate origin.",
+      "Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.",
+      "Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities."
+    ],
+    "overall_text": "Metadata contains an explicit generation declaration supporting synthetic or AI-mediated creation. Metadata authenticity is unverified. This finding does not establish a localized editing mechanism.\nSupporting Signals:\n- explicit generation declaration in metadata: Embedded metadata explicitly declares generation; metadata authenticity remains unverified.\n- embedded generation prompt or workflow: Embedded metadata explicitly declares generation; metadata authenticity remains unverified.\nModerating Signals:\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\nContextual Signals:\n- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- creator attribution metadata: Creator attribution is present but does not declare generation.\n- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\nEvidence Limitations:\n- Heuristic support levels are not probabilities.\n- Metadata authenticity is unverified; C2PA presence alone is not validation.\nConfidence Rationale:\n- An explicit unverified declaration supports AI-mediated creation independently of inconclusive localized editing.\n- Confidence concerns generation-relevant evidence; unverified declarations do not authenticate origin.\n- Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.\n- Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities.\n\nsynthetic_origin: Medium (suspicious). Metadata contains an explicit generation declaration supporting synthetic or AI-mediated creation. Metadata authenticity is unverified. This finding does not establish a localized editing mechanism.\nSupporting Signals:\n- explicit generation declaration in metadata: Embedded metadata explicitly declares generation; metadata authenticity remains unverified.\n- embedded generation prompt or workflow: Embedded metadata explicitly declares generation; metadata authenticity remains unverified.\nModerating Signals:\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\nContextual Signals:\n- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- creator attribution metadata: Creator attribution is present but does not declare generation.\n- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\nLimitations: Heuristic support levels are not probabilities. Metadata authenticity is unverified; C2PA presence alone is not validation.\n\nlocalized_editing: Inconclusive (neutral). A specific localized-editing mechanism is not established.\nSupporting Signals:\n- fragmented boundary regions show signs of localized processing: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- multiple forensic signals converge on the same localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\nModerating Signals:\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.\nContextual Signals:\n- explicit generation declaration in metadata: A generation declaration does not identify a localized editing mechanism.\n- embedded generation prompt or workflow: A generation declaration does not identify a localized editing mechanism.\n- image edge boundary observation: Image-edge measurements lack validated person alignment and cannot establish person-specific segmentation artifacts.\nLimitations: Localized editing evidence does not by itself establish AI generation. Boundary reliability is reduced (0.00).\n\ncamera_acquisition: Medium (benign). Camera-like acquisition evidence is present.\nSupporting Signals:\n- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.\nContextual Signals:\n- explicit generation declaration in metadata: A generation declaration can coexist with camera-compatible structure; it does not authenticate acquisition history.\n- embedded generation prompt or workflow: A generation declaration can coexist with camera-compatible structure; it does not authenticate acquisition history.\nLimitations: Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.\n\nCoverage limitation: Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.\n"
+  },
+  "stages": {
+    "completed": 14,
+    "skipped": 9,
+    "failed": 0
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "pattern_before": "multi_signal_suspicious_convergence",
+  "pattern_after": "multi_signal_suspicious_convergence",
+  "confidence_before": "High",
+  "confidence_after": "Medium",
+  "suspicious_score": 8.155,
+  "benign_score": 0.0,
+  "primary_hypothesis": "unresolved_anomaly",
+  "policy_rule": "generic.one_strong_observation",
+  "numerical_invariance_passed": true
+}

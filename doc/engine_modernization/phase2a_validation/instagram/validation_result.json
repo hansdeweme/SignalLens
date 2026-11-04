@@ -1,0 +1,49 @@
+{
+  "case": "instagram",
+  "mode": "subject_based",
+  "before": {
+    "suspicious_score": 20.47705,
+    "benign_score": 2.25,
+    "edit_boost": 1.823,
+    "caution_penalty": 1.6
+  },
+  "after": {
+    "suspicious_score": 20.47705,
+    "benign_score": 2.25,
+    "edit_boost": 1.823,
+    "caution_penalty": 1.6
+  },
+  "stages": {
+    "completed": 23,
+    "skipped": 0,
+    "failed": 0
+  },
+  "errors": [],
+  "pattern": "possible_foreground_background_processing_mismatch",
+  "confidence": "High",
+  "polarity": "suspicious",
+  "mask_status": "reliable",
+  "mask_coverage": 0.5961422390407987,
+  "cross_signal_status": "success",
+  "reconstruction_passed": true,
+  "raw_contributions": {
+    "camera_counter_support": 1.25,
+    "local_edit_support_score": 4.85,
+    "clone_support_score": 0.0,
+    "synthetic_boost": 0.4,
+    "edit_boost": 1.823,
+    "provenance_boost": 0.0,
+    "sensor_boost": 0.0,
+    "compression_boost": 0.75,
+    "caution_penalty": 1.6
+  },
+  "base_suspicious": 23.0,
+  "transforms": {
+    "measured_camera_support": 1.25,
+    "camera_multiplier": 0.85,
+    "geometry_multiplier": 1.0,
+    "photo_context_multiplier": 1.0,
+    "photo_context_prior": false,
+    "suspicious_floor": 0.0
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "app": "SignalLens",
+  "version": "0.0.1-Beta",
+  "run_id": "20261031_211215_c9408e02",
+  "started_at": "2026-10-31T21:12:15+01:00",
+  "finished_at": "2026-10-31T21:12:22+01:00",
+  "status": "completed",
+  "input": {
+    "selected_file": "test_images\\insta_fake\\Curvy Leggings Outfit.jpg",
+    "input_name": "Curvy Leggings Outfit.jpg"
+  },
+  "stages": [
+    {
+      "name": "Prepared image gatekeeper",
+      "started_at": "2026-10-31T21:12:15+01:00",
+      "finished_at": "2026-10-31T21:12:15+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.2244,
+      "error": null
+    },
+    {
+      "name": "EXIF analysis",
+      "started_at": "2026-10-31T21:12:15+01:00",
+      "finished_at": "2026-10-31T21:12:16+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.3761,
+      "error": null
+    },
+    {
+      "name": "ELA analysis",
+      "started_at": "2026-10-31T21:12:16+01:00",
+      "finished_at": "2026-10-31T21:12:16+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.305,
+      "error": null
+    },
+    {
+      "name": "Noise analysis",
+      "started_at": "2026-10-31T21:12:16+01:00",
+      "finished_at": "2026-10-31T21:12:16+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.199,
+      "error": null
+    },
+    {
+      "name": "Sensor-origin analysis",
+      "started_at": "2026-10-31T21:12:16+01:00",
+      "finished_at": "2026-10-31T21:12:16+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0558,
+      "error": null
+    },
+    {
+      "name": "CFA / demosaicing analysis",
+      "started_at": "2026-10-31T21:12:16+01:00",
+      "finished_at": "2026-10-31T21:12:16+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1213,
+      "error": null
+    },
+    {
+      "name": "Person-aware subject mask",
+      "started_at": "2026-10-31T21:12:16+01:00",
+      "finished_at": "2026-10-31T21:12:17+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.365,
+      "error": null
+    },
+    {
+      "name": "Person-derived region masks",
+      "started_at": "2026-10-31T21:12:17+01:00",
+      "finished_at": "2026-10-31T21:12:17+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0084,
+      "error": null
+    },
+    {
+      "name": "Person mask reliability",
+      "started_at": "2026-10-31T21:12:17+01:00",
+      "finished_at": "2026-10-31T21:12:17+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0,
+      "error": null
+    },
+    {
+      "name": "Subject-boundary analysis",
+      "started_at": "2026-10-31T21:12:17+01:00",
+      "finished_at": "2026-10-31T21:12:17+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0894,
+      "error": null
+    },
+    {
+      "name": "Region segmentation analysis",
+      "started_at": "2026-10-31T21:12:17+01:00",
+      "finished_at": "2026-10-31T21:12:17+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0202,
+      "error": null
+    },
+    {
+      "name": "FFT analysis",
+      "started_at": "2026-10-31T21:12:17+01:00",
+      "finished_at": "2026-10-31T21:12:18+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.687,
+      "error": null
+    },
+    {
+      "name": "Patch similarity analysis",
+      "started_at": "2026-10-31T21:12:18+01:00",
+      "finished_at": "2026-10-31T21:12:18+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.8967,
+      "error": null
+    },
+    {
+      "name": "Cross-signal analysis",
+      "started_at": "2026-10-31T21:12:18+01:00",
+      "finished_at": "2026-10-31T21:12:18+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0003,
+      "error": null
+    },
+    {
+      "name": "Boundary-focused analysis",
+      "started_at": "2026-10-31T21:12:18+01:00",
+      "finished_at": "2026-10-31T21:12:19+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0581,
+      "error": null
+    },
+    {
+      "name": "Region-aware FFT analysis",
+      "started_at": "2026-10-31T21:12:19+01:00",
+      "finished_at": "2026-10-31T21:12:20+01:00",
+      "status": "success",
+      "elapsed_seconds": 1.7569,
+      "error": null
+    },
+    {
+      "name": "Segmentation alignment analysis",
+      "started_at": "2026-10-31T21:12:20+01:00",
+      "finished_at": "2026-10-31T21:12:20+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0023,
+      "error": null
+    },
+    {
+      "name": "Subject texture consistency analysis",
+      "started_at": "2026-10-31T21:12:20+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 1.3276,
+      "error": null
+    },
+    {
+      "name": "Subject process asymmetry analysis",
+      "started_at": "2026-10-31T21:12:22+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1559,
+      "error": null
+    },
+    {
+      "name": "Subject material realism analysis",
+      "started_at": "2026-10-31T21:12:22+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.3922,
+      "error": null
+    },
+    {
+      "name": "Patch spatial analysis",
+      "started_at": "2026-10-31T21:12:22+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0034,
+      "error": null
+    },
+    {
+      "name": "Compression-history analysis",
+      "started_at": "2026-10-31T21:12:22+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0722,
+      "error": null
+    },
+    {
+      "name": "Shared boundary overlays",
+      "started_at": "2026-10-31T21:12:22+01:00",
+      "finished_at": "2026-10-31T21:12:22+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1867,
+      "error": null
+    }
+  ],
+  "artifacts": {
+    "output_dir": "analyzed\\phase12_validation\\baseline\\instagram",
+    "output_json": "analyzed\\phase12_validation\\baseline\\instagram\\exif_signals.json"
+  },
+  "errors": [],
+  "warnings": []
+}

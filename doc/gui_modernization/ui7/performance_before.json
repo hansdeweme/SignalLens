@@ -1,0 +1,129 @@
+{
+  "font_setup": "explicit Windows Segoe UI/Consolas for offscreen Qt",
+  "render_mode": "pre-fix eager layout reconstruction",
+  "startup": {
+    "seconds": 0.14383279997855425,
+    "rss_mb": 220.17
+  },
+  "typical_stored_load": {
+    "seconds": 0.11229089996777475,
+    "max_heartbeat_gap_seconds": 0.038832099991850555,
+    "rss_before_mb": 220.35,
+    "rss_after_mb": 237.12
+  },
+  "navigate_Overview": {
+    "seconds": 1.1399970389902592e-05,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 237.12,
+    "rss_after_mb": 237.12
+  },
+  "navigate_Image Forensics": {
+    "seconds": 0.008654600009322166,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 237.12,
+    "rss_after_mb": 238.57
+  },
+  "navigate_Evidence": {
+    "seconds": 0.008427999971900135,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 238.57,
+    "rss_after_mb": 238.58
+  },
+  "navigate_Reasoning": {
+    "seconds": 0.008391599985770881,
+    "max_heartbeat_gap_seconds": 0,
+    "rss_before_mb": 238.58,
+    "rss_after_mb": 238.59
+  },
+  "navigate_Provenance": {
+    "seconds": 0.010657900013029575,
+    "max_heartbeat_gap_seconds": 0.0014196999836713076,
+    "rss_before_mb": 238.59,
+    "rss_after_mb": 238.59
+  },
+  "navigate_Reports": {
+    "seconds": 0.009520300023723394,
+    "max_heartbeat_gap_seconds": 0.0016862000338733196,
+    "rss_before_mb": 238.59,
+    "rss_after_mb": 238.59
+  },
+  "typical_artifact_switch": {
+    "seconds": 0.011020900041330606,
+    "max_heartbeat_gap_seconds": 0.009759799984749407,
+    "rss_before_mb": 238.59,
+    "rss_after_mb": 239.71
+  },
+  "large_81mp_source_preview": {
+    "seconds": 0.05445009999675676,
+    "max_heartbeat_gap_seconds": 0.03653759998269379,
+    "rss_before_mb": 239.71,
+    "rss_after_mb": 229.37,
+    "decoded_preview_dimensions": [
+      0,
+      0
+    ],
+    "message": "Preview unavailable: Unable to read image data"
+  },
+  "large_30mp_source_preview": {
+    "seconds": 0.09072450001258403,
+    "max_heartbeat_gap_seconds": 0.016539799980819225,
+    "rss_before_mb": 229.37,
+    "rss_after_mb": 367.57,
+    "message": "6000 \u00d7 5000 encoded pixels \u00b7 bounded preview"
+  },
+  "large_trace_and_report_bind": {
+    "seconds": 0.5721299999859184,
+    "max_heartbeat_gap_seconds": 0.533311799983494,
+    "rss_before_mb": 264.54,
+    "rss_after_mb": 325.59
+  },
+  "large_evidence_filter": {
+    "seconds": 0.009680300019681454,
+    "max_heartbeat_gap_seconds": 0.0038595999940298498,
+    "rss_before_mb": 325.59,
+    "rss_after_mb": 325.59
+  },
+  "large_reasoning_route_detail": {
+    "seconds": 0.03311260003829375,
+    "max_heartbeat_gap_seconds": 0.005425899988040328,
+    "rss_before_mb": 326.76,
+    "rss_after_mb": 328.05
+  },
+  "large_metadata_bind": {
+    "seconds": 0.044063500012271106,
+    "max_heartbeat_gap_seconds": 0.018040800001472235,
+    "rss_before_mb": 333.35,
+    "rss_after_mb": 338.69
+  },
+  "large_metadata_filter": {
+    "seconds": 0.004922299995087087,
+    "max_heartbeat_gap_seconds": 0.003974799998104572,
+    "rss_before_mb": 340.84,
+    "rss_after_mb": 340.84
+  },
+  "large_automatic_report_save": {
+    "seconds": 0.18596540001453832,
+    "max_heartbeat_gap_seconds": 0.1852338999742642,
+    "rss_before_mb": 340.85,
+    "rss_after_mb": 363.54
+  },
+  "large_explicit_export": {
+    "seconds": 0.12563620001310483,
+    "max_heartbeat_gap_seconds": 0.06393259996548295,
+    "rss_before_mb": 363.54,
+    "rss_after_mb": 363.62
+  },
+  "large_fixture": {
+    "evidence_rows": 2500,
+    "route_rows": 1000,
+    "metadata_rows": 5000,
+    "narrative_characters": 2048000
+  },
+  "switch_10_investigations": {
+    "seconds": 0.08512930001597852,
+    "max_heartbeat_gap_seconds": 0.07744190003722906,
+    "rss_before_mb": 363.62,
+    "rss_after_mb": 260.34
+  },
+  "post_switch_memory_mb": 260.14
+}

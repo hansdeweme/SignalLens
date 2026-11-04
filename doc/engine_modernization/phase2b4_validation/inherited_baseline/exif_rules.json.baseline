@@ -1,0 +1,197 @@
+{
+  "watch_tags": [
+    "Software",
+    "CreatorTool",
+    "ProcessingSoftware",
+    "HostComputer",
+    "HistorySoftwareAgent",
+    "HistoryAction",
+    "HistoryParameters",
+    "HistoryWhen",
+    "DerivedFromDocumentID",
+    "DerivedFromInstanceID",
+    "DerivedFromFilePath",
+    "DerivedFromManager",
+    "DerivedFromManagerVariant",
+    "JUMBF",
+    "C2PA",
+    "Comment",
+    "Source",
+    "Warning",
+    "Prompt",
+    "Parameters"
+  ],
+
+  "tool_rules": [
+    {
+      "term": "comfyui",
+      "aliases": ["comfyui-image-saver", "comfy-core"],
+      "category": "generation",
+      "confidence": 0.92,
+      "severity": "high"
+    },
+    {
+      "term": "ksampler",
+      "aliases": ["ksamplerselect", "samplercustomadvanced"],
+      "category": "generation",
+      "confidence": 0.86,
+      "severity": "high"
+    },
+    {
+      "term": "cliptextencode",
+      "aliases": ["clip text encode", "positive prompt", "negative prompt"],
+      "category": "generation",
+      "confidence": 0.84,
+      "severity": "high"
+    },
+    {
+      "term": "vaedecode",
+      "aliases": ["vae decode", "vaeloader"],
+      "category": "generation",
+      "confidence": 0.84,
+      "severity": "high"
+    },
+    {
+      "term": "safetensors",
+      "aliases": [".safetensors", "lora", "loraloader"],
+      "category": "generation",
+      "confidence": 0.82,
+      "severity": "medium"
+    },
+    {
+      "term": "stable diffusion",
+      "aliases": ["stablediffusion", "sdxl", "flux", "flux2", "unet loader"],
+      "category": "generation",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+    {
+      "term": "midjourney",
+      "category": "generation",
+      "confidence": 0.90,
+      "severity": "high"
+    },
+    {
+      "term": "firefly",
+      "category": "generation",
+      "confidence": 0.90,
+      "severity": "high"
+    },
+    {
+      "term": "stable diffusion",
+      "category": "generation",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+    {
+      "term": "sdxl",
+      "category": "generation",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+    {
+      "term": "dall-e",
+      "category": "generation",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+
+    {
+      "term": "topaz",
+      "category": "enhancement",
+      "confidence": 0.85,
+      "severity": "high"
+    },
+    {
+      "term": "gigapixel",
+      "category": "enhancement",
+      "confidence": 0.85,
+      "severity": "high"
+    },
+    {
+      "term": "remini",
+      "category": "enhancement",
+      "confidence": 0.85,
+      "severity": "high"
+    },
+    {
+      "term": "magnific",
+      "category": "enhancement",
+      "confidence": 0.85,
+      "severity": "high"
+    },
+    {
+      "term": "photoshop generative fill",
+      "category": "enhancement",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+    {
+      "term": "photoshop generative expand",
+      "category": "enhancement",
+      "confidence": 0.88,
+      "severity": "high"
+    },
+    {
+      "term": "adobe photoshop",
+      "category": "generic_editing",
+      "confidence": 0.55,
+      "severity": "low"
+    },
+    {
+      "term": "lightroom",
+      "category": "generic_editing",
+      "confidence": 0.55,
+      "severity": "low"
+    },
+    {
+      "term": "gimp",
+      "category": "generic_editing",
+      "confidence": 0.55,
+      "severity": "low"
+    },
+    {
+      "term": "midjourney",
+      "category": "generation",
+      "confidence": 0.90,
+      "severity": "high",
+      "aliases": ["mid journey"]
+    },
+    {
+      "term": "adobe firefly",
+      "category": "generation",
+      "confidence": 0.92,
+      "severity": "high",
+      "aliases": ["firefly"]
+    },
+    {
+      "term": "topaz gigapixel",
+      "category": "enhancement",
+      "confidence": 0.88,
+      "severity": "high",
+      "aliases": ["gigapixel", "topaz"]
+    },
+    {
+      "term": "adobe photoshop",
+      "category": "generic_editing",
+      "confidence": 0.55,
+      "severity": "low",
+      "aliases": ["photoshop"]
+    }
+    ],
+    "declarative_generation_terms": [
+      "ai generated",
+      "generated with ai",
+      "synthetic",
+      "created with ai",
+      "ai image"
+  ],
+  "declarative_enhancement_terms": [
+    "upscaled",
+    "enhanced",
+    "denoised",
+    "restored",
+    "super resolution",
+    "generative fill"
+  ]
+}

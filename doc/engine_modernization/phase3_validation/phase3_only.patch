@@ -1,0 +1,1678 @@
+--- a/decision_logic.py
++++ b/decision_logic.py
+@@ -5,7 +5,7 @@
+ #
+ 
+ from __future__ import annotations
+-from dataclasses import dataclass, field
++from dataclasses import dataclass, field, replace
+ from typing import Any, Callable
+ from math import isfinite
+ # Local imports 
+@@ -25,6 +25,11 @@
+     has_real_photo_context_prior,
+ )
+ from scorecard_integrity import ScorecardIntegrityError, available_sections
++from confidence_policy import (
++    Finding, Specificity, finding_specificity, AssessmentEvidence,
++    ConfidencePolicyResult, evaluate_confidence, generic_confidence,
++)
++from confidence_policy_inputs import snapshot_confidence_facts, coverage_limitations
+ from production_corroboration import (
+     CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate,
+ )
+@@ -109,6 +114,7 @@
+     selection_reason: str | None = None,
+     confidence_rationale: list[str] | None = None,
+     corroboration_gates: list[dict] | None = None,
++    confidence_policy_results: list[ConfidencePolicyResult] | None = None,
+ ) -> dict:
+     assessment = next((h for h in (hypotheses or []) if h.hypothesis_id == primary_hypothesis), None)
+     presentation = evidence_presentation(assessment)
+@@ -127,6 +133,10 @@
+         "derived_signals": _object_to_dict(ds),
+         "scorecard": _object_to_dict(card),
+         "scorecard_calculation": _jsonable_scalar(card.calculation),
++        "confidence_policy": {
++            "version": "3", "primary_hypothesis": primary_hypothesis,
++            "assessments": [_object_to_dict(item) for item in (confidence_policy_results or [])],
++        },
+         "corroboration_audit": {
+             "version": "2b3",
+             "evaluated_gates": _jsonable_scalar(sorted(corroboration_gates or [], key=lambda item: item['gate_id'])),
+@@ -308,13 +318,8 @@
+         gate_passed=source_check['requirement_satisfied'] and score >= 3.0,
+         production_correction='Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged.')
+     record_gate(corroboration_gates, source_check)
+-    if source_check['gate_passed']:
+-        return "High"
+-    if strong_signals >= 1 and score >= 2.0:
+-        return "Medium"
+-    if score >= 1.2:
+-        return "Low"
+-    return "Inconclusive"
++    # Compatibility helper; authoritative generic thresholds live in the policy.
++    return generic_confidence(score, strong_signals, source_check['requirement_satisfied'])[0]
+ 
+ def extract_secondary_patterns(
+     sections: dict[str, ModuleSummary],
+@@ -417,6 +422,8 @@
+     module counts cannot establish a mechanism or statistical independence.
+     """
+     reasons = [selection_reason] if selection_reason else []
++    if assessment is not None and assessment.confidence_policy_rule:
++        return reasons + list(assessment.confidence_rationale)
+     if assessment is None:
+         reasons.append("No hypothesis-scoped assessment was supplied; aggregate scores alone do not identify a mechanism.")
+         return reasons
+@@ -463,6 +470,8 @@
+     hypothesis_id: str | None = None
+     selected: bool = False
+     disposition: str | None = None
++    legacy_confidence: str | None = None
++    confidence_source: str | None = None
+ 
+ @dataclass
+ class DecisionEnv:
+@@ -480,6 +489,8 @@
+     primary_hypothesis: str | None = None
+     selection_reason: str | None = None
+     corroboration_gates: list[dict] = field(default_factory=list)
++    confidence_policy_results: list[ConfidencePolicyResult] = field(default_factory=list)
++    coverage_limitations: tuple[str, ...] = ()
+ 
+ @dataclass(frozen=True)
+ class DecisionResult:
+@@ -489,6 +500,11 @@
+     polarity: str
+     branch: str
+     debug_message: str | None = None
++    finding: Finding = Finding.UNSPECIFIED
++
++    @property
++    def specificity(self):
++        return finding_specificity(self.finding)
+     
+ #---------------------------------------------------
+ # context info set into the GUI by analist
+@@ -688,6 +704,19 @@
+     debug_lines: list[str] | None = None,
+     debug: bool = False,
+ ) -> tuple[str | None, str, str, str, dict]:
++    if not env.confidence_policy_results:
++        if not env.hypotheses:
++            env.primary_hypothesis = 'unresolved_anomaly'
++            env.hypotheses = [HypothesisAssessment(hypothesis_id='unresolved_anomaly', polarity=result.polarity)]
++        result = _apply_confidence_policy(env, (), result)
++    authoritative = {item.hypothesis:item for item in env.confidence_policy_results}
++    for assessment in env.hypotheses:
++        policy = authoritative[assessment.hypothesis_id]
++        assessment.confidence_tier = policy.tier
++        assessment.confidence_policy_rule = policy.policy_rule
++        assessment.confidence_rationale = list(policy.rationale)
++    primary_policy = next(h for h in env.hypotheses if h.hypothesis_id == env.primary_hypothesis)
++    result = replace(result, confidence=primary_policy.confidence_tier)
+     if debug:
+         print("\n--- SYNTHESIS DEBUG REPORT ---")
+         for line in debug_lines or []:
+@@ -715,6 +744,8 @@
+         text = append_hypothesis_evidence(text, assessment)
+         if assessment.limitations:
+             text += "Limitations: " + " ".join(assessment.limitations) + "\n"
++        if assessment.confidence_policy_rule:
++            text += "Confidence policy rule: " + assessment.confidence_policy_rule + "\n"
+     reasoning_trace = _build_reasoning_trace(
+         sections=env.sections,
+         ctx=env.ctx,
+@@ -734,6 +765,7 @@
+         selection_reason=env.selection_reason,
+         confidence_rationale=rationale,
+         corroboration_gates=env.corroboration_gates,
++        confidence_policy_results=env.confidence_policy_results,
+     )
+     return (pattern, text, result.confidence, polarity, reasoning_trace)
+ 
+@@ -753,6 +785,7 @@
+             "Medium",
+             "neutral",
+             "real_photo_context_moderates_suspicion",
++            finding=Finding.PHOTO_CONTEXT,
+         )
+     return None
+ 
+@@ -765,6 +798,7 @@
+             "Medium",
+             "neutral",
+             "boundary_support_limited_localized_processing",
++            finding=Finding.BOUNDARY_LIMITED,
+         )
+     return None
+ 
+@@ -779,6 +813,7 @@
+             "Medium",
+             "neutral",
+             "region_geometry_unreliable_localized_processing",
++            finding=Finding.GEOMETRY_LIMITED,
+         )
+     return None
+ 
+@@ -802,6 +837,7 @@
+             "suspicious",
+             "localized_editing_multi_mechanism",
+             "DECISION: localized_editing_multi_mechanism",
++            finding=Finding.MULTI_LOCAL,
+         )
+     return None
+ 
+@@ -825,6 +861,7 @@
+                 "suspicious",
+                 "possible_foreground_background_processing_mismatch",
+                 "DECISION: possible_foreground_background_processing_mismatch",
++                finding=Finding.BOUNDARY_DECISIVE,
+             )
+         confidence = "Low" if env.card.camera_counter_support else "Medium"
+         polarity = "neutral" if env.card.camera_counter_support else "suspicious"
+@@ -840,6 +877,7 @@
+             polarity,
+             "localized_processing_inconclusive",
+             "DECISION: localized_processing_inconclusive",
++            finding=Finding.LOCAL_UNCERTAIN,
+         )
+     return None
+ 
+@@ -859,6 +897,7 @@
+             "suspicious",
+             "possible_clone_reuse",
+             "DECISION: possible_clone_reuse",
++            finding=Finding.CLONE_DECISIVE,
+         )
+     return None
+ 
+@@ -880,6 +919,7 @@
+                 "suspicious",
+                 "possible_foreground_background_processing_mismatch_moderated",
+                 "DECISION: possible_foreground_background_processing_mismatch (moderated)",
++                finding=Finding.BOUNDARY_SUPPORTED,
+             )
+         return DecisionResult(
+             "localized_editing_inconclusive",
+@@ -892,6 +932,7 @@
+             "suspicious",
+             "localized_editing_inconclusive",
+             "DECISION: localized_editing_inconclusive",
++            finding=Finding.LOCAL_WEAK,
+         )
+     return None
+ 
+@@ -905,6 +946,7 @@
+                 "neutral",
+                 "clone_ambiguous → camera counterforce override",
+                 "DECISION: clone_ambiguous → camera counterforce override",
++                finding=Finding.CLONE_CAMERA_AMBIGUOUS,
+             )
+         if env.ds.material_realism_strong:
+             return DecisionResult(
+@@ -914,6 +956,7 @@
+                 "neutral",
+                 "clone_ambiguous → realism override",
+                 "DECISION: clone_ambiguous → realism override",
++                finding=Finding.CLONE_MATERIAL_AMBIGUOUS,
+             )
+         return DecisionResult(
+             "possible_clone_reuse",
+@@ -922,6 +965,7 @@
+             "neutral",
+             "possible_clone_reuse (ambiguous)",
+             "DECISION: possible_clone_reuse (ambiguous)",
++            finding=Finding.CLONE_AMBIGUOUS,
+         )
+     return None
+ 
+@@ -950,6 +994,7 @@
+             "neutral",
+             "structured_recurrence_inconclusive",
+             "DECISION: structured_recurrence_inconclusive",
++            finding=Finding.RECURRENCE_CAUTION,
+         )
+     return None
+ 
+@@ -992,6 +1037,7 @@
+             "suspicious",
+             "synthetic_multi_signal_convergence",
+             "DECISION: synthetic_multi_signal_convergence",
++            finding=Finding.VISUAL_GENERATION,
+         )
+     return None
+ 
+@@ -1009,6 +1055,7 @@
+             "neutral",
+             "localized_processing_inconclusive",
+             "DECISION: localized_processing_inconclusive",
++            finding=Finding.LOCAL_PROCESSING,
+         )
+     return None
+ 
+@@ -1023,6 +1070,7 @@
+             "suspicious",
+             "possible_subject_background_segmentation_artifact",
+             "DECISION: possible_subject_background_segmentation_artifact",
++            finding=Finding.SUBJECT_BOUNDARY,
+         )
+     return None
+ 
+@@ -1044,6 +1092,7 @@
+             "Medium",
+             "neutral",
+             "boundary_evidence_unreliable_context_moderated",
++            finding=Finding.UNRELIABLE_BOUNDARY,
+         )
+     return None
+ 
+@@ -1062,6 +1111,7 @@
+             "suspicious",
+             "possible_boundary_transition_inconsistency",
+             "DECISION: possible_boundary_transition_inconsistency",
++            finding=Finding.BOUNDARY_TRANSITION,
+         )
+     return None
+ 
+@@ -1076,6 +1126,7 @@
+             "suspicious",
+             "provenance_supported_synthetic_context",
+             "DECISION: provenance_supported_synthetic_context",
++            finding=Finding.GENERATION_DECLARATION,
+         )
+     if state == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION:
+         return DecisionResult(
+@@ -1083,6 +1134,7 @@
+             "Metadata declares enhancement or generative editing; metadata authenticity is unverified. "
+             "This supports a declared processing context, not whole-image synthetic generation or a specific localized mechanism.",
+             "Medium", "suspicious", "provenance_supported_enhancement_context",
++            finding=Finding.ENHANCEMENT_DECLARATION,
+         )
+     if env.ds.osint_ai_context:
+         return DecisionResult(
+@@ -1090,6 +1142,7 @@
+             "An AI-gallery source provides contextual support for synthetic origin. "
+             "Source context does not authenticate this image's creation history.",
+             "Low", "suspicious", "osint_synthetic_context",
++            finding=Finding.SOURCE_CONTEXT,
+         )
+     return None
+ 
+@@ -1112,6 +1165,7 @@
+             "benign",
+             pattern,
+             "DECISION: camera_like_acquisition_supported",
++            finding=Finding.CAMERA_COMPATIBLE,
+         )
+     return None
+ 
+@@ -1144,6 +1198,7 @@
+             "suspicious",
+             "multi_signal_suspicious_convergence",
+             "DECISION: multi_signal_suspicious_convergence",
++            finding=Finding.ANOMALY_ACCUMULATION,
+         )
+     return None
+ 
+@@ -1160,6 +1215,7 @@
+             env.confidence_tier,
+             "suspicious",
+             "moderate_suspicious_convergence",
++            finding=Finding.GENERAL_ANOMALY,
+         )
+     return None
+ 
+@@ -1179,6 +1235,7 @@
+             "benign",
+             "photo_like_consistency_supported",
+             "DECISION: photo_like_consistency_supported",
++            finding=Finding.PHOTO_CONSISTENCY,
+         )
+     return None
+ 
+@@ -1201,6 +1258,7 @@
+         polarity=fallback_polarity,
+         branch="helper_driven_fallback",
+         debug_message="DECISION: helper_driven_fallback",
++        finding=Finding.FALLBACK,
+     )
+ 
+ @dataclass(frozen=True)
+@@ -1239,8 +1297,32 @@
+ 
+ def _specific_finding(result: DecisionResult | None) -> bool:
+     return bool(result and result.polarity == "suspicious"
+-                and result.confidence in {"Medium", "High"}
+-                and "inconclusive" not in (result.pattern or ""))
++                and result.specificity in {Specificity.SPECIFIC, Specificity.DECISIVE})
++
++
++def _apply_confidence_policy(env, candidates, selected):
++    findings = {}
++    for spec, result in candidates:
++        findings.setdefault(spec.hypothesis_id, []).append(result.finding)
++    facts = snapshot_confidence_facts(env.sections, env.card, env.ds, env.corroboration_gates, findings,
++        coverage=env.coverage_limitations)
++    policy_results = []
++    for assessment in env.hypotheses:
++        policy = evaluate_confidence(AssessmentEvidence.from_assessment(assessment), facts)
++        assessment.confidence_tier = policy.tier
++        assessment.confidence_policy_rule = policy.policy_rule
++        assessment.confidence_rationale = list(policy.rationale)
++        assessment.limitations = list(policy.reliability_limitations)
++        policy_results.append(policy)
++    env.confidence_policy_results = policy_results
++    by_hypothesis = {item.hypothesis:item for item in policy_results}
++    for item in env.route_trace or []:
++        if item.matched:
++            item.legacy_confidence = item.confidence
++            policy = by_hypothesis.get(item.hypothesis_id)
++            item.confidence = policy.tier if policy else None
++            item.confidence_source = policy.policy_rule if policy else 'legacy_alternative_not_assessed'
++    return replace(selected, confidence=by_hypothesis[env.primary_hypothesis].tier)
+ 
+ 
+ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
+@@ -1249,6 +1331,7 @@
+     # candidate-specific audits so a reused environment cannot retain old gates.
+     env.corroboration_gates[:] = [entry for entry in env.corroboration_gates
+         if entry['gate_id'] == 'confidence.strong_source_diversity']
++    env.confidence_policy_results = []
+     if not env.card.is_valid:
+         explanation = "Scorecard calculation is invalid; a forensic conclusion is withheld. " + "; ".join(env.card.validation_errors)
+         env.primary_hypothesis = "unresolved_anomaly"
+@@ -1258,7 +1341,7 @@
+             hypothesis_id=name, explanation="Assessment withheld because scorecard integrity failed.",
+             limitations=list(env.card.validation_errors), decision_branch="scorecard_integrity_failure",
+         ) for name in ("synthetic_origin", "localized_editing", "camera_acquisition", "unresolved_anomaly")]
+-        return DecisionResult("scorecard_invalid", explanation, "Inconclusive", "neutral", "scorecard_integrity_failure")
++        return _apply_confidence_policy(env, (), DecisionResult("scorecard_invalid", explanation, "Inconclusive", "neutral", "scorecard_integrity_failure", finding=Finding.INVALID))
+     candidates: list[tuple[DecisionRoute, DecisionResult]] = []
+     env.route_trace = []
+     for spec in DECISION_ROUTES if routes is None else routes:
+@@ -1296,7 +1379,7 @@
+ 
+     # Evidence of a specific local mechanism has priority over unverified metadata;
+     # supported visual generation can lead when local corroboration is weaker.
+-    if _specific_finding(local_result) and local_result.confidence == "High":
++    if _specific_finding(local_result) and local_result.specificity == Specificity.DECISIVE:
+         chosen = local_choice
+         why = "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately."
+     elif _specific_finding(synthetic_result) and synthetic_choice[0].evaluate == route_synthetic_multi_signal:
+@@ -1357,7 +1440,7 @@
+         HypothesisAssessment(
+             hypothesis_id="synthetic_origin",
+             polarity=synthetic_result.polarity if synthetic_result else "neutral",
+-            confidence_tier=synthetic_result.confidence if synthetic_result else "Inconclusive",
++            confidence_tier="Inconclusive",  # Placeholder until scoped policy evaluation.
+             limitations=synthetic_limits,
+             decision_branch=synthetic_result.branch if synthetic_result else None,
+             explanation=synthetic_result.text if synthetic_result else "Synthetic origin is not established by the available evidence.",
+@@ -1365,14 +1448,14 @@
+         HypothesisAssessment(
+             hypothesis_id="localized_editing",
+             polarity=local_result.polarity if local_result else "neutral",
+-            confidence_tier=local_result.confidence if local_result else "Inconclusive",
++            confidence_tier="Inconclusive",
+             limitations=local_limits,
+             decision_branch=local_result.branch if local_result else None,
+             explanation=local_result.text if local_result else "A specific localized-editing mechanism is not established.",
+         ),
+         HypothesisAssessment(
+             hypothesis_id="camera_acquisition", polarity="benign" if camera_ids else "neutral",
+-            confidence_tier="Medium" if camera_ids else "Inconclusive",
++            confidence_tier="Inconclusive",
+             limitations=["Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing."],
+             decision_branch="camera_acquisition_compatibility" if camera_ids else None,
+             explanation="Camera-like acquisition evidence is present." if camera_ids else "Camera acquisition is not established.",
+@@ -1381,13 +1464,12 @@
+     if chosen[0].hypothesis_id == "unresolved_anomaly":
+         env.hypotheses.append(HypothesisAssessment(
+             hypothesis_id="unresolved_anomaly", polarity=chosen[1].polarity,
+-            confidence_tier=chosen[1].confidence, decision_branch=chosen[1].branch,
++            confidence_tier="Inconclusive", decision_branch=chosen[1].branch,
+             explanation=chosen[1].text,
+             limitations=["An unresolved anomaly is not evidence of a particular origin or editing mechanism."],
+         ))
+     elif chosen[0].hypothesis_id == "camera_acquisition":
+         camera_assessment = env.hypotheses[2]
+-        camera_assessment.confidence_tier = chosen[1].confidence
+         camera_assessment.polarity = chosen[1].polarity
+         camera_assessment.decision_branch = chosen[1].branch
+         camera_assessment.explanation = chosen[1].text
+@@ -1415,7 +1497,7 @@
+                                     local_choice[0].evaluate.__name__ if local_choice else "",
+                                     synthetic_choice[0].evaluate.__name__ if synthetic_choice else "",
+                                 } else "alternative_candidate; scoped safeguards and specificity rules apply")
+-    return chosen[1]
++    return _apply_confidence_policy(env, candidates, chosen[1])
+ 
+ 
+ def synthesize_overall(
+@@ -1425,6 +1507,7 @@
+     analysis_mode: str | None = None,
+     *,
+     evidence_dependency_shadow: bool = False,
++    analysis_coverage: dict | None = None,
+     ) -> tuple[str | None, str, str, str, dict]:
+     """
+     Overall synthesis, returns: overall_pattern, overall_text, overall_confidence, overall_polarity, decision
+@@ -1436,6 +1519,7 @@
+         scene_context=scene_context,
+         analysis_mode=analysis_mode,
+     )
++    env.coverage_limitations = coverage_limitations(analysis_coverage)
+     if env.card.is_valid:
+         base_suspicious_score, base_benign_score, suspicious_domains, benign_domains = compute_base_scores(sections)
+     else:
+--- a/hypothesis_engine.py
++++ b/hypothesis_engine.py
+@@ -150,6 +150,8 @@
+     contradicting_evidence: list[str] = field(default_factory=list)
+     contextual_evidence: list[str] = field(default_factory=list)
+     evidence_details: dict[str, dict] = field(default_factory=dict)
++    confidence_policy_rule: str | None = None
++    confidence_rationale: list[str] = field(default_factory=list)
+ 
+ def weight(section: ModuleSummary | None) -> float:
+     if section is None:
+--- a/reasoning_persistence.py
++++ b/reasoning_persistence.py
+@@ -311,6 +311,16 @@
+     derived = reasoning_trace.get("derived_signals", {}) or {}
+     sections = reasoning_trace.get("section_snapshot", {}) or {}
+     pipeline = reasoning_trace.get("pipeline_status", {})
++    policy = reasoning_trace.get('confidence_policy')
++    if policy:
++        _add_heading(lines, 'Confidence Policy')
++        _add_kv(lines, 'Version', policy.get('version'))
++        _add_kv(lines, 'Primary Hypothesis', policy.get('primary_hypothesis'))
++        for assessment in policy.get('assessments', []):
++            _add_kv(lines, assessment['hypothesis'], assessment['tier'] + ' / ' + assessment['policy_rule'])
++            _add_list(lines, 'Policy Rationale', assessment['rationale'])
++            _add_list(lines, 'Policy Limitations', assessment['reliability_limitations'])
++        lines.append('')
+     corroboration = reasoning_trace.get('corroboration_audit')
+     if corroboration:
+         _add_heading(lines, 'Production Corroboration Audit')
+--- a/summary_synthesizer.py
++++ b/summary_synthesizer.py
+@@ -141,23 +141,14 @@
+     result.module_scores = extract_module_scores(result.sections)
+     # Overall decision
+     analysis_mode=getattr(state, "analysis_mode", None)
+-    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, evidence_dependency_shadow=evidence_dependency_shadow)    # Rendered outputs
+     coverage = getattr(state, "analysis_coverage", {})
++    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, evidence_dependency_shadow=evidence_dependency_shadow, analysis_coverage=coverage)    # Rendered outputs
+     if coverage:
+         result.reasoning_trace["pipeline_status"] = {
+             "coverage": coverage, "mask_diagnostics": getattr(state, "mask_diagnostics", {}), "stages": statuses,
+         }
+-        if coverage.get("status") == "partial":
+-            limitation = (
+-                "Analysis coverage is incomplete. Unavailable stages: "
+-                + ", ".join(coverage.get("unavailable_stages", []))
+-                + ". Missing regional evidence supports neither authenticity nor synthetic origin."
+-            )
+-            result.overall_text = result.overall_text.rstrip() + "\n\nCoverage limitation: " + limitation + "\n"
+-            result.reasoning_trace["decision"]["overall_text"] = result.overall_text
+-            result.reasoning_trace["decision"]["limitations"].append(limitation)
+-            for assessment in result.reasoning_trace.get("hypothesis_assessments", []):
+-                assessment["limitations"].append(limitation)
++        # Coverage limitations already passed through the authoritative policy;
++        # do not mutate hypothesis limitations independently after synthesis.
+     result.full_text = render_summary_text(result)
+     result.full_html = render_summary_html(result)
+     return result
+--- /dev/null
++++ b/confidence_policy.py
+@@ -0,0 +1,262 @@
++"""Hypothesis-scoped confidence policy, version 3 (heuristic, not probability).
++
++Route tiers/names and narrative text are deliberately absent from policy inputs.
++Rules consolidate existing mechanism constraints and generic 2B.3 corroboration.
++"""
++from dataclasses import dataclass
++from enum import Enum
++from math import isfinite
++
++from metadata_evidence import ProvenanceState
++
++
++class Finding(str, Enum):
++    UNSPECIFIED='unspecified'
++    PHOTO_CONTEXT='photo_context_ambiguity'
++    BOUNDARY_LIMITED='boundary_support_limited'
++    GEOMETRY_LIMITED='region_geometry_limited'
++    MULTI_LOCAL='multiple_local_mechanisms'
++    BOUNDARY_DECISIVE='decisive_boundary_mechanism'
++    LOCAL_UNCERTAIN='strong_local_concern_unspecific'
++    CLONE_DECISIVE='decisive_spatial_reuse'
++    BOUNDARY_SUPPORTED='supported_boundary_mechanism'
++    LOCAL_WEAK='limited_local_mechanism'
++    CLONE_CAMERA_AMBIGUOUS='reuse_camera_ambiguity'
++    CLONE_MATERIAL_AMBIGUOUS='reuse_material_ambiguity'
++    CLONE_AMBIGUOUS='reuse_nonspecific'
++    RECURRENCE_CAUTION='recurrence_context_ambiguity'
++    VISUAL_GENERATION='visual_generation_compound'
++    LOCAL_PROCESSING='differential_processing_unspecific'
++    SUBJECT_BOUNDARY='intrinsic_boundary_transition'
++    UNRELIABLE_BOUNDARY='unreliable_person_boundary'
++    BOUNDARY_TRANSITION='supported_transition_anomaly'
++    GENERATION_DECLARATION='unverified_generation_declaration'
++    ENHANCEMENT_DECLARATION='unverified_enhancement_declaration'
++    SOURCE_CONTEXT='source_context'
++    CAMERA_COMPATIBLE='camera_acquisition_compatible'
++    ANOMALY_ACCUMULATION='general_anomaly_accumulation'
++    GENERAL_ANOMALY='general_anomaly'
++    PHOTO_CONSISTENCY='photo_like_consistency'
++    FALLBACK='unresolved_interpretation'
++    INVALID='invalid_analysis'
++
++
++class Specificity(str, Enum):
++    UNSPECIFIC='unspecific'
++    SPECIFIC='specific_mechanism_or_declaration'
++    DECISIVE='decisive_local_mechanism'
++
++
++def finding_specificity(finding):
++    if finding in {Finding.MULTI_LOCAL,Finding.BOUNDARY_DECISIVE,Finding.CLONE_DECISIVE}:
++        return Specificity.DECISIVE
++    if finding in {Finding.BOUNDARY_SUPPORTED,Finding.SUBJECT_BOUNDARY,Finding.BOUNDARY_TRANSITION,
++                   Finding.VISUAL_GENERATION,Finding.GENERATION_DECLARATION,Finding.ENHANCEMENT_DECLARATION}:
++        return Specificity.SPECIFIC
++    return Specificity.UNSPECIFIC
++
++
++@dataclass(frozen=True)
++class VerifiedGenerationAssertion:
++    """Trusted upstream validator result, never constructed from metadata flags.
++
++    Current production has no validator and never populates this input. Tests
++    can model a future successful signature/assertion/image-binding validation.
++    Authentication of a claim alone is not proof of pixel origin.
++    """
++    evidence_id: str
++    validator_id: str
++    validation_succeeded: bool
++    image_binding_verified: bool
++
++    def __post_init__(self):
++        if not self.evidence_id or not self.validator_id or any(type(v) is not bool for v in (self.validation_succeeded,self.image_binding_verified)):
++            raise ValueError('Verification needs a named validator and explicit validation/binding results.')
++
++
++@dataclass(frozen=True)
++class ConfidenceFacts:
++    valid: bool = True
++    findings: tuple[tuple[str,tuple[Finding,...]],...] = ()
++    suspicious: float = 0.0
++    local_support: float = 0.0
++    clone_support: float = 0.0
++    camera_support: float = 0.0
++    synthetic_boost: float = 0.0
++    person_reliable: bool = False
++    boundary_reliability: float = 0.0
++    geometry_unreliable: bool = False
++    context_risk: bool = False
++    boundary_compound: bool = False
++    generic_source_diversity: bool = False
++    generic_strong_count: int = 0
++    visual_global: bool = False
++    visual_regional: bool = False
++    camera_observed: bool = False
++    provenance: ProvenanceState = ProvenanceState.NO_SUBSTANTIVE_PROVENANCE_EVIDENCE
++    osint_ai_context: bool = False
++    missing_detectors: tuple[str,...] = ()
++    verification: VerifiedGenerationAssertion | None = None
++    coverage_limitations: tuple[str,...] = ()
++
++    def __post_init__(self):
++        if type(self.findings) is not tuple or type(self.missing_detectors) is not tuple or type(self.coverage_limitations) is not tuple:
++            raise ValueError('Policy snapshots must use immutable collections.')
++        if len(dict(self.findings))!=len(self.findings):
++            raise ValueError('Duplicate hypothesis finding set.')
++        for hypothesis,findings in self.findings:
++            if not isinstance(hypothesis,str) or type(findings) is not tuple or any(not isinstance(f,Finding) for f in findings):
++                raise ValueError('Findings must be typed immutable hypothesis claims.')
++        if not isinstance(self.provenance,ProvenanceState) or (self.verification is not None and not isinstance(self.verification,VerifiedGenerationAssertion)):
++            raise ValueError('Provenance confidence requires typed state/validator evidence.')
++
++    def for_hypothesis(self,hypothesis):
++        return frozenset(dict(self.findings).get(hypothesis,()))
++
++
++@dataclass(frozen=True)
++class AssessmentEvidence:
++    hypothesis: str
++    supporting_evidence: tuple[str,...] = ()
++    contradicting_evidence: tuple[str,...] = ()
++    moderating_evidence: tuple[str,...] = ()
++    contextual_evidence: tuple[str,...] = ()
++    limitations: tuple[str,...] = ()
++
++    def __post_init__(self):
++        for name in ('supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence','limitations'):
++            if type(getattr(self,name)) is not tuple:
++                raise ValueError('Scoped policy evidence must use immutable tuples.')
++
++    @classmethod
++    def from_assessment(cls,assessment):
++        return cls(assessment.hypothesis_id,*(tuple(getattr(assessment,role)) for role in (
++            'supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence')),
++            tuple(assessment.limitations))
++
++
++@dataclass(frozen=True)
++class ConfidencePolicyResult:
++    hypothesis: str
++    tier: str
++    policy_rule: str
++    supporting_evidence: tuple[str,...]
++    contradicting_evidence: tuple[str,...]
++    moderating_evidence: tuple[str,...]
++    contextual_evidence: tuple[str,...]
++    reliability_limitations: tuple[str,...]
++    rationale: tuple[str,...]
++
++
++def generic_confidence(suspicious, strong_count, source_diversity):
++    """Exact existing generic thresholds; distinct-source result is from 2B.3."""
++    if source_diversity and suspicious>=3.0:
++        return 'High','generic.distinct_strong_sources'
++    if strong_count>=1 and suspicious>=2.0:
++        return 'Medium','generic.one_strong_observation'
++    if suspicious>=1.2:
++        return 'Low','generic.nonspecific_anomaly'
++    return 'Inconclusive','generic.insufficient_support'
++
++
++def _synthetic(facts,findings):
++    if Finding.VISUAL_GENERATION in findings and Finding.RECURRENCE_CAUTION not in findings and facts.synthetic_boost>=1.0 and facts.suspicious>=5.0:
++        if facts.visual_global or (facts.visual_regional and facts.person_reliable and not facts.geometry_unreliable):
++            return 'High','synthetic.visual_compound','Existing generation-relevant compound evidence supports visual structure; this is not authenticated origin.'
++    v=facts.verification
++    if v is not None and v.validation_succeeded and v.image_binding_verified:
++        return 'Medium','synthetic.verified_assertion','A validator authenticated a generation assertion and its image binding; claim authentication alone does not establish pixel origin.'
++    if facts.provenance==ProvenanceState.UNVERIFIED_GENERATION_DECLARATION:
++        return 'Medium','synthetic.unverified_generation_declaration','An explicit generation declaration supports declared creation context; metadata authenticity is unverified.'
++    if facts.provenance==ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION:
++        return 'Medium','synthetic.unverified_enhancement_declaration','An enhancement declaration supports AI-mediated processing context, not whole-image generation.'
++    if facts.osint_ai_context:
++        return 'Low','synthetic.source_context','Reviewed source context supports a provisional origin interpretation, without authenticating creation history.'
++    if Finding.RECURRENCE_CAUTION in findings:
++        return 'Medium','synthetic.recurrence_ambiguity','Structured recurrence is measurable but remains compatible with scene content or processing.'
++    if Finding.VISUAL_GENERATION in findings and facts.visual_regional and not facts.person_reliable:
++        return 'Inconclusive','synthetic.required_region_unavailable','Region-dependent generation evidence lacks reliable required person geometry.'
++    return 'Inconclusive','synthetic.not_established','No specific generation interpretation is established; localized anomalies do not supply missing generation support.'
++
++
++def _localized(facts,findings):
++    # Spatial reuse is not a person-boundary claim and survives boundary safeguards.
++    if Finding.CLONE_DECISIVE in findings and facts.clone_support>=3.5 and facts.clone_support>=facts.local_support+1.0 and facts.camera_support<2.0:
++        return 'High','localized.spatial_reuse','Existing spatial-reuse mechanism support is decisive within its stated limitations, not proof of AI use.'
++    for finding,rule,why in (
++        (Finding.PHOTO_CONTEXT,'localized.photo_context_ambiguity','Camera metadata and supplied processing context limit localized interpretation.'),
++        (Finding.BOUNDARY_LIMITED,'localized.boundary_support_limited','Boundary support fails the existing mechanism reliability requirement.'),
++        (Finding.GEOMETRY_LIMITED,'localized.geometry_limited','Region geometry is unreliable for a decisive boundary interpretation.'),
++        (Finding.UNRELIABLE_BOUNDARY,'localized.person_boundary_unavailable','Required reliable person-boundary geometry is unavailable.'),
++    ):
++        if finding in findings:return 'Medium',rule,why
++    regional_findings={Finding.MULTI_LOCAL,Finding.BOUNDARY_DECISIVE,Finding.BOUNDARY_SUPPORTED,
++        Finding.SUBJECT_BOUNDARY,Finding.BOUNDARY_TRANSITION}
++    if regional_findings&findings:
++        if not facts.person_reliable or facts.geometry_unreliable:
++            return 'Medium','localized.required_geometry_cap','A person-boundary interpretation cannot be High without reliable required geometry.'
++        if facts.boundary_reliability<0.6:
++            return 'Medium','localized.boundary_support_limited','The existing boundary-reliability requirement is not met, regardless of which candidate routes were supplied.'
++    if {Finding.MULTI_LOCAL,Finding.BOUNDARY_DECISIVE}&findings:
++        if Finding.MULTI_LOCAL in findings and facts.local_support>=3.0 and facts.clone_support>=3.0 and abs(facts.local_support-facts.clone_support)<1.0 and not facts.context_risk:
++            return 'High','localized.multiple_mechanisms','Existing local-processing and reuse mechanism requirements are satisfied.'
++        if Finding.BOUNDARY_DECISIVE in findings and facts.local_support>=3.5 and facts.local_support>=facts.clone_support+1.0 and facts.camera_support<2.0 and not facts.context_risk and facts.boundary_compound:
++            return 'High','localized.reliable_boundary_compound','Strong local-processing support and the existing compound boundary requirement are satisfied.'
++    if Finding.LOCAL_UNCERTAIN in findings:
++        if facts.camera_support:
++            return 'Low','localized.camera_moderated_uncertainty','Camera-compatible structure moderates an unconfirmed local mechanism; it does not exclude later editing.'
++        return 'Medium','localized.unspecific_local_processing','Strong local concern lacks sufficient boundary corroboration for a specific mechanism.'
++    if Finding.BOUNDARY_SUPPORTED in findings and facts.boundary_compound:
++        return 'Medium','localized.supported_boundary','The existing compound transition requirements support a qualified localized interpretation.'
++    if Finding.LOCAL_WEAK in findings:
++        return 'Low','localized.limited_mechanism','The local mechanism remains insufficiently corroborated.'
++    if Finding.CLONE_CAMERA_AMBIGUOUS in findings:
++        return 'Low','localized.reuse_camera_ambiguity','Camera compatibility limits an ambiguous reuse interpretation.'
++    if Finding.CLONE_MATERIAL_AMBIGUOUS in findings:
++        tier,rule=generic_confidence(facts.suspicious,facts.generic_strong_count,facts.generic_source_diversity)
++        return tier,'localized.reuse_ambiguity.'+rule,'Material-related regularity leaves the reuse mechanism ambiguous; generic support does not establish synthetic origin.'
++    if Finding.CLONE_AMBIGUOUS in findings:
++        return 'Medium','localized.reuse_unspecific','Repeated content is present but natural repetition remains a plausible explanation.'
++    if findings&{Finding.LOCAL_PROCESSING,Finding.SUBJECT_BOUNDARY,Finding.BOUNDARY_TRANSITION}:
++        return 'Medium','localized.qualified_processing','Existing transition or processing evidence supports a qualified localized concern.'
++    return 'Inconclusive','localized.not_established','A specific localized mechanism is not established.'
++
++
++def evaluate_confidence(evidence, facts):
++    """Authoritative pure policy over scoped evidence and typed factual snapshots."""
++    hypothesis=evidence.hypothesis
++    findings=facts.for_hypothesis(hypothesis)
++    finite=all(isfinite(v) for v in (facts.suspicious,facts.local_support,facts.clone_support,facts.camera_support,facts.synthetic_boost,facts.boundary_reliability))
++    if not facts.valid or not finite:
++        tier,rule,why='Inconclusive','integrity.invalid_scorecard','Numerical integrity failed; confidence is withheld.'
++    elif hypothesis=='synthetic_origin':
++        tier,rule,why=_synthetic(facts,findings)
++    elif hypothesis=='localized_editing':
++        tier,rule,why=_localized(facts,findings)
++    elif hypothesis=='camera_acquisition':
++        if facts.camera_observed or findings&{Finding.CAMERA_COMPATIBLE,Finding.PHOTO_CONSISTENCY}:
++            tier,rule,why='Medium','camera.acquisition_compatibility','Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity.'
++        else:
++            tier,rule,why='Inconclusive','camera.not_established','Camera acquisition is not established.'
++    elif hypothesis=='unresolved_anomaly':
++        tier,rule=generic_confidence(facts.suspicious,facts.generic_strong_count,facts.generic_source_diversity)
++        why='General anomaly support uses the existing source-diversity policy; it does not identify an origin or localized mechanism.'
++    else:
++        tier,rule,why='Inconclusive','scope.unknown_hypothesis','Unknown hypothesis has no registered confidence interpretation.'
++    limits=list(evidence.limitations)+list(facts.coverage_limitations)
++    relevant={
++        'synthetic_origin':{'metadata','fft','patch_similarity','subject_material_realism','subject_process_asymmetry'},
++        'localized_editing':{'region_masks','boundary_focus','segmentation_alignment','subject_boundary','patch_spatial'},
++        'camera_acquisition':{'sensor_origin','cfa_demosaic'},
++        'unresolved_anomaly':set(),
++    }.get(hypothesis,set())
++    missing=sorted(relevant.intersection(facts.missing_detectors))
++    if missing:limits.append('Coverage limitation (not negative evidence): unavailable '+', '.join(missing)+'.')
++    rationale=[f'Confidence policy {rule}: {why}']
++    if evidence.contradicting_evidence:
++        rationale.append('Direct counter-evidence remains scoped to this mechanism. Surviving compound/reuse requirements, not a global point deduction, determine the tier.')
++    if evidence.moderating_evidence:
++        rationale.append('Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.')
++    rationale.append('Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.')
++    return ConfidencePolicyResult(hypothesis,tier,rule,evidence.supporting_evidence,evidence.contradicting_evidence,
++        evidence.moderating_evidence,evidence.contextual_evidence,tuple(dict.fromkeys(limits)),tuple(rationale))
+--- /dev/null
++++ b/confidence_policy_inputs.py
+@@ -0,0 +1,41 @@
++"""Adapter from existing typed score/derived/gate data to immutable policy facts."""
++from confidence_policy import ConfidenceFacts
++from metadata_evidence import ProvenanceState
++
++
++def coverage_limitations(coverage):
++    if not coverage or coverage.get('status')!='partial':
++        return ()
++    return ('Analysis coverage is incomplete. Unavailable stages: '
++        + ', '.join(coverage.get('unavailable_stages', []))
++        + '. Missing regional evidence supports neither authenticity nor synthetic origin.',)
++
++
++def snapshot_confidence_facts(sections, card, derived, gates, findings, *, coverage=()):
++    gate_by_id={g['gate_id']:g for g in gates}
++    generic=gate_by_id.get('confidence.strong_source_diversity',{})
++    return ConfidenceFacts(
++        valid=card.is_valid,
++        findings=tuple((hypothesis,tuple(sorted(set(claims),key=lambda claim:claim.value)))
++            for hypothesis,claims in sorted(findings.items())),
++        suspicious=card.suspicious_score,local_support=card.local_edit_support_score,
++        clone_support=card.clone_support_score,camera_support=card.camera_counter_support,
++        synthetic_boost=card.synthetic_boost,
++        person_reliable=derived.person_mask_reliable,boundary_reliability=derived.boundary_reliability_score,
++        geometry_unreliable=derived.region_geometry_unreliable,context_risk=card.contextual_false_positive_risk,
++        boundary_compound=bool(gate_by_id.get('boundary.compound_support',{}).get('gate_passed')),
++        generic_source_diversity=bool(generic.get('requirement_satisfied')),
++        generic_strong_count=generic.get('observed_strong_indicator_count',0),
++        visual_global=bool(gate_by_id.get('synthetic.fft_patch_compound',{}).get('gate_passed')),
++        visual_regional=bool(gate_by_id.get('synthetic.material_asymmetry_compound',{}).get('gate_passed')),
++        camera_observed=bool(derived.camera_like_support or derived.cfa_camera_like_support or derived.metadata_camera_like),
++        provenance=ProvenanceState(derived.provenance_state),osint_ai_context=derived.osint_ai_context,
++        missing_detectors=tuple(sorted(key for key in (
++            'metadata','region_masks','boundary_focus','segmentation_alignment','subject_boundary','patch_spatial',
++            'sensor_origin','cfa_demosaic','fft','patch_similarity','subject_material_realism','subject_process_asymmetry',
++        ) if (section:=sections.get(key)) is None or section.status in {'not_run','unavailable','skipped','failed','error'})),
++        # No cryptographic validator exists in this production path. Metadata
++        # flags or a supplied JSON "verified" state are never a validator result.
++        verification=None,
++        coverage_limitations=tuple(coverage),
++    )
+--- /dev/null
++++ b/tests/test_confidence_policy.py
+@@ -0,0 +1,308 @@
++"""Phase 3 centralized policy and complete synthesis integration regressions."""
++from copy import deepcopy
++from dataclasses import FrozenInstanceError, asdict, replace
++import json
++from types import SimpleNamespace
++
++import pytest
++
++import decision_logic as logic
++from confidence_policy import (
++    AssessmentEvidence, ConfidenceFacts, Finding, VerifiedGenerationAssertion,
++    evaluate_confidence, generic_confidence,
++)
++from confidence_policy_inputs import snapshot_confidence_facts
++from hypothesis_engine import HypothesisAssessment
++from metadata_evidence import ProvenanceState
++from reasoning_persistence import build_reasoning_trace_text
++from scorecard_integrity import reconstruct_scorecard_calculation
++from summary_synthesizer import build_summary_result
++from test_reasoning import assess, metadata, reference_env, section, visual_generation_env
++from test_production_corroboration import measured_boundary
++
++
++def policy(trace,hypothesis):
++    return next(item for item in trace['confidence_policy']['assessments'] if item['hypothesis']==hypothesis)
++
++
++def hypotheses(trace):
++    return {h['hypothesis_id']:h for h in trace['hypothesis_assessments']}
++
++
++def test_unverified_generation_is_bounded_and_identifies_policy_rule():
++    result=logic.synthesize_overall({'metadata':metadata('DECLARED_SYNTHETIC')})
++    record=policy(result[4],'synthetic_origin')
++    assert result[2]==record['tier']=='Medium'
++    assert record['policy_rule']=='synthetic.unverified_generation_declaration'
++    assert 'unverified' in ' '.join(record['rationale'])
++    assert result[4]['provenance_evidence']['metadata_authenticity_verified'] is False
++
++
++@pytest.mark.parametrize('binding,success',[(True,True),(False,True),(True,False)])
++def test_verified_assertion_requires_actual_typed_validator_and_image_binding(binding,success):
++    evidence=AssessmentEvidence('synthetic_origin',supporting_evidence=('verified:assertion',))
++    verified=VerifiedGenerationAssertion('verified:assertion','fixture-validator',success,binding)
++    result=evaluate_confidence(evidence,ConfidenceFacts(verification=verified))
++    if binding and success:
++        assert result.policy_rule=='synthetic.verified_assertion'
++        assert result.tier=='Medium'  # Claim authentication is not pixel-origin proof.
++    else: assert result.policy_rule=='synthetic.not_established'
++
++
++@pytest.mark.parametrize('signal',['C2PA_PRESENT','AI_TOOL_NAME_MATCH','AMBIGUOUS_WORKFLOW_METADATA'])
++def test_metadata_verification_flags_and_ambiguity_cannot_create_high(signal):
++    summary=metadata(signal)
++    summary.details.update(provenance_verified=True,provenance_state='verified_generation_assertion')
++    result=logic.synthesize_overall({'metadata':summary})
++    assert result[2]!='High'
++    assert policy(result[4],'synthetic_origin')['tier']=='Inconclusive'
++
++
++def test_verification_enum_or_json_dictionary_is_not_a_validator_result():
++    evidence=AssessmentEvidence('synthetic_origin')
++    result=evaluate_confidence(evidence,ConfidenceFacts(provenance=ProvenanceState.VERIFIED_GENERATION_ASSERTION))
++    assert result.tier=='Inconclusive'
++    with pytest.raises(ValueError): ConfidenceFacts(verification={'verified':True})
++
++
++def test_missing_metadata_does_not_change_a_mechanism_confidence():
++    sections=measured_boundary(.04)
++    sections['subject_boundary']=section('subject','possible_subject_background_segmentation_artifact')
++    first=logic.synthesize_overall(sections)
++    second=logic.synthesize_overall({**sections,'metadata':metadata('METADATA_STRIPPED_OR_SPARSE')})
++    assert first[2]==second[2]=='High'
++    assert policy(first[4],'localized_editing')['policy_rule']==policy(second[4],'localized_editing')['policy_rule']
++    assert policy(second[4],'synthetic_origin')['tier']=='Inconclusive'
++
++
++def test_reliable_local_processing_high_is_not_transferred_to_generation():
++    result=assess(reference_env('instagram'))
++    assert policy(result[4],'localized_editing')['tier']=='High'
++    assert policy(result[4],'synthetic_origin')['tier']=='Inconclusive'
++    assert result[2]=='High'
++
++
++def test_rejected_person_geometry_cannot_sustain_high_boundary_policy():
++    facts=ConfidenceFacts(findings=(('localized_editing',(Finding.BOUNDARY_DECISIVE,)),),
++        suspicious=9,local_support=5,boundary_compound=True,person_reliable=False)
++    result=evaluate_confidence(AssessmentEvidence('localized_editing'),facts)
++    assert result.tier=='Medium' and result.policy_rule=='localized.required_geometry_cap'
++    sections=measured_boundary()
++    sections['region_masks'].status='not_run'
++    actual=logic.synthesize_overall(sections)
++    assert policy(actual[4],'localized_editing')['tier']!='High'
++
++
++def test_reliability_cap_does_not_depend_on_safeguard_route_presence():
++    env=reference_env('instagram')
++    env.ds.boundary_reliability_score=.25
++    routes=[spec for spec in logic.DECISION_ROUTES if not spec.boundary_safeguard]
++    result=logic.finish_decision(env,logic.evaluate_hypotheses(env,routes))
++    assert result[2]=='Medium'
++    assert policy(result[4],'localized_editing')['policy_rule']=='localized.boundary_support_limited'
++
++
++@pytest.mark.parametrize('reliability',[0,.25,.5])
++def test_existing_limited_boundary_requirement_remains_explicit(reliability):
++    env=reference_env('instagram')
++    env.ds.boundary_reliability_score=reliability
++    result=assess(env)
++    assert policy(result[4],'localized_editing')['tier']=='Medium'
++    assert policy(result[4],'localized_editing')['policy_rule']=='localized.boundary_support_limited'
++
++
++def test_descendants_cannot_bypass_general_high_gate_via_a_high_route_label():
++    sections=measured_boundary(.02)
++    sections['unrelated_status_weight']=section('extra','unspecific',status='strong')
++    env=logic.build_decision_env(sections)
++    assert logic.route_multi_signal_suspicious(env).confidence=='High'  # legacy only
++    result=logic.synthesize_overall(sections)
++    record=policy(result[4],'unresolved_anomaly')
++    assert record['tier']=='Medium' and result[2]=='Medium'
++    assert record['policy_rule']=='generic.one_strong_observation'
++    gate=next(g for g in result[4]['corroboration_audit']['evaluated_gates'] if g['gate_id']=='confidence.strong_source_diversity')
++    assert gate['corroborating_source_count']==1 and not gate['gate_passed']
++
++
++def test_distinct_sources_keep_existing_generic_high_rule():
++    sections=measured_boundary()
++    sections['subject_process_asymmetry']=section('asym','subject_process_asymmetry_strong')
++    env=logic.build_decision_env(sections)
++    source=next(g for g in env.corroboration_gates if g['gate_id']=='confidence.strong_source_diversity')
++    tier,rule=generic_confidence(env.card.suspicious_score,source['observed_strong_indicator_count'],source['requirement_satisfied'])
++    assert tier=='High' and rule=='generic.distinct_strong_sources'
++
++
++def test_strong_visual_generation_and_limited_local_findings_are_assessed_separately():
++    result=assess(visual_generation_env())
++    assert policy(result[4],'synthetic_origin')['tier']=='High'
++    assert policy(result[4],'localized_editing')['tier']=='Low'
++    assert result[4]['decision']['primary_hypothesis']=='synthetic_origin'
++
++
++def test_camera_compatibility_and_generation_declaration_coexist():
++    result=logic.synthesize_overall({'metadata':metadata('DECLARED_SYNTHETIC'),
++        'sensor_origin':section('sensor','camera_like_acquisition_supported',polarity='benign')})
++    syn=policy(result[4],'synthetic_origin');camera=policy(result[4],'camera_acquisition')
++    assert syn['tier']==camera['tier']=='Medium'
++    assert syn['moderating_evidence'] and not syn['contradicting_evidence']
++    assert camera['policy_rule']=='camera.acquisition_compatibility'
++    assert 'not photographic authenticity' in ' '.join(camera['rationale'])
++
++
++def test_direct_contradiction_changes_mechanism_eligibility_without_global_penalty():
++    sections=measured_boundary(.04)
++    sections.update(boundary_focus=section('focus','boundary_focused_processing_mismatch'),
++        compression_history=section('compression','localized_compression_inconsistency'),
++        subject_texture_consistency=section('texture','subject_texture_stochastic_regularization'))
++    before=logic.synthesize_overall(sections)
++    assert before[2]=='High'
++    sections['boundary_focus']=section('focus','boundary_processing_convergence_supported',status='weak',polarity='benign',score=0)
++    after=logic.synthesize_overall(sections)
++    record=policy(after[4],'localized_editing')
++    assert record['tier']=='Medium' and record['contradicting_evidence']
++    assert 'not a global point deduction' in ' '.join(record['rationale'])
++    assert policy(after[4],'synthetic_origin')['tier']=='Inconclusive'
++
++
++def test_counter_evidence_is_not_deleted_when_other_compound_support_survives():
++    env=reference_env('instagram')
++    env.sections['boundary_focus']=section('focus','boundary_processing_convergence_supported',status='weak',polarity='benign',score=0)
++    result=assess(env)
++    record=policy(result[4],'localized_editing')
++    assert record['tier']=='High' and record['contradicting_evidence']
++
++
++def test_missing_regional_coverage_is_limitation_not_declaration_penalty():
++    coverage={'status':'partial','unavailable_stages':['Person-derived region masks','Subject texture consistency analysis']}
++    sections={'metadata':metadata('DECLARED_SYNTHETIC')}
++    plain=logic.synthesize_overall(sections)
++    missing=logic.synthesize_overall(sections,analysis_coverage=coverage)
++    assert plain[2]==missing[2]=='Medium'
++    record=policy(missing[4],'synthetic_origin')
++    assert any('Analysis coverage is incomplete' in s for s in record['reliability_limitations'])
++    assert missing[4]['decision']['limitations']==hypotheses(missing[4])['synthetic_origin']['limitations']==list(record['reliability_limitations'])
++
++
++@pytest.mark.parametrize('case',['instagram','midjourney'])
++def test_route_order_and_repeated_evaluation_do_not_set_policy_confidence(case):
++    env=reference_env(case)
++    first=assess(env)
++    repeated=assess(env)
++    assert first==repeated
++    reordered=reference_env(case)
++    result=logic.evaluate_hypotheses(reordered,reversed(logic.DECISION_ROUTES))
++    reversed_result=logic.finish_decision(reordered,result)
++    assert first[:4]==reversed_result[:4]
++    assert first[4]['confidence_policy']==reversed_result[4]['confidence_policy']
++
++
++@pytest.mark.parametrize('legacy_tier',['Low','High','Inconclusive'])
++def test_tampering_with_every_route_tier_cannot_change_selection_or_policy(monkeypatch,legacy_tier):
++    sections=reference_env('instagram').sections
++    baseline=logic.synthesize_overall(sections)
++    original=logic.DecisionResult
++    def provisional(*args,**kwargs):
++        return replace(original(*args,**kwargs),confidence=legacy_tier)
++    monkeypatch.setattr(logic,'DecisionResult',provisional)
++    result=logic.synthesize_overall(sections)
++    assert baseline[:4]==result[:4]
++    assert baseline[4]['confidence_policy']==result[4]['confidence_policy']
++    assert any(item['legacy_confidence']==legacy_tier for item in result[4]['decision_route_trace'] if item['matched'])
++
++
++def test_branch_names_text_and_legacy_assessment_tier_are_not_policy_inputs():
++    assessment=HypothesisAssessment('synthetic_origin',confidence_tier='High',decision_branch='definitely_generated',explanation='High confidence proven')
++    result=evaluate_confidence(AssessmentEvidence.from_assessment(assessment),ConfidenceFacts())
++    assert result.tier=='Inconclusive'
++
++
++def test_policy_does_not_promote_the_highest_confidence_secondary_to_primary(monkeypatch):
++    original=logic.evaluate_confidence
++    def secondary_policy(evidence,facts):
++        result=original(evidence,facts)
++        return replace(result,tier='High',policy_rule='fixture.secondary_support') if evidence.hypothesis=='camera_acquisition' else result
++    monkeypatch.setattr(logic,'evaluate_confidence',secondary_policy)
++    env=reference_env('midjourney')
++    selected=logic.evaluate_hypotheses(env)
++    assert env.primary_hypothesis=='synthetic_origin'
++    # Presentation follows the selected hypothesis, not a maximum over tiers.
++    camera=next(h for h in env.hypotheses if h.hypothesis_id=='camera_acquisition')
++    assert camera.confidence_tier=='High'
++    result=logic.finish_decision(env,selected)
++    assert result[2]=='Medium' and result[4]['decision']['primary_hypothesis']=='synthetic_origin'
++
++
++def test_presentation_cannot_be_overridden_by_a_provisional_or_mutated_tier():
++    env=reference_env('midjourney')
++    selected=logic.evaluate_hypotheses(env)
++    for assessment in env.hypotheses: assessment.confidence_tier='High'
++    result=logic.finish_decision(env,replace(selected,confidence='High'))
++    assert result[2]=='Medium'
++    assert all(h['confidence_tier']==policy(result[4],h['hypothesis_id'])['tier'] for h in result[4]['hypothesis_assessments'])
++
++
++def test_json_and_text_use_one_authoritative_policy_for_all_hypotheses():
++    result=assess(reference_env('instagram'))
++    trace=json.loads(json.dumps(result[4],allow_nan=False))
++    hs=hypotheses(trace)
++    assert trace['confidence_policy']['version']=='3'
++    for record in trace['confidence_policy']['assessments']:
++        h=hs[record['hypothesis']]
++        assert h['confidence_tier']==record['tier']
++        assert h['confidence_policy_rule']==record['policy_rule']
++        for role in ('supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence'):
++            assert h[role]==record[role]
++        assert h['limitations']==record['reliability_limitations']
++        assert h['confidence_rationale']==record['rationale']
++    primary=trace['decision']['primary_hypothesis']
++    assert result[2]==hs[primary]['confidence_tier']==policy(trace,primary)['tier']
++    assert 'Confidence Policy' in build_reasoning_trace_text(trace)
++    for item in trace['decision_route_trace']:
++        if item['matched']: assert item['confidence_source']
++
++
++def test_summary_gui_consumption_and_coverage_are_compatible():
++    keys=('ela','noise','sensor_origin','region_masks','segmentation_alignment','region_fft','cross_signal','boundary_focus','fft','subject_boundary','subject_texture_consistency','subject_process_asymmetry','subject_material_realism','patch_similarity','patch_spatial','compression_history','cfa_demosaic')
++    state=SimpleNamespace(**{key+'_payload':None for key in keys})
++    state.exif_payload={'signals':[{'id':'DECLARED_SYNTHETIC'}]}
++    state.analysis_mode='subject_based';state.analysis_coverage={'status':'partial','unavailable_stages':['Subject texture consistency analysis']}
++    summary=build_summary_result(state,evidence_dependency_shadow=True)
++    assert summary.overall_confidence=='Medium'
++    record=policy(summary.reasoning_trace,'synthetic_origin')
++    assert record['tier']==summary.overall_confidence
++    assert 'synthetic.unverified_generation_declaration' in summary.full_text
++    assert 'synthetic.unverified_generation_declaration' in summary.full_html
++    assert summary.reasoning_trace['decision']['limitations']==list(record['reliability_limitations'])
++    assert summary.reasoning_trace['evidence_dependency_analysis']['policy']=='structural_restatement_only'
++
++
++def test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy():
++    env=reference_env('instagram')
++    original=deepcopy(asdict(env.card))
++    # Use a recomputed card for replay; the old reference_env deliberately injects legacy values.
++    sections=env.sections
++    plain=logic.synthesize_overall(sections)
++    shadow=logic.synthesize_overall(sections,evidence_dependency_shadow=True)
++    assert plain[:4]==shadow[:4]
++    assert plain[4]['scorecard_calculation']==shadow[4]['scorecard_calculation']
++    assert plain[4]['corroboration_audit']==shadow[4]['corroboration_audit']
++    replay=reconstruct_scorecard_calculation(plain[4]['scorecard_calculation'])
++    assert replay['suspicious_score']==pytest.approx(plain[4]['scorecard']['suspicious_score'])
++    assess(env)
++    assert asdict(env.card)==original
++
++
++def test_invalid_scorecard_has_named_inconclusive_policy_for_every_assessment():
++    result=logic.synthesize_overall({'boundary':section('bad','x',score=float('nan'))})
++    assert result[2]=='Inconclusive'
++    assert all(r['tier']=='Inconclusive' and r['policy_rule']=='integrity.invalid_scorecard' for r in result[4]['confidence_policy']['assessments'])
++
++
++def test_policy_snapshots_are_immutable_and_unknown_hypothesis_is_conservative():
++    facts=ConfidenceFacts()
++    with pytest.raises(FrozenInstanceError): facts.suspicious=9
++    with pytest.raises(ValueError): AssessmentEvidence('synthetic_origin',supporting_evidence=[])
++    with pytest.raises(ValueError): ConfidenceFacts(findings=(('synthetic_origin',('route_high',)),))
++    result=evaluate_confidence(AssessmentEvidence('future_hypothesis'),facts)
++    assert result.tier=='Inconclusive' and result.policy_rule=='scope.unknown_hypothesis'
+--- /dev/null
++++ b/doc/phase3_confidence_policy/confidence_policy_implementation.md
+@@ -0,0 +1,139 @@
++# Phase 3 confidence-policy implementation report
++
++## Baseline and isolation
++
++Branch `fix/scorecard-integrity-phase2a`, HEAD `f64f226` (`phase 1`). Inherited
++Phase 2A-2B.3 work remained uncommitted. Baseline: **262 passed, 0 failed,
++0 skipped**. An exact 75-file inherited snapshot and SHA-256 manifest were
++preserved under ignored `analyzed/phase3_validation/inherited_baseline/`;
++Python copies use `.py.baseline` suffixes. No branch, stage, commit, stash, reset
++or discard was performed.
++
++`analyzed/phase3_validation/phase3_only.patch` isolates this phase from inherited
++work. Previous audit reports and production lineage/shadow/corroboration modules
++are preserved. `test_images/` remains ignored and was only read.
++
++## Inventory and migration
++
++The audit covered **26 route-return assignments, four generic branches and five
++hypothesis construction/override paths**, plus invalid/default placeholders and
++presentation consumers. All authoritative final assignments are now centralized.
++The 26 provisional route tiers remain for compatibility and diagnostics only;
++the five construction paths now create placeholders resolved by policy.
++
++See [confidence_rule_inventory.md](confidence_rule_inventory.md) for baseline
++functions, evidence conditions, proposed/implemented equivalents and qualifiers.
++Measurement confidence in ExifTool or person-mask detectors is separate metadata
++and was not treated as forensic hypothesis confidence.
++
++## Changed files
++
++| File | Responsibility |
++| --- | --- |
++| `confidence_policy.py` (new) | Frozen structured inputs/results, typed finding specificity, named hypothesis-specific policy rules, centralized existing generic thresholds |
++| `confidence_policy_inputs.py` (new) | Read-only adapter from existing card/derived/corroboration/coverage data; no loose narrative interpretation or detector execution |
++| `decision_logic.py` | Typed finding claims on 26 route returns; confidence-independent selection; policy after evidence scoping; authoritative presentation and route-trace audit |
++| `hypothesis_engine.py` | Additive policy-rule/rationale fields on HypothesisAssessment only; mathematical functions unchanged |
++| `summary_synthesizer.py` | Supply coverage before confidence and remove independent post-policy limitation mutation |
++| `reasoning_persistence.py` | Render policy version, rules, rationale and limitations alongside existing traces |
++| `tests/test_confidence_policy.py` (new) | 35 policy and complete integration regressions |
++| Four documents in this directory | Inventory, semantics/specification, implementation and actual reference comparison |
++
++## Architecture
++
++1. Existing detectors, summaries, scorecard and corroboration produce observations.
++2. Matching routes produce typed finding claims and provisional compatibility data.
++3. Existing deterministic hypothesis selection uses typed specificity instead of
++   checking a route's High/Medium label. Route priorities, specificity meanings
++   and boundary-versus-clone safeguards remain intact.
++4. Existing evidence scoping populates supporting/contradicting/moderating/
++   contextual records for each hypothesis.
++5. The pure policy consumes immutable snapshots and assigns each assessment a
++   tier, stable rule, scoped evidence, limitations and rationale.
++6. Final results, route-trace authoritative tiers and presentation consume that
++   policy. The primary interpretation is not reselected by maximum confidence.
++
++Route names, branch strings, prose and provisional confidence do not enter the
++policy inputs. All matching typed findings are consolidated independent of
++evaluation order. Unknown hypotheses/findings cannot use a legacy High label to
++create a confident interpretation. Presentation restores policy tiers even if
++an external caller mutates a provisional result or an assessment tier afterward.
++
++## Meaningful behavior changes
++
++- A general anomaly route no longer bypasses the existing 2B.3 source-diversity
++  policy by hardcoding High. A saved baseline-module replay confirms High ->
++  Medium at unchanged S=8.155, B=0 for two related boundary/cross descendants.
++  The primary pattern remains `multi_signal_suspicious_convergence`; the named
++  rule is `generic.one_strong_observation`.
++- Required person-boundary reliability is enforced by policy even if a caller
++  supplies a route subset omitting safeguard routes. The existing 0.6 boundary
++  requirement and reliable-person/geometry contract are reused, not recalibrated.
++- Policy, hypothesis and decision coverage limitations are produced together,
++  eliminating independent after-the-fact mutation by summary orchestration.
++
++There is no global contradiction penalty. Existing direct counter-evidence
++remains visible, while valid alternative compound/reuse support can retain its
++existing tier. Unverified declarations remain Medium and camera-compatible
++structure remains compatibility rather than authentication. A typed future
++verified-assertion result has a distinct rule/rationale but does not invent a
++High pixel-origin guarantee from signature authenticity alone.
++
++## Compatibility and invariants
++
++- Five-element synthesis return API preserved; existing positional parameters
++  remain. Coverage is an optional keyword-only input.
++- Existing JSON fields retained. New fields are policy audit, assessment
++  rule/rationale and route-trace legacy/source data.
++- All new authoritative tiers have named rules. Secondary assessments are
++  evaluated separately; no cross-hypothesis confidence transfer.
++- Numerical scorecard functions, coefficients, reliability multipliers and
++  detector thresholds are unchanged. HypothesisAssessment adds two defaulted
++  fields without changing ScoreCard or EvidenceSnapshot contracts.
++- Phase 2B.2 modules/policy and Phase 2B.3 corroboration helper remain unchanged.
++  Full reference sidecars and corroboration audit records match baseline JSON.
++- Current GUI/controller integration is unchanged. Full text/HTML consume the
++  policy's primary tier and existing evidence presentation.
++- No new dependencies, packaging or workflow changes.
++
++## Tests and real-image validation
++
++Final suite: **297 passed, 0 failed, 0 skipped**, including all original 262 and
++35 new tests. Coverage includes unverified/typed verified provenance, forged
++verification flags, missing metadata, local-versus-generation scope, camera
++coexistence, reliability caps independent of route presence, contradictions,
++moderation, coverage, descendant source inflation, distinct sources, reordered
++routes, repeated evaluation, tier tampering, non-maximum primary selection,
++JSON/text/HTML consistency and numerical/shadow/corroboration invariants.
++
++Both actual references completed full headless `subject_based` pipelines with
++zero failed stages and unchanged read-only image hashes. Instagram remains High
++at S=20.47705/B=2.25 under `localized.reliable_boundary_compound`; Midjourney
++remains Medium at S=6.0375/B=1.5 under
++`synthetic.unverified_generation_declaration`. The latter keeps rejected person
++geometry and partial regional coverage. These are validation examples, not a
++calibration dataset. See [confidence_policy_reference_comparison.md](confidence_policy_reference_comparison.md).
++
++## Remaining limitations
++
++The policy consolidates existing heuristic meanings; it does not statistically
++calibrate tiers, independence or probabilities. Compound rule thresholds and
++correlated numerical weighting still need a representative labeled benchmark.
++Verified provenance integration remains outside this phase because the current
++extractor has no cryptographic validator; metadata flags are never promoted to
++verification.
++
++Existing structured mechanism scores remain trusted policy inputs, including
++legacy programmatic callers that inject scorecard values for decision-only
++fixtures. The policy does not rerun detectors or reinterpret such overrides as
++new measured observations. Normal production scorecards retain Phase 2A's
++finite/reconstructable calculation contract. Partial input coverage is recorded
++without inventing evidence or replacing established mechanism rules with new
++global thresholds.
++
++No required Phase 3 functionality is deferred: final confidence authority,
++hypothesis separation, typed selection, rationale and policy audit are integrated
++and tested. Empirical calibration, cryptographic validation and numerical
++dependency weighting remain separate scope limitations, not hidden policy rules.
++
++Nothing was staged, committed, pushed, merged, tagged, stashed, reset or discarded.
+--- /dev/null
++++ b/doc/phase3_confidence_policy/confidence_policy_reference_comparison.md
+@@ -0,0 +1,149 @@
++# Phase 3 full reference confidence-policy comparison
++
++Both existing references ran full headless `subject_based` analyses. Image SHA-256 hashes matched before/after; no file under test_images was modified. Saved pipeline summaries were also replayed through the final policy after the last central reliability-cap change; policy, hypothesis, arithmetic, shadow and corroboration records match the full-run output.
++
++This report contains only aggregate values, evidence identifiers, named policy rules and limitations. It exports no raw image, prompt, creator value or detector array. Full outputs remain ignored under `analyzed/phase3_validation/{instagram,midjourney}/`.
++
++## Primary outcomes
++
++| Metric | Instagram before | Instagram policy | Midjourney before | Midjourney policy |
++| --- | --- | --- | --- | --- |
++| Primary hypothesis | localized_editing | localized_editing | synthetic_origin | synthetic_origin |
++| Dominant pattern | possible_foreground_background_processing_mismatch | possible_foreground_background_processing_mismatch | provenance_supported_synthetic_context | provenance_supported_synthetic_context |
++| Confidence | High | High | Medium | Medium |
++| Suspicious score | 20.47705 | 20.47705 | 6.0375 | 6.0375 |
++| Benign score | 2.25 | 2.25 | 1.5 | 1.5 |
++| Policy rule | route provisional tier | localized.reliable_boundary_compound | route provisional tier | synthetic.unverified_generation_declaration |
++| Completed stages | 23 | 23 | 14 | 14 |
++| Unavailable / skipped | 0 | 0 | 9 | 9 |
++| Failed stages | 0 | 0 | 0 | 0 |
++
++No reference tier was forced. Policy rules were defined from the existing structured evidence constraints before reference validation. These two cases do not calibrate confidence or establish accuracy.
++
++## Instagram
++
++| Hypothesis | Previous tier | Policy tier | Policy rule |
++| --- | --- | --- | --- |
++| synthetic_origin | Inconclusive | Inconclusive | synthetic.not_established |
++| localized_editing | High | High | localized.reliable_boundary_compound |
++| camera_acquisition | Medium | Medium | camera.acquisition_compatibility |
++
++### synthetic_origin
++
++- Supporting evidence: none.
++- Contradictory evidence: none.
++- Moderating evidence: `cfa_demosaic:weak_camera_cfa_supported`, `sensor_origin:camera_like_acquisition_supported`.
++- Policy rationale: Confidence policy synthetic.not_established: No specific generation interpretation is established; localized anomalies do not supply missing generation support. Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Heuristic support levels are not probabilities.
++- Missing provenance coverage is a limitation, not positive generation evidence.
++- No substantive generation declaration or specific visual generation finding is established.
++
++### localized_editing
++
++- Supporting evidence: `boundary:possible_foreground_background_processing_mismatch`, `boundary_focus:boundary_focused_processing_mismatch`, `compression_history:localized_compression_inconsistency`, `cross_signal:partial_hotspot_convergence`, `subject_boundary:possible_subject_background_segmentation_artifact`.
++- Contradictory evidence: none.
++- Moderating evidence: `cfa_demosaic:weak_camera_cfa_supported`, `sensor_origin:camera_like_acquisition_supported`.
++- Policy rationale: Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied. Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Localized editing evidence does not by itself establish AI generation.
++
++### camera_acquisition
++
++- Supporting evidence: `cfa_demosaic:weak_camera_cfa_supported`, `sensor_origin:camera_like_acquisition_supported`.
++- Contradictory evidence: none.
++- Moderating evidence: none.
++- Policy rationale: Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.
++
++Mask status `reliable`, coverage 0.5961422390407987. The maximum usable coverage remains 0.90. Stage statuses: `{"success": 23}`; no errors.
++
++## Midjourney
++
++| Hypothesis | Previous tier | Policy tier | Policy rule |
++| --- | --- | --- | --- |
++| synthetic_origin | Medium | Medium | synthetic.unverified_generation_declaration |
++| localized_editing | Inconclusive | Inconclusive | localized.not_established |
++| camera_acquisition | Medium | Medium | camera.acquisition_compatibility |
++
++### synthetic_origin
++
++- Supporting evidence: `metadata:DECLARED_SYNTHETIC`, `metadata:EMBEDDED_GENERATION_PROMPT`.
++- Contradictory evidence: none.
++- Moderating evidence: `sensor_origin:camera_like_acquisition_supported`.
++- Policy rationale: Confidence policy synthetic.unverified_generation_declaration: An explicit generation declaration supports declared creation context; metadata authenticity is unverified. Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Heuristic support levels are not probabilities.
++- Metadata authenticity is unverified; C2PA presence alone is not validation.
++- Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.
++- Coverage limitation (not negative evidence): unavailable subject_material_realism, subject_process_asymmetry.
++
++### localized_editing
++
++- Supporting evidence: `boundary:possible_boundary_fragment_convergence`, `cross_signal:strong_hotspot_convergence`.
++- Contradictory evidence: none.
++- Moderating evidence: `sensor_origin:camera_like_acquisition_supported`.
++- Policy rationale: Confidence policy localized.not_established: A specific localized mechanism is not established. Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Localized editing evidence does not by itself establish AI generation.
++- Boundary reliability is reduced (0.00).
++- Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.
++- Coverage limitation (not negative evidence): unavailable boundary_focus, patch_spatial, region_masks, segmentation_alignment.
++
++### camera_acquisition
++
++- Supporting evidence: `sensor_origin:camera_like_acquisition_supported`.
++- Contradictory evidence: none.
++- Moderating evidence: none.
++- Policy rationale: Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity. Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.
++
++Reliability and coverage limitations:
++
++- Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.
++- Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.
++
++Mask status `unreliable`, coverage 0.9181777419747081. The maximum usable coverage remains 0.90. Stage statuses: `{"skipped": 8, "success": 14, "unavailable": 1}`; no errors.
++
++## Interpretation and preserved safeguards
++
++Instagram retains High confidence in localized processing because reliable person geometry, strong local support and the existing compound boundary requirement are satisfied. This confidence is specific to processing inconsistency; synthetic origin remains Inconclusive. Camera-compatible observations remain moderation and do not rule out later editing. No global contradiction deduction or new score formula was applied.
++
++Midjourney retains Medium confidence in an explicit unverified generation declaration. Camera-compatible structure can coexist with that declaration. Its 0.9181777419747081 person-mask coverage remains rejected under the existing 0.90 limit: region selection is unavailable and eight regional analyses skip. Missing regional evidence does not become either authenticity support or synthetic-origin support, and does not arbitrarily reduce the declaration tier. The policy and presentation share the same coverage limitation.
++
++The full numerical scorecard, Phase 2A operation ledger, section snapshot, Phase 2B.2 dependency sidecar and Phase 2B.3 corroboration audit were compared to baseline and remain unchanged. The policy adds authoritative confidence rules, scoped rationale and consistent limitations; it does not replace shadow scores or modify gate semantics.
++
++## Actual baseline-module replay of the corrected route bypass
++
++| Metric | Inherited Phase 2B.3 | Centralized Phase 3 |
++| --- | --- | --- |
++| Pattern | multi_signal_suspicious_convergence | multi_signal_suspicious_convergence |
++| Primary hypothesis | unresolved_anomaly | unresolved_anomaly |
++| Tier | High | Medium |
++| Suspicious score | 8.155 | 8.155 |
++| Benign score | 0.0 | 0.0 |
++| Authority | hardcoded route High | generic.one_strong_observation |
++
++The fixture has strong boundary and cross indicators from the same ELA/residual ancestry, reliable reduced boundary support, and an additional nonspecific weighted observation. The score is 8.155 in both implementations. The Phase 2B.3 generic diversity gate already fails, but the general accumulation route previously bypassed it by returning High. The exact inherited module was loaded read-only from the baseline snapshot and replayed against the same inputs. Phase 3 assigns Medium under `generic.one_strong_observation`; the scorecard and mathematical ledger are identical.
++
++This is an explained reasoning correction, not evidence that a lower tier is statistically more accurate. A separate regression proves that omitting safeguard routes cannot evade the existing required-geometry/boundary reliability cap. Tier tampering and route reordering tests show that provisional labels do not control final confidence.
++
++## Artifact and consistency checks
++
++- `summary/reasoning_trace.json` and `.txt`: named policy audit alongside the unchanged arithmetic and corroboration audits.
++- `summary/final_summary.json`, `.txt`, `.html`: primary policy tier and scoped evidence presentation.
++- `validation_result.json`, `console.txt`: actual pipeline counts, mask diagnostics, invariant checks and reference policy records.
++- `route_bypass_comparison.json`: sanitized before/after replay of the explained behavioral change.
++- `inherited_baseline/` and `phase3_only.patch`: isolated review boundary from prior uncommitted work.
++
++The selected primary tier equals its hypothesis tier and policy tier. Supporting/contradicting/moderating/contextual IDs and limitations agree between policy and hypothesis records. The final rationale is generated by the policy, with only the existing selection explanation prepended for presentation. No shadow confidence or probability is assigned.
+--- /dev/null
++++ b/doc/phase3_confidence_policy/confidence_policy_specification.md
+@@ -0,0 +1,144 @@
++# Phase 3 confidence semantics and policy specification
++
++## Semantics established before implementation
++
++Confidence describes the strength and reliability of support for a particular
++forensic interpretation. It is not the probability that an image is AI-generated,
++authentic or edited. An image can support camera-acquisition compatibility,
++localized processing and unverified generation context simultaneously.
++
++- **Strength:** existing structured mechanism/support values and observed statuses;
++  this task does not change their coefficients.
++- **Reliability:** applicable mask/geometry/measurement safeguards. A rejected
++  person mask cannot justify a High person-boundary interpretation.
++- **Specificity:** what the finding establishes (localized mechanism, visual
++  structure, declaration, compatibility or unresolved anomaly).
++- **Corroboration:** the existing typed production source-diversity or compound
++  check. Shared descendants do not manufacture distinct-source support.
++- **Contradiction:** a directly challenging observation in the assessed hypothesis
++  and mechanism scope. It remains visible even when other mechanism evidence
++  survives; it is not a universal numerical penalty.
++- **Moderation:** contextual limits that do not directly disprove the hypothesis.
++  Camera-compatible structure does not refute an unverified declaration.
++- **Coverage:** missing evidence is neither support nor contradiction. It can
++  prevent a rule from establishing a mechanism requiring that evidence.
++
++## Consolidation boundary
++
++Stages remain interpretation, hypothesis assessment, deterministic primary
++selection, centralized confidence policy, then presentation. Confidence does not
++select the primary hypothesis. Typed finding specificity replaces the old
++selection dependence on provisional route tiers; candidate priorities and scope
++safeguards remain unchanged.
++
++Existing mechanism-specific rule meanings are retained. The policy consumes
++structured assessments, typed findings, existing score/derived facts and
++corroboration results. It does not interpret free-text narratives, route names,
++unrecognized pattern strings or the provisional route tier as confidence input.
++
++Unverified generation/enhancement declarations remain bounded at Medium; source
++context alone remains Low. Genuine provenance verification requires a typed
++upstream validator result with image binding, not a metadata boolean. The
++production extractor has no such validator. Signature/claim authenticity alone
++will not silently become proof of the pixel-generating process.
++
++Strong reliable compound localized processing or spatial reuse can remain High
++without transferring that confidence to synthetic origin. General anomaly
++confidence uses the existing generic thresholds and Phase 2B.3 source-diversity
++gate, so an accumulation route cannot bypass that gate by returning High.
++
++No arbitrary global deduction for contradiction/moderation, new score threshold,
++new coefficient, empirical family budget, probability estimate or shadow-scoring
++activation is introduced. New numerical calibration questions remain unresolved.
++
++## Authoritative interface
++
++`AssessmentEvidence` freezes the existing scoped supporting, contradicting,
++moderating and contextual evidence identifiers plus assessment limitations.
++`ConfidenceFacts` freezes typed finding claims, existing numerical support,
++provenance state, reliability, coverage and the existing corroboration results.
++`ConfidencePolicyResult` returns hypothesis, tier, stable rule ID, the same
++evidence roles, reliability limitations and policy rationale.
++
++Neither the assessment's old tier, its route/branch name, its narrative nor the
++route's provisional tier is an input. `confidence_policy_inputs.py` is a small
++adapter over structured score/derived/gate objects; no detector is rerun and no
++raw pixel/mask/prompt payload is copied into confidence facts.
++
++## Precedence and existing rule equivalents
++
++| Hypothesis / precedence | Policy rule family | Tier and rationale |
++| --- | --- | --- |
++| All: invalid scorecard | `integrity.invalid_scorecard` | Inconclusive; no confident output from invalid numerical state |
++| Synthetic: qualifying visual compound, without recurrence caveat | `synthetic.visual_compound` | High using existing boost >=1 / S>=5 and approved global or reliable regional compound requirements |
++| Synthetic: trusted assertion validation and image binding | `synthetic.verified_assertion` | Medium with authenticated-claim rationale; no new unsupported upgrade to pixel-origin proof |
++| Synthetic: generation/enhancement declaration | `synthetic.unverified_generation_declaration`, `.unverified_enhancement_declaration` | Medium; authenticity remains unverified; enhancement does not establish whole-image generation |
++| Synthetic: reviewed source context | `synthetic.source_context` | Low; source context is not image-history authentication |
++| Synthetic: recurrence caveat | `synthetic.recurrence_ambiguity` | Medium confidence in a qualified ambiguity finding, not positive proof of generation |
++| Synthetic: required geometry absent / no specific evidence | `synthetic.required_region_unavailable`, `.not_established` | Inconclusive; missing local evidence neither proves nor disproves generation |
++| Localized: decisive spatial reuse | `localized.spatial_reuse` | High under existing clone >=3.5, dominance >=1 and camera <2 requirements; not a person-boundary claim |
++| Localized: supplied photo context / existing boundary or geometry safeguard | `localized.photo_context_ambiguity`, `.boundary_support_limited`, `.geometry_limited`, `.person_boundary_unavailable` | Existing qualified Medium findings; scope limited to the affected mechanism |
++| Localized: required person geometry or boundary support missing | `localized.required_geometry_cap`, `.boundary_support_limited` | A person-boundary interpretation cannot be High without required reliable geometry; existing boundary threshold 0.6 applies even if a caller omits safeguard routes |
++| Localized: multiple mechanisms / decisive boundary compound | `localized.multiple_mechanisms`, `.reliable_boundary_compound` | Existing High requirements: support thresholds, camera/context restrictions and typed compound support |
++| Localized: unconfirmed strong local concern | `localized.camera_moderated_uncertainty`, `.unspecific_local_processing` | Existing Low with camera moderation, otherwise Medium unspecific local processing |
++| Localized: supported boundary / weak mechanism | `localized.supported_boundary`, `.limited_mechanism` | Existing Medium / Low, respectively |
++| Localized: ambiguous reuse | `localized.reuse_camera_ambiguity`, `.reuse_ambiguity.generic.*`, `.reuse_unspecific` | Existing Low camera ambiguity, generic support for material ambiguity, or Medium nonspecific recurrence |
++| Localized: other qualified processing | `localized.qualified_processing` | Medium for the existing processing/subject-boundary/transition interpretations |
++| Localized: no established mechanism | `localized.not_established` | Inconclusive, without borrowing generation confidence |
++| Camera compatibility | `camera.acquisition_compatibility`, `.not_established` | Medium for existing camera-compatible observations or coherent photo-like consistency; otherwise Inconclusive. No authenticity claim |
++| Unresolved anomaly | `generic.distinct_strong_sources`, `.one_strong_observation`, `.nonspecific_anomaly`, `.insufficient_support` | Existing 2B.3 generic High/Medium/Low/Inconclusive rules; no route-High bypass |
++| Unknown hypothesis | `scope.unknown_hypothesis` | Inconclusive with an explicit missing-policy interpretation |
++
++Generic thresholds remain S>=3 with the existing distinct-source requirement,
++S>=2 with one valid strong observation, S>=1.2 for nonspecific Low, otherwise
++Inconclusive. They are not applied as a universal formula to all three forensic
++hypotheses. Mechanism-specific High rules remain valid compound interpretations,
++not assertions of statistical independence.
++
++## Selection, legacy compatibility and contradictions
++
++Typed `Finding`/`Specificity` describes the evidentiary meaning used for selection:
++unspecific concern, specific mechanism/declaration, or decisive local mechanism.
++All matching findings are collected as a canonical hypothesis set for policy
++evaluation. Selection still uses the existing route priorities and scoped
++safeguards; it occurs before confidence. The highest-confidence hypothesis does
++not automatically become primary.
++
++The 26 route return tiers remain available for direct route callers and are
++recorded as `legacy_confidence`. They are not authoritative. Matched route-trace
++confidence comes from its assessed hypothesis policy; alternatives without an
++assessment are explicitly marked nonauthoritative rather than emitting an
++unexplained final tier. Tier-tampering regressions verify the separation.
++
++Direct contradiction is preserved in its hypothesis/mechanism scope. Changing
++boundary-focused support to boundary consistency can remove the existing compound
++requirement and change the local rule. Surviving intrinsic/other compound support
++can still justify its prior tier; no arbitrary global downgrade is introduced.
++Boundary consistency does not contradict copy-move reuse. Camera compatibility
++moderates generation/local interpretation without becoming a contradiction of a
++generation declaration.
++
++## Coverage and presentation
++
++Pipeline coverage is supplied before policy evaluation. Missing relevant detector
++results add explicit limitations, not positive/negative evidence. A missing
++modality can prevent a rule that actually requires it (notably person geometry),
++while a generation declaration does not require regional detectors to remain
++Medium. Summary code no longer independently appends assessment limitations after
++policy assignment.
++
++`confidence_policy.version` is `3`; each assessment has a named rule and rationale.
++The primary assessment tier is authoritative for overall confidence and GUI/text/
++HTML presentation. Existing JSON fields remain, with additive rule/rationale and
++policy-audit fields. Policy evidence IDs and limitations match the hypothesis
++assessment; primary rationale adds only the existing selection explanation.
++
++## Verification trust boundary
++
++`VerifiedGenerationAssertion` is a typed result from a trusted upstream validator,
++including successful validation and image binding. A JSON flag, C2PA presence,
++enum string or metadata declaration cannot construct that trusted production
++input. The current production adapter always supplies None because no validator
++exists in the extraction path. Fixtures test the future typed contract without
++implementing cryptographic validation. Even authenticated claim/image binding is
++not automatically equivalent to independently verified pixel-generation history.
+--- /dev/null
++++ b/doc/phase3_confidence_policy/confidence_rule_inventory.md
+@@ -0,0 +1,86 @@
++# Confidence rule inventory (Phase 3 baseline)
++
++Baseline: branch `fix/scorecard-integrity-phase2a`, HEAD `f64f226`, inherited uncommitted Phase 2A-2B.3 work; 262 tests passed. Baseline line anchors refer to the preserved Phase 3 entry snapshot.
++
++## Route-return assignments
++
++26 return sites were inspected and consolidated into typed finding/evidence rules. Their provisional labels remain only for direct route-call compatibility and diagnostic comparison. They no longer determine final confidence or selection specificity. No policy rule receives the route name, branch string, narrative or provisional tier.
++
++| Stable rule ID | Source | Hypothesis | Provisional assignment | Existing evidence / safeguard condition | Typed policy finding | Expected effect |
++| --- | --- | --- | --- | --- | --- | --- |
++| legacy.route_real_photo_context_prior.1 | decision_logic.py:749 route_real_photo_context_prior | localized_editing | 'Medium' | env.real_photo_context_prior and (not env.ds.metadata_synthetic) and (env.card.synthetic_boost <= 0.25) | PHOTO_CONTEXT | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_boundary_support_limited.1 | decision_logic.py:761 route_boundary_support_limited | localized_editing | 'Medium' | env.ds.strong_local_edit and env.ds.boundary_reliability_score < 0.6 | BOUNDARY_LIMITED | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_region_geometry_unreliable.1 | decision_logic.py:773 route_region_geometry_unreliable | localized_editing | 'Medium' | env.ds.region_geometry_unreliable and env.ds.strong_local_edit | GEOMETRY_LIMITED | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_localized_multi_mechanism.1 | decision_logic.py:793 route_localized_multi_mechanism | localized_editing | 'High' | env.card.local_edit_support_score >= 3.0 and env.card.clone_support_score >= 3.0 and (score_gap < 1.0) and (not env.card.contextual_false_positive_risk) | MULTI_LOCAL | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_strong_local_edit.1 | decision_logic.py:816 route_strong_local_edit | localized_editing | 'High' | env.card.local_edit_support_score >= 3.5 and env.card.local_edit_support_score >= env.card.clone_support_score + 1.0 and (env.card.camera_counter_support < 2.0) and (not env.card.contextual_false_positive_risk) and _boundary_corroborated(env) | BOUNDARY_DECISIVE | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_strong_local_edit.2 | decision_logic.py:831 route_strong_local_edit | localized_editing | confidence | env.card.local_edit_support_score >= 3.5 and env.card.local_edit_support_score >= env.card.clone_support_score + 1.0 and (env.card.camera_counter_support < 2.0) and (not env.card.contextual_false_positive_risk) | LOCAL_UNCERTAIN | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_clone_reuse.1 | decision_logic.py:852 route_clone_reuse | localized_editing | 'High' | env.card.clone_support_score >= 3.5 and env.card.clone_support_score >= env.card.local_edit_support_score + 1.0 and (env.card.camera_counter_support < 2.0) | CLONE_DECISIVE | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_moderated_local_edit.1 | decision_logic.py:872 route_moderated_local_edit | localized_editing | 'Medium' | env.ds.strong_local_edit and dominant_localized_score >= 2.5 and _boundary_corroborated(env) | BOUNDARY_SUPPORTED | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_moderated_local_edit.2 | decision_logic.py:884 route_moderated_local_edit | localized_editing | 'Low' | env.ds.strong_local_edit and dominant_localized_score >= 2.5 | LOCAL_WEAK | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_clone_ambiguous.1 | decision_logic.py:901 route_clone_ambiguous | localized_editing | 'Low' | env.card.clone_ambiguous and env.card.clone_support_score >= 2.0 and env.card.camera_counter_support >= 1.5 | CLONE_CAMERA_AMBIGUOUS | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_clone_ambiguous.2 | decision_logic.py:910 route_clone_ambiguous | localized_editing | env.confidence_tier | env.card.clone_ambiguous and env.card.clone_support_score >= 2.0 and env.ds.material_realism_strong | CLONE_MATERIAL_AMBIGUOUS | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_clone_ambiguous.3 | decision_logic.py:918 route_clone_ambiguous | localized_editing | 'Medium' | env.card.clone_ambiguous and env.card.clone_support_score >= 2.0 | CLONE_AMBIGUOUS | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_structured_recurrence_inconclusive.1 | decision_logic.py:943 route_structured_recurrence_inconclusive | synthetic_origin | 'Medium' | env.ds.fft_structured and env.ds.patch_structured and env.ds.local_signals_weak and env.ds.provenance_clean and (env.ds.coverage_ratio >= 0.18) and (env.ds.camera_like_support or env.ctx.decorative_geometric or env.ctx.natural_repetition or env.ctx.smartphone_computational or env.ctx.screen_origin) | RECURRENCE_CAUTION | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_synthetic_multi_signal.1 | decision_logic.py:988 route_synthetic_multi_signal | synthetic_origin | 'High' | env.card.synthetic_boost >= 1.0 and env.card.suspicious_score >= 5.0 and env.card.synthetic_supported_by_other_domains and (env.ds.fft_structured and env.ds.patch_structured or (env.ds.material_realism_strong and env.ds.subject_process_asymmetry_strong and (not env.ds.region_geometry_unreliable))) and (not (env.ds.local_signals_weak and env.ds.provenance_clean and (env.ds.coverage_ratio >= 0.18))) | VISUAL_GENERATION | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_localized_processing.1 | decision_logic.py:1000 route_localized_processing | localized_editing | 'Medium' | env.card.edit_boost >= 0.5 and env.card.suspicious_score >= 4.5 | LOCAL_PROCESSING | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_subject_boundary.1 | decision_logic.py:1017 route_subject_boundary | localized_editing | 'Medium' | env.ds.subject_boundary_strong and env.card.suspicious_score >= 4.0 | SUBJECT_BOUNDARY | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_unreliable_boundary_context.1 | decision_logic.py:1039 route_unreliable_boundary_context | localized_editing | 'Medium' | not env.ds.person_mask_reliable and env.ds.boundary_reliability_score <= 0.1 and (env.dominant_pattern in {'possible_boundary_transition_inconsistency', 'possible_subject_background_segmentation_artifact', 'possible_foreground_background_processing_mismatch'}) | UNRELIABLE_BOUNDARY | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_boundary_transition.1 | decision_logic.py:1056 route_boundary_transition | localized_editing | 'Medium' | env.ds.subject_boundary_medium and env.card.suspicious_score >= 3.5 and (env.ds.fragmented_local_edit or env.ds.strong_cross or env.ds.patch_structured) | BOUNDARY_TRANSITION | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_provenance.1 | decision_logic.py:1071 route_provenance | synthetic_origin | 'Medium' | state == ProvenanceState.UNVERIFIED_GENERATION_DECLARATION | GENERATION_DECLARATION | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_provenance.2 | decision_logic.py:1081 route_provenance | synthetic_origin | 'Medium' | state == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION | ENHANCEMENT_DECLARATION | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_provenance.3 | decision_logic.py:1088 route_provenance | synthetic_origin | 'Low' | env.ds.osint_ai_context | SOURCE_CONTEXT | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_camera_like.1 | decision_logic.py:1108 route_camera_like | camera_acquisition | 'Medium' | env.ds.camera_like_support and env.ds.provenance_clean and env.ds.local_signals_weak and (env.card.suspicious_score < 4.0) | CAMERA_COMPATIBLE | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_multi_signal_suspicious.1 | decision_logic.py:1138 route_multi_signal_suspicious | unresolved_anomaly | 'High' | env.card.suspicious_score >= 7.0 and high_support_present and (not env.ds.local_signals_weak) and (not (env.ds.camera_like_support or env.ctx.natural_repetition or env.ctx.decorative_geometric or env.ctx.smartphone_computational or env.ctx.screen_origin)) | ANOMALY_ACCUMULATION | Mechanism meaning retained; general accumulation subject to centralized generic source-diversity policy |
++| legacy.route_moderate_suspicious.1 | decision_logic.py:1152 route_moderate_suspicious | unresolved_anomaly | env.confidence_tier | env.card.suspicious_score >= 3.5 | GENERAL_ANOMALY | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_photo_like_consistency.1 | decision_logic.py:1172 route_photo_like_consistency | camera_acquisition | 'Medium' | env.card.suspicious_score < 1.5 and env.card.benign_score >= 2.0 and _photo_like_clean_signals(env) | PHOTO_CONSISTENCY | Existing meaning retained; required geometry/coverage explicitly reconciled |
++| legacy.route_fallback.1 | decision_logic.py:1193 route_fallback | unresolved_anomaly | fallback_confidence | fallback | FALLBACK | Existing meaning retained; required geometry/coverage explicitly reconciled |
++
++## Other confidence assignments and consumers
++
++- Four generic helper branches (High/Medium/Low/Inconclusive) move to `confidence_policy.generic_confidence()`, preserving thresholds 3/2/1.2, the strong-observation count and the Phase 2B.3 source-diversity result.
++- Five hypothesis construction/override paths (synthetic, localized, camera, unresolved, selected-camera override) become nonauthoritative placeholders; Stage D assigns every final tier after scoping.
++- Invalid-scorecard return/default dataclass tiers are placeholders resolved by named `integrity.invalid_scorecard` policy before presentation.
++- `build_confidence_rationale()` consumes authoritative policy rationale for new assessments; the old explanation-only path remains for legacy callers/traces.
++- `finish_decision()`, summary JSON/text/HTML and GUI consumption use the primary assessment's policy tier, never the selected route's provisional label.
++- `vf_person_subject_mask` detection confidence, ExifTool signal confidence, and module status strength are measurement metadata, not final forensic hypothesis confidence. They are inspected but not recalibrated.
++
++## Contradictions, reliability and precedence
++
++Existing boundary/person-geometry safeguards apply only to region-dependent interpretations; spatial reuse and declarations keep their own scope. Camera compatibility moderates unconfirmed localized mechanisms but does not disprove generation declarations. Direct boundary consistency remains contradictory within the boundary mechanism; it is contextual for clone reuse. Surviving compound evidence can retain its existing tier without a newly invented global contradiction deduction.
++
++## Selection coupling removed
++
++The old `_specific_finding()` and decisive-local selection branch read route confidence. They now use explicit finding specificity (unspecific/specific/decisive mechanism), preserving the same route evidence meaning and priorities. The primary hypothesis is selected before policy assignment and is not automatically changed to whichever secondary hypothesis receives the highest confidence.
++
++## Named policy equivalents and evidence qualifiers
++
++Each row is route-dependent only for the provisional diagnostic return; the final policy evaluates the complete hypothesis finding set and structured facts. The independent policy does not receive the route ID.
++
++| Typed finding | Named policy rule | Contradiction / moderation scope | Reliability / coverage controls |
++| --- | --- | --- | --- |
++| PHOTO_CONTEXT | localized.photo_context_ambiguity | Camera context moderates local interpretation; not contradiction | Existing photo-context prior |
++| BOUNDARY_LIMITED | localized.boundary_support_limited | No automatic penalty on generation | Boundary support <0.6 |
++| GEOMETRY_LIMITED | localized.geometry_limited | Local mechanism only | Unreliable region geometry |
++| MULTI_LOCAL | localized.multiple_mechanisms | Distinct mechanisms; retain scoped contradictions | Person/geometry support; existing local/clone requirements |
++| BOUNDARY_DECISIVE | localized.reliable_boundary_compound | Boundary contradiction retained if other compound support survives | Person/geometry, r>=0.6 and compound requirement |
++| LOCAL_UNCERTAIN | localized.camera_moderated_uncertainty / localized.unspecific_local_processing | Camera observation moderates rather than disproves editing | Unconfirmed compound; existing camera restriction |
++| CLONE_DECISIVE | localized.spatial_reuse | Boundary consistency is contextual for copy-move | Existing spatial-reuse score/dominance; boundary caps do not erase reuse |
++| BOUNDARY_SUPPORTED | localized.supported_boundary | Scoped boundary challenge remains visible | Applicable person/r support and compound gate |
++| LOCAL_WEAK | localized.limited_mechanism | Insufficient mechanism corroboration | No invented evidence from missing detectors |
++| CLONE_CAMERA_AMBIGUOUS | localized.reuse_camera_ambiguity | Camera compatibility moderates ambiguous reuse | Existing clone ambiguity and camera support |
++| CLONE_MATERIAL_AMBIGUOUS | localized.reuse_ambiguity.generic.* | Material regularity does not establish copy-move or generation | Existing generic source-diversity support |
++| CLONE_AMBIGUOUS | localized.reuse_unspecific | Natural repetition remains plausible | Spatial/mechanism uncertainty recorded |
++| RECURRENCE_CAUTION | synthetic.recurrence_ambiguity | Context affects visual recurrence, not authenticated origin | Existing recurrence/context guard |
++| VISUAL_GENERATION | synthetic.visual_compound | Camera observations are moderation; no generic transfer | Existing visual compound; regional branch requires reliable person geometry |
++| LOCAL_PROCESSING | localized.qualified_processing | Unspecific processing is not AI-generation proof | Existing edit support; applicable missing coverage disclosed |
++| SUBJECT_BOUNDARY | localized.qualified_processing | Intrinsic edge evidence is not a person contour by itself | Person/r geometry cap reconciled |
++| UNRELIABLE_BOUNDARY | localized.person_boundary_unavailable | Does not refute generation declaration | Required person support unavailable |
++| BOUNDARY_TRANSITION | localized.qualified_processing | Qualified mechanism only | Person/r support reconciled |
++| GENERATION_DECLARATION | synthetic.unverified_generation_declaration | Camera-compatible observations do not refute declaration | Authenticity remains unverified; no regional requirement |
++| ENHANCEMENT_DECLARATION | synthetic.unverified_enhancement_declaration | Enhancement differs from whole-image generation | Unverified declaration cap |
++| SOURCE_CONTEXT | synthetic.source_context | Reviewed source is contextual rather than authenticated | Source-context limitation |
++| CAMERA_COMPATIBLE | camera.acquisition_compatibility | May coexist with generation and local editing | Existing camera compatibility, no authenticity proof |
++| ANOMALY_ACCUMULATION | generic.* | Anomaly magnitude does not identify a mechanism | Existing 2B.3 distinct-source gate; no route-High bypass |
++| GENERAL_ANOMALY | generic.* | No confidence transfer to specific origin | Existing 2B.3 generic support thresholds |
++| PHOTO_CONSISTENCY | camera.acquisition_compatibility | Photo-like coherence is not cryptographic acquisition proof | Existing consistency conditions; limitations retained |
++| FALLBACK | generic.* | Unresolved interpretation remains unresolved | Existing generic support and coverage |

@@ -1,0 +1,1126 @@
+--- a/decision_logic.py
++++ b/decision_logic.py
+@@ -142,7 +142,7 @@
+             "evaluated_gates": _jsonable_scalar(sorted(corroboration_gates or [], key=lambda item: item['gate_id'])),
+             "limitations": [
+                 "Measurement-disjoint ancestry is a structural diversity check, not statistical independence.",
+-                "Compound conditions allow related interpretations; numerical scores and shadow policy are unchanged.",
++                "Compound conditions allow related interpretations. Production base-credit allocation is audited separately; shadow policy remains diagnostic.",
+             ],
+         },
+         "decision_route_trace": [
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b4_contribution_classification.md
+@@ -0,0 +1,51 @@
++# Phase 2B.4 numerical contribution classification
++
++## Baseline readiness and review boundary
++
++Branch `fix/scorecard-integrity-phase2a`, HEAD `f64f2262126da2a539813415f2bf49685f392571`.
++Initial suite: **297 passed, 0 failed, 0 skipped**. Six inherited tracked files
++were modified: decision logic, hypothesis engine, hypothesis evidence, reasoning
++persistence, signal language and summary synthesis. Phase 2A, lineage/shadow,
++production corroboration and confidence-policy modules, tests and documents were
++untracked. The exact entry inventory, 169-file byte snapshot and hashes are in
++ignored `analyzed/phase2b4_validation/`. No staging or Git history operation is
++needed. A phase-only patch against that snapshot will isolate this work.
++
++Reviewed the acceptance audit, Phase 2B.1 audit/graph and both CSV inventories,
++lineage schema, shadow implementation/activation criteria, production gate audit
++and remaining limitations, and their source implementations. The earlier
++activation criteria prohibit adopting experimental scoring; this task authorizes
++only structurally demonstrated duplicate-credit corrections. No experimental
++weights, family budgets or calibrated marginal fractions are activated.
++
++## Classification before implementation
++
++Categories apply to contribution relationships, not entire detector names.
++Identical ancestry alone is insufficient to assign category B.
++
++| Contribution | Shared source | Relationship | Evidence of redundancy or added information | Proposed action |
++| --- | --- | --- | --- | --- |
++| Same summary instance entered under multiple section keys | Identical `ModuleSummary` object | A | `compute_base_scores` iterates dictionary values without identity checking; the same observation can be added repeatedly (its domain already uses set semantics) | Credit once; prefer its registered key, then lexical key; no content-equality deduplication of separate observations |
++| Fragmented-boundary **base** plus cross-convergence base/domain | Identical ELA/residual overlap | B | `classify_boundary_convergence` fragment fallback tests supportive component labels and the same overlap count/ratios. Unlike the preceding contour branch, it requires no positive contour/topology property. The adapter assigns weak suspicious weight solely from this fallback label | When a suspicious partial/strong cross summary already represents that overlap, withhold the fragment base and its extra domain; keep the boundary observation and mechanism-specific interpretation |
++| Fragment local-support 0.5 and fragment/cross edit 0.5 | Same overlap fallback already represented by cross | B | These guards require only the redundant fragment flag and, for the latter, cross itself. Neither measures positive contour/localization information | Withhold both when the fragment base is demonstrably redundant; existing 0.18 conversion consumes corrected support; retain observations/routes |
++| Contour-boundary base plus cross base | Same overlap, with connected-cluster contour measurement | C | `find_connected_clusters` and `score_contour_shape` add extent, elongation and fill information; the strong branch requires `is_contour_like` | Retain existing weights and domain, disclose common ancestry |
++| Boundary focus plus cross/boundary | Same ELA/residual maps and selected masks | C | `_extract_ela_map`, `_extract_noise_map` and regional intensity comparisons measure anomaly localization relative to masks | Retain; no blanket composite removal |
++| Segmentation alignment plus cross | Filtered hotspot mask and selected boundary band | C | Spatial alignment fraction against selected geometry is additional measured information | Retain under existing availability/reliability policy |
++| Patch spatial plus patch similarity | Retained matches and mask geometry | C | Endpoint region densities and topology classify location; no new matching is claimed | Retain existing base and spatial clone-support rule |
++| Regional/global FFT | Overlapping pixels and shared FFT helper | C | Regional detector reruns transforms on masked crops, rather than recopying global result | Retain |
++| Texture, asymmetry and material measurements | Shared gradient/residual/DCT definitions; optional texture/region-FFT carry-forward | D | Separate samples/statistics and comparative gaps exist; quantifiable conditional redundancy is not established, including carry-forward's effect on final status | Retain provisionally, explicitly unresolved |
++| Sensor versus CFA | Shared high-pass scale/phase family | D | Luminance and chroma/directional maps differ | Retain provisionally |
++| Compression versus residual/boundary | Same pixels/processing history | D | JPEG grid-energy measurements differ from recompression/residual maps | Retain provisionally |
++| Other base weights plus single-signal mechanism terms and local-support conversion | Same signal, different explicitly specified scoring roles | D | Existing formulas explicitly prescribe these terms; local support is converted once and is never separately added to final suspicious score | Preserve formulas outside the confirmed fragment restatement; their combined empirical strength remains unresolved, rather than relabeling them as independent measurements |
++| Boundary-stack, alignment/cross, material/cross, material/asymmetry, intrinsic-boundary interactions | Related measurements | C | Explicit existing compound predicates encode contour/location/measurement agreement | Preserve coefficients and conjunctions; compounds are not independence claims |
++| Clone candidate, similarity, separation, coverage and localization | Same retained matches | C | Existing rules test different quantitative properties; clone support routes decisions and is not also summed into suspicious score | Preserve |
++| Camera benign base, convergence, attenuation, cautions, local/clone moderation | Same acquisition observations | D | Intentional multi-role policy, not duplicate addition of camera support into the suspicious aggregate | Preserve, disclose empirical uncertainty |
++| Metadata base/provenance boost and OSINT/context combination | Assertions that may share an originating declaration | D | Existing mutually exclusive provenance branches specify these roles; no authenticated claim identity is available across metadata and OSINT | Preserve; never claim verified or independent corroboration |
++| Repeated metadata IDs/narratives/overlays | Same section observation | D | Reporting does not itself add score; both prompt/declaration IDs produce one metadata base | No numerical change |
++| Domain bonus for preserved C/D findings | Existing credited domains | D | Domain is a scoring category, not an independence count; incremental value is uncalibrated | Retain 0.25 coefficient; remove only domains whose entire numerical base was proven duplicate |
++
++The two reference images do not establish empirical independence or calibration.
++An unknown future pattern or equal-valued separate summary is not silently
++declared a restatement. Omitted parent summaries remain a provisional legacy
++summary contract, not invented measurements. Explicitly unavailable evidence
++cannot itself earn a base credit.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b4_correction6_acceptance.md
+@@ -0,0 +1,79 @@
++# Correction #6 reassessment after Phase 2B.4
++
++**Disposition: ACCEPTED for the original structural double-counting correction.**
++This is a source-contract and integration determination, not empirical validation
++of every retained heuristic coefficient or a claim of statistical independence.
++The historical acceptance report remains an accurate record of its earlier
++working tree; this report supplies the subsequent correction and reassessment.
++
++## Evidence supporting the disposition
++
++| Requirement | Implementation / verification |
++| --- | --- |
++| Confirmed duplicate representation receives one numerical base credit | `numerical_evidence.allocate_base_evidence` canonicalizes identical summary instances; registered source keys win ties. Production calculator tests cover both suspicious and benign polarities, repeated aliases and separate equal-valued observations |
++| Pure derived restatement does not add repeated base/domain credit | `evidence_lineage.numerical_restatement_sources` identifies the actual overlap-only fallback, excluding positive contour measurement. Public synthesis regression and the final Midjourney run demonstrate suppression |
++| Restatement cannot regain credit via mechanism terms | `hypothesis_engine.compute_scorecard` delegates both fragment-only positive component terms to `add_fragment_component`; corrected local support feeds the unchanged conversion. Reliable-geometry test gives local support 1.0 and edit 0.18, instead of 1.5 and 0.77 |
++| Descendant contracts reuse lineage and hypothesis scope | Registered restatement descendants require an actually credited ancestor, compatible polarity and identical hypothesis scope. Three descendants add no credit; unavailable required parent produces no new restatement credit |
++| Genuine additional measurements survive | Positive contour topology, mask-relative anomaly intensity, alignment fractions, patch endpoint topology and fresh regional FFT extractions are category C. Regression checks and unchanged Instagram contributions demonstrate preservation |
++| Uncertain shared features are not arbitrarily discounted | Category D surface carry-forward, sensor/CFA, compression, camera multi-role and metadata/OSINT relationships retain their existing coefficients and are documented as empirical uncertainties |
++| Independent-source gates stay lineage-aware | Existing Phase 2B.3 implementation and all its regressions remain intact; shadow/normal synthesis preserves the same corroboration audit |
++| Confidence remains authoritative and hypothesis-specific | Phase 3 policy definitions are unchanged. Adjusted scorecard reaches production evaluation; both final reference route-match sets, primary hypotheses and policy rules remain unchanged |
++| Arithmetic is reconstructable | Extended Phase 2A reconstruction validates eligible base/domain accounting, component suppression and reliability. New corruption tests plus independent final-image replay pass |
++| No shadow activation or unsupported independence claim | Optional shadow starts from corrected production bases, remains diagnostic and cannot overwrite production. Text traces disclose shared ancestry and provisional credit |
++
++Final regression suite: **334 passed, 0 failed, 0 skipped**. All original 297
++tests are unchanged. Both complete headless reference pipelines finish with
++zero failed stages and no recorded errors. Full numerical and decision effects
++are in [phase2b4_reference_comparison.md](phase2b4_reference_comparison.md).
++
++## Resolution of the original F01 examples
++
++The prior audit identified confirmed computational overlap and unreconciled
++numerical paths; it explicitly did not prove that every child contribution was
++wholly redundant. This reassessment examines the actual additional properties
++rather than adopting the diagnostic downstream-removal ablation.
++
++- Cross plus **fragment fallback** is a confirmed category-B repeat. All three
++  positive fragment contribution paths and its extra weighted domain are now
++  withheld when cross already represents the overlap.
++- Cross plus **positive contour boundary**, focus and patch spatial are category
++  C relationships: connected contour geometry, regional intensity and endpoint
++  topology are separately measured additions. Their original contributions and
++  explicit compound conditions remain. They are not extra independent sources.
++- Local-support conversion appears once in the final edit term. Local support
++  is not also added directly to the suspicious total. The redundant fragment
++  input is removed before conversion; no second aggregate subtraction occurs.
++- Other single-signal multi-role weights, domain categories for retained genuine
++  findings, surface carry-forward and camera/provenance moderation have explicit
++  existing scoring roles or uncertain conditional value. No identical numerical
++  operation or demonstrably information-free representation remains identified
++  in those reviewed paths. Their effectiveness is an empirical question, not
++  permission to invent a discount or delete every shared-parent contribution.
++
++On this evidence, no **known category A/B numerical defect identified in the
++review remains uncorrected**. Full acceptance depends on these current source
++contracts; a future detector or changed classifier must revisit its equivalence
++contract and add appropriate regression coverage. The acceptance does not mean
++that arbitrary independently copied, unregistered summaries have authenticated
++observation identity: lacking a source contract, equality is insufficient to
++erase potentially distinct measurements.
++
++## Remaining limitations and roadmap consequence
++
++Conditional information gain, statistical correlations and the magnitude of
++existing multi-role effects remain unmeasured. Positive localization/contour
++credit is retained at the existing heuristic weights, not presented as a
++calibrated likelihood increment. Two reference images cannot establish tier
++accuracy, false-positive rates or statistical independence. These are genuinely
++empirical uncertainties under the task's category-D preservation rule.
++
++No detector output, scoring coefficient, detection/routing/mask threshold,
++confidence-policy definition, dependency or GUI/packaging behavior was changed.
++The audit's nonblocking overflow, inactive malformed-detail and unsupported
++partial-route issues are not resolved or concealed by this task.
++
++With correction #6 accepted on the reviewed source contracts, the original
++ten-correction roadmap has no remaining identified structural blocker. This
++targeted reassessment does not repeat the independent audits of the other nine
++corrections, and does not assert broader forensic validation. No commit or push
++was performed.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b4_numerical_deduplication.md
+@@ -0,0 +1,134 @@
++# Phase 2B.4 production numerical evidence deduplication
++
++Date: 2026-11-01. Classification and baseline readiness are recorded in
++[phase2b4_contribution_classification.md](phase2b4_contribution_classification.md).
++
++## Implementation
++
++`numerical_evidence.allocate_base_evidence` allocates raw status weights before
++reliability, penalty and aggregate calculations. It reuses `build_lineage` and
++the existing registry; there is no parallel ancestry graph or experimental
++weighting policy. `evidence_lineage.numerical_restatement_sources` adds one
++pattern-specific computational contract for the shared overlap fallback.
++
++The deterministic rules are:
++
++1. An identical summary object supplied under multiple keys earns one base
++   contribution. Prefer a registered key, then lexical order. Runtime object
++   addresses are never serialized. Equal-valued separate observations retain
++   credit because content equality alone does not establish source identity.
++2. A suspicious `possible_boundary_fragment_convergence` (or overlap-only
++   `partial_boundary_convergence`) is not another numerical measurement when
++   an active suspicious cross summary already represents that same overlap.
++   Keep both observations, but suppress the restated boundary base. Remove
++   only domain categories that no longer contain an eligible base contribution.
++   Preserve the existing 0.25 bonus coefficient and all other credited domains.
++3. The same fragment restatement is withheld from its 0.5 local-support term
++   and 0.5 fragment/cross edit term. `local_support_conversion` consumes corrected
++   support at the unchanged 0.18 coefficient. No duplicate subtraction occurs
++   after aggregation. A standalone observed fragment retains its single
++   representation; unavailable/non-supporting cross evidence cannot erase it.
++4. Registered pure-restatement descendants require an actually counted
++   ancestor in the same hypothesis scope and polarity. No new measurements are
++   inferred from missing parents. Existing compound-summary APIs may omit raw
++   parent summaries; their ancestry remains explicitly provisional.
++5. Contour-positive boundary findings, focus intensity measurements, spatial
++   alignment and patch topology retain their existing contributions. Sharing
++   ancestry, families or feature helper code alone never triggers suppression.
++
++The two affected component sites are intercepted by `add_fragment_component`.
++Their operation ledger retains the original operand as `raw_operand`, records
++an eligible operand of zero, and links a category-B allocation. The later
++reliability multipliers are recorded by `finalize_component_allocations`.
++Other component formulas and all their numerical coefficients remain intact.
++
++`hypothesis_engine.compute_base_scores` and `compute_scorecard` share the same
++allocation helper. The latter allocates once, derives totals and domain sets
++from eligible rows, computes the existing components, applies reliability and
++aggregate transformations, and validates the result before decision evaluation.
++No detector, confidence-policy definition, mask threshold or routing threshold
++was changed. The only decision-module edit corrects an obsolete trace statement
++that numerical scoring was unchanged.
++
++## Calculation audit and compatibility
++
++The existing version-2A calculation envelope is retained with additive fields:
++
++- `base_evidence[].weight`: original status weight, unchanged.
++- `base_evidence[].credited_weight`: eligible production weight, either the
++  original value or zero; no new fractional coefficient.
++- `numerical_deduplication`: version `2b4`, compact measurement ancestry,
++  classifications A–D, original/eligible/suppressed contributions, credited
++  representatives, missing dependencies, provisional relationships, component
++  allocations and raw/eligible base/domain reconciliation.
++
++Base allocation multipliers are 1.0 because they precede aggregate camera,
++geometry and photo-context attenuation. The existing aggregate ledger records
++those multipliers, penalties and floor exactly once. Base allocation rows are
++not asserted to be additive final-score attributions after a nonlinear floor.
++Component allocation rows record their actual later component multipliers.
++
++`scorecard_integrity.reconstruct_scorecard_calculation` independently consumes
++eligible base weights, replays eligible component operands and the existing
++aggregate formula. Its allocation validator rejects missing coverage,
++fractional replacements, mismatched suppression, mismatched domain accounting
++and altered component allocation records. Historical 2A JSON without these
++extensions still reconstructs. New consumers must use `credited_weight` when
++replaying new traces; the old raw status-only formula intentionally no longer
++describes corrected totals.
++
++The five-element `synthesize_overall` API, section snapshots, hypotheses and
++centralized policy interface are unchanged. Text reasoning persistence renders
++the production allocation separately from shadow diagnostics. It copies no
++large detector payloads. The optional shadow analyzer starts from eligible
++production base weights, so a duplicate cannot regain credit in the diagnostic
++comparison. Experimental overrides remain diagnostic only and cannot alter
++production, routing or confidence. Production corroboration gates still use
++their existing measurement-disjoint/compound semantics.
++
++## Verification
++
++**334 passed, 0 failed, 0 skipped** (`py -3.13 -m pytest -q --tb=short`, final run 3.67 s).
++All original 297 regressions are preserved; 37 focused cases were added in
++`tests/test_numerical_evidence.py`. The earlier new-test run exposed incorrect
++test assumptions about the existing tuple/policy schema and fragment compound
++arithmetic; those assertions were corrected after inspecting production code.
++No existing test was edited to obtain a pass.
++
++Coverage includes repeated identical observations, equal-valued distinct
++measurements, primary plus restatement, multiple restatement descendants,
++measured increments, provisional/unknown relationships, opposite polarities,
++missing inputs, rejected geometry, provenance with visual evidence, order and
++repeat determinism, controlled nonfinite inputs, source-diversity/shadow/policy
++integration, JSON/text persistence, independent arithmetic reconstruction,
++historical trace compatibility, and corrupted base/component ledger detection.
++Tests use synthetic observations and no new dependency.
++
++Both final full headless image runs passed independent arithmetic replay,
++unchanged-image hashes, repeated-summary equality and shadow/production equality.
++The reference comparison documents the score change and all unchanged decision
++gates. Existing TensorFlow Lite/MediaPipe initialization diagnostics appeared;
++neither image had a failed stage or recorded pipeline error.
++
++## Isolation and limits
++
++Entry files and Git inventory are preserved under ignored
++`analyzed/phase2b4_validation/inherited_baseline/`, with a SHA-256 manifest.
++The phase-only patch is `analyzed/phase2b4_validation/phase2b4_only.patch`.
++New source: `numerical_evidence.py`; new regression file and four phase reports.
++Changes to inherited files: `hypothesis_engine.py`, `evidence_lineage.py`,
++`scorecard_integrity.py`, `evidence_dependency_analysis.py`,
++`reasoning_persistence.py`, and one trace-description line in `decision_logic.py`.
++No other inherited file should differ from the entry snapshot.
++
++Uncertain surface carry-forward, camera multi-role moderation, provenance/OSINT
++claim overlap and conditional value of preserved localization remain empirical
++questions. Their existing coefficients are retained provisionally. The allocator
++does not infer observation identity across independently copied, unregistered
++payloads without a source contract. It does not establish statistical independence,
++accuracy or calibrated probabilities. The acceptance audit's unrelated overflow
++and malformed-input/internal-route limitations remain outside this change.
++
++No staging, commit, push, merge, tag, stash, reset, deletion, detector change,
++dependency update, packaging or GUI change was performed. `test_images/` and
++validation artifacts remain ignored.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b4_reference_comparison.md
+@@ -0,0 +1,101 @@
++# Phase 2B.4 reference-image comparison
++
++Both original images ran through `SignalLensController.run_analysis` in
++`subject_based` mode, followed by summary synthesis and text/HTML/JSON reasoning
++persistence. Final runner and outputs are under ignored
++`analyzed/phase2b4_validation/`; the runner is `run_reference_validation.py`,
++with results in `reference_results.json`. Before values come from the preserved
++final acceptance-audit traces. Historical outputs were not rewritten.
++
++| Metric | Instagram before | Instagram after | Midjourney before | Midjourney after |
++| --- | --- | --- | --- | --- |
++| Suspicious score | 20.47705 | 20.47705 | 6.0375 | 5.4 |
++| Benign score | 2.25 | 2.25 | 1.5 | 1.5 |
++| Raw/eligible suspicious base weight | 20.5 / 20.5 | 20.5 / 20.5 | 8 / 8 | 8 / 7.5 |
++| Suspicious domain bonus | 2.5 | 2.5 | 1 | 0.75 |
++| Base suspicious total | 23 | 23 | 9 | 8.25 |
++| Final additive boosts | 2.973 | 2.973 | 0.75 | 0.75 |
++| Camera multiplier | 0.85 | 0.85 | 0.85 | 0.85 |
++| Caution penalty | 1.6 | 1.6 | 2.25 | 2.25 |
++| Geometry/photo multipliers | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 |
++| Deduplicated base rows | None | None | None | Fragmented boundary: 0.5 |
++| Deduplicated component rows | None | None | None | Fragment local 0.5 and fragment/cross edit 0.5 before reliability |
++| Remaining provisional scored relationships | Not enumerated by production | 6 | Not enumerated by production | 1 |
++| Primary hypothesis | Localized editing | Localized editing | Synthetic origin | Synthetic origin |
++| Confidence | High | High | Medium | Medium |
++| Completed stages | 23 | 23 | 14 | 14 |
++| Unavailable / skipped stages | 0 / 0 | 0 / 0 | 1 / 8 | 1 / 8 |
++| Failed stages / recorded errors | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
++
++The provisional relationship count names scored composites with uncalibrated
++marginal value or incomplete ancestry, not a count of known duplicate defects.
++Instagram's entries are boundary, boundary focus, cross signal, patch spatial,
++material realism and process asymmetry. Midjourney's is cross signal. Related
++primary extraction families also have the empirical limits in the classification
++report; this count is not an exhaustive covariance inventory.
++
++## Instagram
++
++`possible_foreground_background_processing_mismatch` requires the positive
++contour branch of `classify_boundary_convergence`. Contour extent/elongation/fill
++adds information beyond overlap. Boundary focus measures mask-relative intensity;
++patch spatial measures retained-pair topology. Full credit is preserved:
++
++| Relevant section | Raw base | Eligible base | Reason |
++| --- | ---: | ---: | --- |
++| Cross signal | 0.5 | 0.5 | Measured overlap relationship |
++| Boundary | 3 | 3 | Positive measured contour property |
++| Boundary focus | 1.5 | 1.5 | Regional intensity localization |
++| Patch similarity | 1.5 | 1.5 | Retained matches |
++| Patch spatial | 1.5 | 1.5 | Endpoint topology/localization |
++
++Other base/component contributions remain unchanged. The aggregate reconstructs
++as `(23 + 2.973) * 0.85 - 1.6 = 20.47705`.
++All route match states, primary hypothesis and policy rule
++`localized.reliable_boundary_compound` are unchanged. No new safeguard fires.
++The retained selected person mask remains reliable; complete coverage is preserved.
++
++## Midjourney
++
++The observed weak boundary finding is the fragmented-overlap fallback. It does
++not pass the positive contour criterion. Its overlap is already counted by the
++medium cross section (1.5). The 0.5 boundary base is withheld, and `boundary`
++ceases to supply an extra weighted domain. Metadata, frequency and patch
++contributions retain full weight; the unverified declaration remains separate
++from localized-processing evidence.
++
++The 0.5 fragment local-support term and 0.5 fragment/cross edit term are also
++withheld before mechanism reliability. Raw local support changes from 1.5 to
++1.0; local-support conversion changes from 0.27 to 0.18, while the separate 0.5
++fragment/cross boost is removed. Boundary reliability is zero in this image,
++so these mechanism terms were already zero in the final score. They contribute
++no additional final-score difference here, but the focused reliable-geometry
++test proves the corrected mechanism behavior when reliability is nonzero.
++
++The final difference is exactly `(0.5 + 0.25) * 0.85 = 0.6375`.
++Before: `(9 + 0.75) * 0.85 - 2.25 = 6.0375`.
++After: `(8.25 + 0.75) * 0.85 - 2.25 = 5.4` (floating representation
++`5.3999999999999995`). No threshold was changed or conclusion forced.
++
++All route match states remain unchanged. The primary hypothesis remains
++synthetic origin from the unverified embedded-generation declaration; the policy
++rule remains `synthetic.unverified_generation_declaration`, Medium. Person-mask
++reliability remains low, with one unavailable regional mask stage and eight
++dependent regional skips; independent stages continue. No new safeguard fires.
++
++## Reproducibility and arithmetic
++
++The final runner independently replays eligible base rows, domain bonuses,
++component operations, reliability operations and aggregate transformations,
++without calling the production reconstruction helper. Both cards reconcile.
++Each image's repeated reasoning dictionaries are equal. Enabling shadow analysis
++leaves scorecard, decisions, hypotheses, confidence policy and corroboration audit
++equal to normal production output. The final tier appears in text and HTML.
++
++Image SHA-256 values matched before/after:
++
++- Instagram: `1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9`.
++- Midjourney: `08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9`.
++
++These two images establish integration behavior, not empirical accuracy or
++independence. Neither diagnostic ablation score was adopted.
+--- a/evidence_dependency_analysis.py
++++ b/evidence_dependency_analysis.py
+@@ -98,14 +98,15 @@
+         stable_rule_id=sha256(op['reason'].encode('utf-8')).hexdigest()[:12]
+         rows.append({'contribution_id':f'component:{op["field"]}:{op["operation"]}:{stable_rule_id}',
+             'ledger_index':index,
+-            'field':op['field'],'operation':op['operation'],'raw_contribution':op['operand'],
++            'field':op['field'],'operation':op['operation'],'raw_contribution':op.get('raw_operand', op['operand']),
+             'reliability_adjusted_contribution':op['operand']*factor if op['operation']=='add' and not later_floor else None,
+             'later_component_multiplier':factor,'nonlinear_floor_follows':later_floor,
+             'evidence_ids':ids,'measurement_ancestry':tuple(sorted({a for key in ids for a in nodes[key].measurement_ancestry})),
+             'condition':op['reason'],'unknown_signal_aliases':unknown,
+             'control_dependencies':('evidence:region_masks',) if op['reason'] in {'boundary_reliability','boundary_reliability_caution'} else (),
+-            'diagnostic_contribution':op['operand'],'difference':0.0,
+-            'reason':'Existing explicit arithmetic/control policy retained; not another independent evidence credit.'})
++            'diagnostic_contribution':op['operand'],'difference':op['operand']-op.get('raw_operand', op['operand']),
++            'reason':('Production numerical restatement suppression already applied; no shadow reallocation.' if 'numerical_allocation' in op
++                      else 'Existing explicit arithmetic/control policy retained; not another independent evidence credit.')})
+     if len({r['contribution_id'] for r in rows})!=len(rows):
+         raise LineageError('Duplicate component-rule identifier; review operation lineage.')
+     return rows
+@@ -143,7 +144,7 @@
+     groups={
+         'determine_confidence.strong_signals':strong,
+         '_boundary_corroborated':boundary,
+-        'suspicious_domain_bonus':['evidence:'+r['section'] for r in calc['base_evidence'] if r['polarity']=='suspicious'],
++        'suspicious_domain_bonus':['evidence:'+r['section'] for r in calc['base_evidence'] if r['polarity']=='suspicious' and r.get('credited_weight', r['weight'])>0],
+         'synthetic_material_asymmetry_conjunction':['evidence:'+k for k,f in (('subject_material_realism','material_realism_strong'),('subject_process_asymmetry','subject_process_asymmetry_strong')) if getattr(ds,f,False)],
+         'synthetic_fft_patch_conjunction':['evidence:'+k for k,f in (('fft','fft_structured'),('patch_similarity','patch_structured')) if getattr(ds,f,False)],
+         'camera_convergence_bonus':['evidence:'+k for k,f in (('metadata','metadata_camera_like'),('sensor_origin','camera_like_support'),('cfa_demosaic','cfa_camera_like_support')) if getattr(ds,f,False)],
+@@ -187,7 +188,7 @@
+     records=build_lineage(sections,context=context)
+     nodes={r.evidence_id:r for r in records}
+     contributions=[Contribution('base:'+r['section'],('evidence:'+r['section'],),'base_'+r['polarity'],
+-        r['weight'],r['polarity'],nodes['evidence:'+r['section']].hypotheses,r['domain']) for r in calc['base_evidence']]
++        r.get('credited_weight', r['weight']),r['polarity'],nodes['evidence:'+r['section']].hypotheses,r['domain']) for r in calc['base_evidence']]
+     allocated=allocate_marginal(contributions,records,experimental=experimental)
+     operations=_operation_records(calc,nodes,ds)
+     unknown_operations=[r['contribution_id'] for r in operations if r['unknown_signal_aliases'] or
+@@ -211,7 +212,7 @@
+     role_map={}
+     for h in hypotheses:
+         role_map[h.hypothesis_id]={role:list(getattr(h,role)) for role in ('supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence')}
+-    scored_ids=['evidence:'+r['section'] for r in calc['base_evidence']]
++    scored_ids=['evidence:'+r['section'] for r in calc['base_evidence'] if r.get('credited_weight', r['weight'])>0]
+     return {'mode':'shadow','lineage_version':'2b2','status':'partial' if unknown_operations or unknown_base else 'complete','production_score_unchanged':True,
+         'policy':'structural_restatement_only' if experimental is None else 'experimental:'+experimental.name,
+         'lineage':lineage_to_json(records),'families':families,'contributions':allocated,
+@@ -220,7 +221,7 @@
+             'known_scoring_indicator_count':sum(all(nodes[e].known for e in c.evidence_ids) for c in contributions),
+             'unknown_base_credit_ids':unknown_base,
+             'unknown_component_rule_ids':unknown_operations},
+-        'domain_accounting':{'production_suspicious_bonus':calc['base_suspicious']-fsum(r['weight'] for r in calc['base_evidence'] if r['polarity']=='suspicious'),
++        'domain_accounting':{'production_suspicious_bonus':calc['base_suspicious']-fsum(r.get('credited_weight', r['weight']) for r in calc['base_evidence'] if r['polarity']=='suspicious'),
+             'shadow_suspicious_bonus':aggregates['base_suspicious']-fsum(r['diagnostic_contribution'] for r in allocated if r['polarity']=='suspicious'),
+             'policy':'Existing 0.25 per additional credited domain retained; families are not substituted for domains.'},
+         'shared_ancestry':_corroboration(scored_ids,nodes),
+--- a/evidence_lineage.py
++++ b/evidence_lineage.py
+@@ -159,6 +159,21 @@
+ 
+ 
+ REGISTRY = validate_registry(_SPECS)
++
++
++def numerical_restatement_sources(key, pattern):
++    """Pattern-specific equivalence, not a family-wide suppression rule.
++
++    The fragment/partial fallback in classify_boundary_convergence only tests
++    existing overlap thresholds. The contour-positive branch adds measured
++    topology and deliberately is NOT in this contract. Cross and boundary are
++    sibling consumers of the same overlap, not independent extractions.
++    """
++    if key == 'boundary' and pattern in {
++        'possible_boundary_fragment_convergence', 'partial_boundary_convergence',
++    }:
++        return ('cross_signal',)
++    return ()
+ 
+ 
+ def build_lineage(sections, *, context=None, registry=REGISTRY):
+--- a/hypothesis_engine.py
++++ b/hypothesis_engine.py
+@@ -10,6 +10,7 @@
+ from typing import Optional
+ # local imports to avoid circular dependencies
+ from gui_semantics import ModuleSummary
++from numerical_evidence import allocate_base_evidence, add_fragment_component, finalize_component_allocations
+ from metadata_evidence import (
+     ProvenanceState, MISSING_METADATA_PATTERNS, metadata_provenance_state,
+ )
+@@ -311,15 +312,26 @@
+ 
+ def compute_base_scores(sections: dict[str, ModuleSummary], ) -> tuple[float, float, set[str], set[str]]:
+     validate_score_inputs(sections)
+-    suspicious_sections = [s for s in sections.values() if is_suspicious(s)]
+-    benign_sections = [s for s in sections.values() if is_benign(s)]
+-    suspicious_score = fsum(weight(s) for s in suspicious_sections)
+-    benign_score = fsum(weight(s) for s in benign_sections)
+-    suspicious_domains = {s.domain for s in suspicious_sections if getattr(s, "domain", None)}
+-    benign_domains = {s.domain for s in benign_sections if getattr(s, "domain", None)}
+-    suspicious_score += max(0, len(suspicious_domains) - 1) * 0.25
+-    benign_score += max(0, len(benign_domains) - 1) * 0.25
+-    return suspicious_score, benign_score, suspicious_domains, benign_domains
++    _, audit = _allocate_base_scores(sections)
++    return _base_totals(audit)
++
++
++def _allocate_base_scores(sections):
++    rows = [
++        {"section": key, "status": section.status, "polarity": section.polarity,
++         "domain": section.domain, "weight": weight(section)}
++        for key, section in sorted(sections.items()) if is_suspicious(section) or is_benign(section)
++    ]
++    return allocate_base_evidence(sections, rows)
++
++
++def _base_totals(audit):
++    totals = audit['aggregate_reconciliation']
++    return (
++        totals['suspicious']['credited_base_weight'] + totals['suspicious']['credited_domain_bonus'],
++        totals['benign']['credited_base_weight'] + totals['benign']['credited_domain_bonus'],
++        set(totals['suspicious']['credited_domains']), set(totals['benign']['credited_domains']),
++    )
+ 
+ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext, ev: EvidenceSnapshot, ds: DerivedSignals,) -> ScoreCard:
+     validate_score_inputs(sections)
+@@ -335,12 +347,13 @@
+     # --------------------------------------------------
+     # Base scores from section status/polarity
+     # --------------------------------------------------
++    base_evidence, numerical_audit = _allocate_base_scores(sections)
+     (
+         card.suspicious_score,
+         card.benign_score,
+         card.suspicious_domains,
+         card.benign_domains,
+-    ) = compute_base_scores(sections)
++    ) = _base_totals(numerical_audit)
+     base_suspicious, base_benign = card.suspicious_score, card.benign_score
+     # --------------------------------------------------
+     # Helpers
+@@ -381,7 +394,7 @@
+     if ds.strong_local_edit:
+         ledger.add('local_edit_support_score', 2.0, 'ds.strong_local_edit')
+     elif ds.fragmented_local_edit:
+-        ledger.add('local_edit_support_score', 0.5, 'otherwise / ds.fragmented_local_edit')
++        add_fragment_component(ledger, numerical_audit, 'local_edit_support_score', 0.5, 'otherwise / ds.fragmented_local_edit')
+     if ds.strong_cross:
+         ledger.add('local_edit_support_score', 1.0, 'ds.strong_cross')
+     if boundary_strong:
+@@ -468,7 +481,7 @@
+     elif boundary_stack_medium:
+         ledger.add('local_edit_support_score', 0.60, 'otherwise / boundary_stack_medium')
+     if ds.fragmented_local_edit and ds.strong_cross:
+-        ledger.add('edit_boost', 0.50, 'ds.fragmented_local_edit and ds.strong_cross')
++        add_fragment_component(ledger, numerical_audit, 'edit_boost', 0.50, 'ds.fragmented_local_edit and ds.strong_cross')
+     if ds.subject_boundary_strong and (ds.strong_cross or ds.fragmented_local_edit):
+         ledger.add('edit_boost', 0.75, 'ds.subject_boundary_strong and (ds.strong_cross or ds.fragmented_local_edit)')
+     elif ds.subject_boundary_medium and (ds.strong_cross or ds.fragmented_local_edit):
+@@ -690,14 +703,12 @@
+     card.synthetic_supported_by_other_domains = (
+         ds.metadata_synthetic or ds.osint_ai_context or ds.material_realism_strong
+     )
++    finalize_component_allocations(numerical_audit, ledger.operations)
+     card.calculation = {
+         "calculation_version": "2a", "status": "valid",
+         "base_suspicious": base_suspicious, "base_benign": base_benign,
+-        "base_evidence": [
+-            {"section": key, "status": section.status, "polarity": section.polarity,
+-             "domain": section.domain, "weight": weight(section)}
+-            for key, section in sorted(sections.items()) if is_suspicious(section) or is_benign(section)
+-        ],
++        "base_evidence": base_evidence,
++        "numerical_deduplication": numerical_audit,
+         "domain_bonus": 0.25,
+         "component_operations": ledger.operations,
+         "raw_operation_count": raw_operation_count,
+--- /dev/null
++++ b/numerical_evidence.py
+@@ -0,0 +1,154 @@
++"""Production base-credit identity/restatement correction, without reweighting.
++
++Reuse the existing lineage graph. Shared ancestry alone never suppresses new
++localization or a related measurement. Component formulas keep their explicit
++scoring roles; this allocator does not treat them as independent observations.
++"""
++from math import fsum
++
++from evidence_lineage import (
++    Addition, Kind, build_lineage, numerical_restatement_sources,
++)
++from scorecard_integrity import ScorecardIntegrityError, finite_number
++
++
++def allocate_base_evidence(sections, raw_rows, *, registry=None):
++    """Return copied effective base rows and a deterministic allocation ledger.
++
++    Object identity proves duplicate representation in this call. Equal-valued
++    distinct objects do not prove observation identity. No IDs derived from
++    memory addresses are persisted. Registered keys win identity ties.
++    """
++    lineage = build_lineage(sections, **({'registry': registry} if registry is not None else {}))
++    nodes = {r.evidence_id.removeprefix('evidence:'): r for r in lineage}
++    raw_rows = tuple(raw_rows)
++    rows = {r['section']: dict(r) for r in raw_rows}
++    if len(rows) != len(raw_rows):
++        raise ScorecardIntegrityError('Duplicate base contribution identifiers.')
++    representatives = {}
++    for key in sorted(rows, key=lambda k: (not nodes[k].known, k)):
++        representatives.setdefault(id(sections[key]), key)
++
++    def ancestors(key):
++        node = nodes[key]
++        result = set()
++        for reference in node.direct_dependencies + node.optional_dependencies:
++            parent = reference.removeprefix('evidence:')
++            result.add(parent)
++            result.update(ancestors(parent))
++        return result
++
++    allocations = {}
++    for key in sorted(rows, key=lambda k: (len(ancestors(k)), k)):
++        row, node = rows[key], nodes[key]
++        raw = finite_number(row['weight'], 'base:' + key)
++        final, category, credited_by = raw, 'D', []
++        reason = 'Related or unregistered observation retained provisionally; no independence claim.'
++        unresolved = not node.known or node.kind != Kind.PRIMARY
++        if node.known and node.kind == Kind.PRIMARY:
++            category, reason = 'C', 'Distinct primary measurement retained at its existing status weight.'
++        elif node.addition in {Addition.LOCALIZATION, Addition.RELATIONSHIP}:
++            category, reason = 'C', 'Additional measured localization/relationship retained; shared ancestry is not redundancy.'
++        elif key in {'boundary', 'subject_material_realism'} and node.known:
++            category, reason = 'C', 'Additional contour/material properties retained under the existing scoring rules.'
++
++        representative = representatives[id(sections[key])]
++        sources = numerical_restatement_sources(key, sections[key].pattern)
++        # A registered pure restatement can be added without a second lineage
++        # system. It must have an actually credited ancestor in the same scope.
++        if node.addition == Addition.RESTATEMENT:
++            sources = tuple(sorted(ancestors(key)))
++        for source in sources:
++            source_row = rows.get(source)
++            source_node = nodes.get(source)
++            source_final = allocations.get(source, {}).get('credited_contribution', 0.0)
++            if source == 'cross_signal':
++                # Sibling contract above: its active overlap summary is the
++                # canonical counted representation, even if parents were omitted.
++                source_final = source_row['weight'] if source_row else 0.0
++                if not source_row or sections[source].pattern not in {'partial_hotspot_convergence', 'strong_hotspot_convergence'}:
++                    continue
++            if (source_row and source_final > 0 and source_row['polarity'] == row['polarity']
++                    and source_node.hypotheses == node.hypotheses
++                    and set(node.measurement_ancestry) <= set(source_node.measurement_ancestry)):
++                credited_by.append('evidence:' + source)
++        if representative != key:
++            final, category, unresolved = 0.0, 'A', False
++            credited_by = ['evidence:' + representative]
++            reason = 'Identical summary instance already represented by its canonical section key.'
++        elif credited_by:
++            final, category, unresolved = 0.0, 'B', False
++            reason = 'Existing overlap/measurement already credited; this representation adds no positive measured property.'
++        elif node.addition == Addition.RESTATEMENT and node.missing_dependencies:
++            final, category, unresolved = 0.0, 'B', False
++            reason = 'Pure restatement has no available upstream measurement to credit.'
++        elif sources:
++            category, unresolved = 'B', False
++            reason = 'Single overlap/measurement representation retained; no other counted representation exists in this scope.'
++        if node.missing_dependencies and final:
++            unresolved = True
++            reason += ' Raw parent summaries are missing; the observed summary contract remains provisional.'
++        row['credited_weight'] = final
++        allocations[key] = {
++            'evidence_id': 'evidence:' + key, 'section': key,
++            'raw_contribution': raw, 'measurement_ancestry': list(node.measurement_ancestry),
++            'previously_credited_evidence': sorted(credited_by),
++            'additional_information': node.addition.value,
++            'classification': category, 'eligible_marginal_contribution': final,
++            'credited_contribution': final, 'suppressed_contribution': raw - final,
++            'reliability_multiplier': 1.0, 'final_adjusted_contribution': final,
++            'adjustment_stage': 'base_before_aggregate_attenuation_penalties_and_floor',
++            'hypotheses': list(node.hypotheses), 'polarity': row['polarity'],
++            'missing_dependencies': list(node.missing_dependencies),
++            'unresolved': unresolved, 'reason': reason,
++        }
++    effective = [rows[key] for key in sorted(rows)]
++    audit = {'version': '2b4', 'contributions': [allocations[key] for key in sorted(allocations)],
++             'unresolved_relationships': [allocations[key]['evidence_id'] for key in sorted(allocations)
++                                          if allocations[key]['unresolved']],
++             'aggregate_reconciliation': {}}
++    for polarity in ('suspicious', 'benign'):
++        selected = [r for r in effective if r['polarity'] == polarity]
++        original_domains = {r['domain'] for r in selected if r['domain']}
++        credited_domains = {r['domain'] for r in selected if r['domain'] and r['credited_weight'] > 0}
++        audit['aggregate_reconciliation'][polarity] = {
++            'raw_base_weight': fsum(r['weight'] for r in selected),
++            'credited_base_weight': fsum(r['credited_weight'] for r in selected),
++            'suppressed_base_weight': fsum(r['weight'] - r['credited_weight'] for r in selected),
++            'raw_domain_bonus': max(0, len(original_domains) - 1) * 0.25,
++            'credited_domain_bonus': max(0, len(credited_domains) - 1) * 0.25,
++            'credited_domains': sorted(credited_domains),
++        }
++    return effective, audit
++
++
++def add_fragment_component(ledger, audit, field, operand, reason):
++    """Withhold the same confirmed restatement in its mechanism paths too.
++
++    Local-support conversion then consumes the corrected support naturally;
++    no post-aggregate subtraction or new conversion coefficient is needed.
++    """
++    duplicate = any(r['section'] == 'boundary' and r['classification'] == 'B'
++                    and r['suppressed_contribution'] > 0 for r in audit['contributions'])
++    ledger.add(field, 0.0 if duplicate else operand, reason)
++    if duplicate:
++        index = len(ledger.operations) - 1
++        ledger.operations[index]['raw_operand'] = operand
++        ledger.operations[index]['numerical_allocation'] = 'B:overlap_restatement'
++        audit.setdefault('component_allocations', []).append({
++            'ledger_index': index, 'field': field, 'evidence_id': 'evidence:boundary',
++            'classification': 'B', 'raw_contribution': operand,
++            'credited_contribution': 0.0, 'suppressed_contribution': operand,
++            'reliability_multiplier': 1.0, 'final_adjusted_contribution': 0.0,
++            'reason': 'Fragment fallback adds no positive measurement beyond the credited cross-overlap; mechanism restatement withheld.',
++        })
++
++
++def finalize_component_allocations(audit, operations):
++    for row in audit.get('component_allocations', []):
++        factor = 1.0
++        for later in operations[row['ledger_index'] + 1:]:
++            if later['field'] == row['field'] and later['operation'] == 'multiply':
++                factor *= later['operand']
++        row['reliability_multiplier'] = factor
++        row['final_adjusted_contribution'] = row['credited_contribution'] * factor
+--- a/reasoning_persistence.py
++++ b/reasoning_persistence.py
+@@ -350,6 +350,21 @@
+             if key in calculation:
+                 _add_kv(lines, key, calculation[key])
+         _add_list(lines, "Calculation Errors", calculation.get("errors"))
++        numerical = calculation.get('numerical_deduplication')
++        if numerical:
++            _add_heading(lines, 'Production Numerical Evidence Allocation')
++            _add_kv(lines, 'Version', numerical.get('version'))
++            _add_kv(lines, 'Base/domain reconciliation', numerical.get('aggregate_reconciliation'))
++            for item in numerical.get('contributions', []):
++                lines.append(
++                    f"- {item['evidence_id']} [{item['classification']}]: "
++                    f"raw={item['raw_contribution']}; credited={item['credited_contribution']}; "
++                    f"suppressed={item['suppressed_contribution']}; {item['reason']}"
++                )
++            _add_list(lines, 'Unresolved numerical relationships', numerical.get('unresolved_relationships'))
++            for item in numerical.get('component_allocations', []):
++                lines.append(f"- {item['field']} / {item['evidence_id']}: raw={item['raw_contribution']}; suppressed={item['suppressed_contribution']}; multiplier={item['reliability_multiplier']}; {item['reason']}")
++            lines.append('Base allocations precede aggregate attenuation, penalties and floor; shared ancestry does not establish independence.')
+         for operation in calculation.get("component_operations", []):
+             lines.append(f"- {operation['field']} {operation['operation']} {operation['operand']}: {operation['reason']}")
+         lines.append("")
+--- a/scorecard_integrity.py
++++ b/scorecard_integrity.py
+@@ -159,6 +159,7 @@
+         raise ScorecardIntegrityError("Invalid base evidence domain or polarity.")
+     if calculation.get("domain_bonus") != 0.25:
+         raise ScorecardIntegrityError("Unexpected domain-bonus coefficient.")
++    validate_numerical_allocation(calculation)
+     bases = {}
+     for polarity in ("suspicious", "benign"):
+         selected = [r for r in rows if r["polarity"] == polarity]
+@@ -166,8 +167,8 @@
+             if row["status"] not in ACTIVE_STATUSES or row["weight"] != STATUS_WEIGHTS[row["status"]]:
+                 raise ScorecardIntegrityError("Base evidence status/weight mismatch.")
+             finite_number(row["weight"], "base evidence weight")
+-        domains = {r["domain"] for r in selected if r["domain"]}
+-        bases[polarity] = fsum(r["weight"] for r in selected) + max(0, len(domains) - 1) * calculation["domain_bonus"]
++        domains = {r["domain"] for r in selected if r["domain"] and r.get('credited_weight', r['weight']) > 0}
++        bases[polarity] = fsum(r.get('credited_weight', r['weight']) for r in selected) + max(0, len(domains) - 1) * calculation["domain_bonus"]
+     values = replay_components(calculation["component_operations"])
+     transforms = calculation["aggregate_transforms"]
+     for name in ("camera_multiplier", "geometry_multiplier", "photo_context_multiplier"):
+@@ -183,6 +184,72 @@
+     for name, value in values.items():
+         finite_number(value, name)
+     return values
++
++
++def validate_numerical_allocation(calculation):
++    """Independently reconcile 2B.4 allocations; historical 2A still replays."""
++    rows = calculation['base_evidence']
++    audit = calculation.get('numerical_deduplication')
++    if audit is None:
++        if any(r.get('credited_weight', r['weight']) != r['weight'] for r in rows):
++            raise ScorecardIntegrityError('Adjusted base credit requires a numerical allocation audit.')
++        return
++    if audit.get('version') != '2b4':
++        raise ScorecardIntegrityError('Unknown numerical allocation version.')
++    allocations = audit['contributions']
++    by_key = {a['section']: a for a in allocations}
++    if len(by_key) != len(allocations) or set(by_key) != {r['section'] for r in rows}:
++        raise ScorecardIntegrityError('Numerical allocation coverage/identity mismatch.')
++    for row in rows:
++        a = by_key[row['section']]
++        raw = finite_number(a['raw_contribution'], 'raw base credit')
++        credit = finite_number(a['credited_contribution'], 'credited base credit')
++        suppressed = finite_number(a['suppressed_contribution'], 'suppressed base credit')
++        if (a['evidence_id'] != 'evidence:' + row['section'] or raw != row['weight']
++                or credit != row.get('credited_weight') or credit not in (0.0, raw)
++                or suppressed != raw - credit or a['classification'] not in {'A', 'B', 'C', 'D'}
++                or (suppressed > 0 and a['classification'] not in {'A', 'B'})
++                or a['eligible_marginal_contribution'] != credit
++                or a['reliability_multiplier'] != 1.0 or a['final_adjusted_contribution'] != credit
++                or a['polarity'] != row['polarity'] or not a['reason']):
++            raise ScorecardIntegrityError('Numerical allocation does not reconcile with raw/eligible base credit.')
++    unresolved = [a['evidence_id'] for a in allocations if a['unresolved']]
++    if audit['unresolved_relationships'] != unresolved:
++        raise ScorecardIntegrityError('Unresolved numerical relationships do not reconcile.')
++    component_rows = audit.get('component_allocations', [])
++    operations = calculation['component_operations']
++    expected_indices = [i for i, op in enumerate(operations) if 'numerical_allocation' in op]
++    if [r['ledger_index'] for r in component_rows] != expected_indices:
++        raise ScorecardIntegrityError('Component allocation coverage mismatch.')
++    for row in component_rows:
++        op = operations[row['ledger_index']]
++        factor = 1.0
++        for later in operations[row['ledger_index'] + 1:]:
++            if later['field'] == row['field'] and later['operation'] == 'multiply':
++                factor *= later['operand']
++        boundary = by_key.get('boundary', {})
++        if (boundary.get('classification') != 'B' or boundary.get('suppressed_contribution', 0) <= 0
++                or op['operation'] != 'add' or op['operand'] != 0
++                or row['field'] != op['field'] or row['classification'] != 'B'
++                or row['raw_contribution'] != op['raw_operand']
++                or row['raw_contribution'] != row['suppressed_contribution']
++                or row['credited_contribution'] != 0 or row['final_adjusted_contribution'] != 0
++                or row['reliability_multiplier'] != factor):
++            raise ScorecardIntegrityError('Component numerical allocation mismatch.')
++    for polarity in ('suspicious', 'benign'):
++        selected = [r for r in rows if r['polarity'] == polarity]
++        raw_domains = {r['domain'] for r in selected if r['domain']}
++        domains = {r['domain'] for r in selected if r['domain'] and r['credited_weight'] > 0}
++        expected = {
++            'raw_base_weight': fsum(r['weight'] for r in selected),
++            'credited_base_weight': fsum(r['credited_weight'] for r in selected),
++            'suppressed_base_weight': fsum(r['weight'] - r['credited_weight'] for r in selected),
++            'raw_domain_bonus': max(0, len(raw_domains) - 1) * .25,
++            'credited_domain_bonus': max(0, len(domains) - 1) * .25,
++            'credited_domains': sorted(domains),
++        }
++        if audit['aggregate_reconciliation'][polarity] != expected:
++            raise ScorecardIntegrityError('Numerical base/domain reconciliation mismatch.')
+ 
+ 
+ def validate_scorecard(card) -> None:
+@@ -216,7 +283,7 @@
+         if not isclose(value, raw[name], rel_tol=REL_TOL, abs_tol=ABS_TOL):
+             raise ScorecardIntegrityError(f"Raw {name} does not reconcile.")
+     for polarity in ("suspicious", "benign"):
+-        domains = {r["domain"] for r in calc["base_evidence"] if r["polarity"] == polarity and r["domain"]}
++        domains = {r["domain"] for r in calc["base_evidence"] if r["polarity"] == polarity and r["domain"] and r.get('credited_weight', r['weight']) > 0}
+         if getattr(card, f"{polarity}_domains") != domains:
+             raise ScorecardIntegrityError(f"{polarity} domains do not match available evidence.")
+     adjustments = calc["reliability_adjustments"]
+--- /dev/null
++++ b/tests/test_numerical_evidence.py
+@@ -0,0 +1,273 @@
++"""Production numerical identity/restatement allocation and independent replay."""
++from copy import deepcopy
++import json
++from math import fsum
++
++import pytest
++
++import decision_logic as logic
++from evidence_lineage import Addition, EvidenceSpec, Family, Kind, validate_registry
++from numerical_evidence import allocate_base_evidence
++from reasoning_persistence import build_reasoning_trace_text
++from scorecard_integrity import ScorecardIntegrityError, reconstruct_scorecard_calculation, validate_scorecard
++from test_reasoning import metadata, section
++from test_scorecard_integrity import boundary_sections, calculate
++
++
++def overlap_sections():
++    data = boundary_sections()
++    data['boundary'] = section('boundary', 'possible_boundary_fragment_convergence', status='weak')
++    data.update({key: section(key, 'inconclusive', status='inconclusive', polarity='neutral')
++                 for key in ('ela', 'noise')})
++    return data
++
++
++def allocations(card):
++    return {a['section']: a for a in card.calculation['numerical_deduplication']['contributions']}
++
++
++@pytest.mark.parametrize('polarity', ['suspicious', 'benign'])
++def test_identical_observation_repeated_in_production_gets_one_base_credit(polarity):
++    observation = section('measurement', 'observed', polarity=polarity)
++    single = calculate({'one': observation})
++    repeated = calculate({'three': observation, 'one': observation, 'two': observation})
++    assert repeated.suspicious_score == single.suspicious_score
++    assert repeated.benign_score == single.benign_score
++    assert sum(a['credited_contribution'] for a in allocations(repeated).values()) == 3
++    assert sorted(a['classification'] for a in allocations(repeated).values()) == ['A', 'A', 'D']
++
++
++def test_registered_key_wins_alias_identity_without_affecting_real_primary():
++    primary = section('sensor', 'camera_like_acquisition_supported', polarity='benign')
++    card = calculate({'aaa_alias': primary, 'sensor_origin': primary})
++    assert allocations(card)['sensor_origin']['credited_contribution'] == 3
++    assert allocations(card)['aaa_alias']['suppressed_contribution'] == 3
++    assert card.benign_score == 3
++
++
++def test_equal_valued_distinct_measurements_are_not_deduplicated_by_content():
++    first = section('measurement', 'observed')
++    card = calculate({'one': first, 'two': deepcopy(first)})
++    assert card.suspicious_score == 6
++    assert all(a['credited_contribution'] == 3 for a in allocations(card).values())
++
++
++def test_fragment_restatement_and_its_domain_are_suppressed_in_public_synthesis():
++    data = overlap_sections()
++    output = logic.synthesize_overall(data)
++    assert len(output) == 5
++    card = calculate(data)
++    audit = allocations(card)
++    assert audit['boundary']['classification'] == 'B'
++    assert audit['boundary']['raw_contribution'] == .5
++    assert audit['boundary']['credited_contribution'] == 0
++    assert audit['boundary']['previously_credited_evidence'] == ['evidence:cross_signal']
++    assert card.calculation['base_suspicious'] == 3
++    assert card.suspicious_domains == {'cross'}
++    assert output[4]['scorecard']['suspicious_score'] == card.suspicious_score
++    # The same restatement cannot re-enter via mechanism or conversion paths.
++    assert card.local_edit_support_score == 1.0
++    assert card.edit_boost == pytest.approx(.18)
++    component_rows = card.calculation['numerical_deduplication']['component_allocations']
++    assert [r['raw_contribution'] for r in component_rows] == [.5, .5]
++    recon = card.calculation['numerical_deduplication']['aggregate_reconciliation']['suspicious']
++    assert recon['suppressed_base_weight'] == .5
++    assert recon['raw_domain_bonus'] - recon['credited_domain_bonus'] == .25
++
++
++@pytest.mark.parametrize('status', ['not_run', 'unavailable', 'skipped', 'failed', 'error', 'inconclusive'])
++def test_inactive_source_cannot_erase_a_standalone_observed_overlap(status):
++    data = overlap_sections()
++    data['cross_signal'].status = status
++    card = calculate(data)
++    assert allocations(card)['boundary']['credited_contribution'] == .5
++    assert 'cross_signal' not in allocations(card)
++
++
++def test_missing_source_preserves_one_observed_representation_without_invented_ancestry():
++    data = overlap_sections()
++    del data['cross_signal']
++    del data['ela']
++    del data['noise']
++    row = allocations(calculate(data))['boundary']
++    assert row['credited_contribution'] == .5
++    assert row['measurement_ancestry'] == []
++    assert row['missing_dependencies'] and row['unresolved']
++
++
++def test_measured_contour_and_localization_keep_full_existing_contributions():
++    data = boundary_sections()
++    data.update({key: section(key, 'inconclusive', status='inconclusive', polarity='neutral')
++                 for key in ('ela', 'noise')})
++    data['boundary_focus'] = section('focus', 'boundary_focused_processing_mismatch', status='medium')
++    data['patch_similarity'] = section('patch', 'possible_clone_reuse', status='medium')
++    data['patch_spatial'] = section('spatial', 'subject_localized_patch_recurrence', status='medium')
++    data['segmentation_alignment'] = section('alignment', 'boundary_aligned_processing_artifacts')
++    rows = allocations(calculate(data))
++    for key in ('boundary', 'cross_signal', 'boundary_focus', 'patch_spatial', 'segmentation_alignment'):
++        assert rows[key]['classification'] == 'C'
++        assert rows[key]['credited_contribution'] == rows[key]['raw_contribution']
++        assert rows[key]['suppressed_contribution'] == 0
++
++
++def test_uncertain_shared_surface_information_is_preserved_and_flagged():
++    data = overlap_sections()
++    data['subject_texture_consistency'] = section('texture', 'subject_texture_inconsistency', status='medium')
++    data['subject_process_asymmetry'] = section('asymmetry', 'subject_process_asymmetry_strong')
++    row = allocations(calculate(data))['subject_process_asymmetry']
++    assert row['classification'] == 'D' and row['unresolved']
++    assert row['credited_contribution'] == row['raw_contribution']
++    assert 'measurement:masked_hybrid_texture_descriptors' in row['measurement_ancestry']
++
++
++def test_contradictory_polarity_is_not_erased_by_related_supporting_measurement():
++    data = overlap_sections()
++    data['cross_signal'].polarity = 'benign'
++    card = calculate(data)
++    assert allocations(card)['boundary']['credited_contribution'] == .5
++    assert card.benign_score == 3
++
++
++def test_mixed_provenance_and_visual_measurements_remain_distinct_and_unverified():
++    data = overlap_sections()
++    data['metadata'] = metadata('DECLARED_SYNTHETIC')
++    result = logic.synthesize_overall(data)
++    row = allocations(calculate(data))['metadata']
++    assert row['credited_contribution'] == row['raw_contribution']
++    synthetic = next(h for h in result[4]['hypothesis_assessments'] if h['hypothesis_id'] == 'synthetic_origin')
++    assert synthetic['confidence_policy_rule'] == 'synthetic.unverified_generation_declaration'
++
++
++def test_rejected_mask_does_not_create_a_new_region_contribution():
++    data = overlap_sections()
++    data['region_masks'].status = 'unavailable'
++    data['patch_spatial'] = section('spatial', 'subject_localized_patch_recurrence', status='unavailable')
++    card = calculate(data)
++    assert 'patch_spatial' not in allocations(card)
++    assert card.edit_boost == 0
++    assert card.local_edit_support_score == 0
++
++
++def test_order_repeated_evaluation_and_inputs_are_stable():
++    data = overlap_sections()
++    before = deepcopy(data)
++    first = logic.synthesize_overall(data)
++    assert first == logic.synthesize_overall(dict(reversed(list(data.items()))))
++    assert first == logic.synthesize_overall(data)
++    assert data == before
++
++
++def test_shadow_corroboration_and_policy_receive_adjusted_production_score():
++    data = overlap_sections()
++    plain = logic.synthesize_overall(data)
++    shadow = logic.synthesize_overall(data, evidence_dependency_shadow=True)
++    diag = shadow[4].pop('evidence_dependency_analysis')
++    assert shadow == plain
++    assert diag['comparison']['suspicious_score']['difference'] == 0
++    assert diag['domain_accounting']['production_suspicious_bonus'] == 0
++    assert 'evidence:boundary' not in diag['corroboration_gates']['suspicious_domain_bonus']['production_indicator_ids']
++    suppressed = [r for r in diag['component_lineage'] if r['difference'] < 0]
++    assert len(suppressed) == 2 and all(r['raw_contribution'] == .5 for r in suppressed)
++    facts = logic.build_decision_env(data)
++    assert facts.card.suspicious_score == plain[4]['scorecard']['suspicious_score']
++    assert plain[4]['corroboration_audit']
++    assert plain[4]['confidence_policy']
++
++
++def test_adjusted_ledger_independently_reconstructs_after_json_serialization():
++    card = calculate(overlap_sections())
++    calc = json.loads(json.dumps(card.calculation, allow_nan=False))
++    rows = calc['base_evidence']
++    bases = {}
++    for polarity in ('suspicious', 'benign'):
++        selected = [r for r in rows if r['polarity'] == polarity]
++        domains = {r['domain'] for r in selected if r['credited_weight'] and r['domain']}
++        bases[polarity] = fsum(r['credited_weight'] for r in selected) + .25 * max(0, len(domains) - 1)
++    components = dict.fromkeys(calc['raw_contributions'], 0.)
++    for op in calc['component_operations']:
++        field, value = op['field'], op['operand']
++        if op['operation'] == 'add': components[field] += value
++        elif op['operation'] == 'multiply': components[field] *= value
++        else: components[field] = max(components[field], value)
++    t = calc['aggregate_transforms']
++    q = bases['suspicious'] + fsum(components[k] for k in ('edit_boost', 'synthetic_boost', 'provenance_boost', 'sensor_boost', 'compression_boost'))
++    expected = max(0, q * t['camera_multiplier'] - components['caution_penalty']) * t['geometry_multiplier'] * t['photo_context_multiplier']
++    assert card.suspicious_score == pytest.approx(expected)
++    assert reconstruct_scorecard_calculation(calc)['suspicious_score'] == pytest.approx(expected)
++    text = build_reasoning_trace_text(logic.synthesize_overall(overlap_sections())[4])
++    assert 'Production Numerical Evidence Allocation' in text and 'suppressed=0.5' in text
++
++
++@pytest.mark.parametrize('mutation', ['credit', 'suppressed', 'category', 'missing_audit', 'domain'])
++def test_corrupted_allocation_cannot_pass_integrity_validation(mutation):
++    card = calculate(overlap_sections())
++    calc = card.calculation
++    row = calc['numerical_deduplication']['contributions'][0]
++    if mutation == 'credit': row['credited_contribution'] = .25
++    elif mutation == 'suppressed': row['suppressed_contribution'] = 10
++    elif mutation == 'category': row['classification'] = 'D'
++    elif mutation == 'missing_audit': del calc['numerical_deduplication']
++    else: calc['numerical_deduplication']['aggregate_reconciliation']['suspicious']['credited_domain_bonus'] = 99
++    with pytest.raises(ScorecardIntegrityError): validate_scorecard(card)
++
++
++@pytest.mark.parametrize('value', [float('nan'), float('inf'), -float('inf'), True])
++def test_invalid_numerical_input_remains_controlled_in_public_synthesis(value):
++    data = overlap_sections()
++    data['cross_signal'].score = value
++    result = logic.synthesize_overall(data)
++    assert result[0] == 'scorecard_invalid'
++    assert result[2:4] == ('Inconclusive', 'neutral')
++    assert result[4]['confidence_policy']
++
++
++def test_registered_pure_restatement_descendants_share_one_counted_ancestor():
++    specs = [EvidenceSpec('p', 'test.primary', Family.PROCESSING, ('m',), hypotheses=('localized_editing',))]
++    for i in range(3):
++        specs.append(EvidenceSpec('child' + str(i), 'test.restatement', Family.PROCESSING, (), ('p',),
++                                  hypotheses=('localized_editing',), kind=Kind.DERIVED, addition=Addition.RESTATEMENT))
++    registry = validate_registry(specs)
++    data = {s.key: section(s.key, 'observed') for s in specs}
++    rows = [{'section': k, 'status': s.status, 'polarity': s.polarity, 'domain': s.domain, 'weight': 3.}
++            for k, s in data.items()]
++    allocated, audit = allocate_base_evidence(data, rows, registry=registry)
++    assert sum(r['credited_weight'] for r in allocated) == 3
++    assert sum(a['suppressed_contribution'] for a in audit['contributions']) == 9
++    data['p'].status = 'unavailable'
++    allocated, _ = allocate_base_evidence(data, [r for r in rows if r['section'] != 'p'], registry=registry)
++    assert sum(r['credited_weight'] for r in allocated) == 0
++
++
++def test_historical_2a_ledger_still_reconstructs_without_new_fields():
++    card = calculate(boundary_sections())
++    calc = deepcopy(card.calculation)
++    del calc['numerical_deduplication']
++    for row in calc['base_evidence']: del row['credited_weight']
++    assert reconstruct_scorecard_calculation(calc)['suspicious_score'] == card.suspicious_score
++
++
++@pytest.mark.parametrize('mutation', ['operand', 'raw_operand', 'factor', 'missing'])
++def test_component_restatement_adjustment_is_independently_validated(mutation):
++    card = calculate(overlap_sections())
++    audit = card.calculation['numerical_deduplication']
++    row = audit['component_allocations'][0]
++    op = card.calculation['component_operations'][row['ledger_index']]
++    if mutation == 'operand': op['operand'] = .5
++    elif mutation == 'raw_operand': op['raw_operand'] = .4
++    elif mutation == 'factor': row['reliability_multiplier'] = .5
++    else: audit['component_allocations'] = []
++    with pytest.raises(ScorecardIntegrityError): validate_scorecard(card)
++
++
++def test_duplicate_contribution_identifier_is_rejected_before_allocation():
++    row = {'section': 'p', 'status': 'strong', 'polarity': 'suspicious', 'domain': 'p', 'weight': 3.}
++    with pytest.raises(ScorecardIntegrityError):
++        allocate_base_evidence({'p': section('p', 'observed')}, [row, row])
++
++
++def test_no_positive_component_credit_is_created_for_rejected_or_missing_masks():
++    data = overlap_sections()
++    del data['region_masks']
++    card = calculate(data)
++    assert card.edit_boost == card.local_edit_support_score == 0
++    assert all(r['final_adjusted_contribution'] == 0 for r in card.calculation['numerical_deduplication']['component_allocations'])

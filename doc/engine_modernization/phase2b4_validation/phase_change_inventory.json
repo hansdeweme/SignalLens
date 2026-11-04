@@ -1,0 +1,20 @@
+{
+  "inherited_files": 169,
+  "unchanged_inherited_files": 163,
+  "modified": [
+    "decision_logic.py",
+    "evidence_dependency_analysis.py",
+    "evidence_lineage.py",
+    "hypothesis_engine.py",
+    "reasoning_persistence.py",
+    "scorecard_integrity.py"
+  ],
+  "new": [
+    "numerical_evidence.py",
+    "tests/test_numerical_evidence.py",
+    "doc/phase2b_evidence_dependency/phase2b4_contribution_classification.md",
+    "doc/phase2b_evidence_dependency/phase2b4_numerical_deduplication.md",
+    "doc/phase2b_evidence_dependency/phase2b4_reference_comparison.md",
+    "doc/phase2b_evidence_dependency/phase2b4_correction6_acceptance.md"
+  ]
+}

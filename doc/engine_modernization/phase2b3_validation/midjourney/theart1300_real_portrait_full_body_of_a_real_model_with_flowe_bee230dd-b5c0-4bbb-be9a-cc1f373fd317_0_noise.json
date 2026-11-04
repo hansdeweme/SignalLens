@@ -1,0 +1,94 @@
+{
+  "file": {
+    "input_path": "test_images\\midjourney\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0.png",
+    "input_name": "theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0.png"
+  },
+  "noise": {
+    "input_format": ".png",
+    "blur_radius": 1.5,
+    "mean_residual": 4.937140464782715,
+    "std_residual": 7.071019172668457,
+    "max_residual": 125,
+    "p95_residual": 18.24500274658203,
+    "high_residual_pixel_ratio": 0.041506311576354676,
+    "residual_scale_factor": 2.0251596243397536,
+    "status": "ok",
+    "note": "Residual analysis completed using luminance minus Gaussian-blurred luminance.",
+    "residual_image_path": "analyzed\\phase2b3_validation\\midjourney\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_noise_residual.png",
+    "noise_overlay_original_path": "analyzed\\phase2b3_validation\\midjourney\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_noise_overlay_original.png",
+    "noise_overlay_residual_path": "analyzed\\phase2b3_validation\\midjourney\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_noise_overlay_residual.png",
+    "blockwise": {
+      "block_size": 64,
+      "grid_rows": 15,
+      "grid_cols": 20,
+      "median_block_mean": 4.41456937789917,
+      "max_block_mean": 15.196420669555664,
+      "p95_block_mean": 10.910412788391113,
+      "max_block_to_median_ratio": 3.4423336386180936,
+      "hot_block_ratio": 0.05,
+      "top_5pct_block_energy_share": 0.13421865608761993,
+      "hottest_block": {
+        "row": 1,
+        "col": 11,
+        "mean": 15.196420669555664
+      },
+      "top_blocks": [
+        {
+          "row": 1,
+          "col": 11,
+          "mean": 15.196420669555664
+        },
+        {
+          "row": 9,
+          "col": 13,
+          "mean": 14.300984382629395
+        },
+        {
+          "row": 4,
+          "col": 7,
+          "mean": 14.20405101776123
+        },
+        {
+          "row": 0,
+          "col": 10,
+          "mean": 14.200668334960938
+        },
+        {
+          "row": 4,
+          "col": 11,
+          "mean": 14.174250602722168
+        },
+        {
+          "row": 2,
+          "col": 11,
+          "mean": 13.753501892089844
+        },
+        {
+          "row": 1,
+          "col": 17,
+          "mean": 13.7520112991333
+        },
+        {
+          "row": 1,
+          "col": 10,
+          "mean": 13.145462989807129
+        },
+        {
+          "row": 4,
+          "col": 12,
+          "mean": 12.80504035949707
+        },
+        {
+          "row": 14,
+          "col": 14,
+          "mean": 12.717885971069336
+        }
+      ]
+    },
+    "pattern": {
+      "noise_pattern": "noise_inconclusive",
+      "noise_signal_strength": "low",
+      "noise_note": "Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern."
+    }
+  }
+}

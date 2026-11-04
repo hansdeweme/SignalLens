@@ -1,0 +1,744 @@
+{
+  "fft": {
+    "input_image": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp.png",
+    "analysis_width": 576,
+    "analysis_height": 1024,
+    "apply_window": true,
+    "fft_anomaly_score": 0.4713,
+    "radial_profile_score": 0.1051,
+    "midband_excess_score": 0.0,
+    "ring_irregularity_score": 0.1911,
+    "peak_periodicity_score": 0.9978,
+    "peak_symmetry_score": 0.995,
+    "peak_count": 200,
+    "anisotropy_score": 0.1417,
+    "axis_bias_score": 0.1417,
+    "diagonal_bias_score": 0.0,
+    "frequency_pattern": "frequency_inconclusive",
+    "frequency_note": "Frequency-domain analysis reveals only mild or ambiguous spectral structure and does not by itself support a strong frequency-domain conclusion.",
+    "grid_hypothesis_present": true,
+    "dominant_fx": 0.013888888888888888,
+    "dominant_fy": 0.0439453125,
+    "dominant_wavelength_x": 72.0,
+    "dominant_wavelength_y": 22.755555555555556,
+    "dominant_angle_deg": 100.08059798754232,
+    "grid_hypothesis_strength": 3.9464365243911743,
+    "grid_response_score": 0.030178509186953306,
+    "paired_peak_count": 94,
+    "multi_grid_hypothesis_present": true,
+    "multi_grid_count": 3,
+    "multi_grid_response_score": 0.03142362693324685,
+    "multi_grid_combined_strength": 11.711451411247253,
+    "artifacts": {
+      "fft_spectrum_image": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_spectrum.png",
+      "fft_radial_profile_image": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_radial_profile.png",
+      "fft_peakmap_image": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_peakmap.png",
+      "fft_grid_overlay_path": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_grid_overlay.png",
+      "fft_grid_response_path": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_grid_response.png",
+      "fft_multi_grid_response_path": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_multi_grid_response.png",
+      "fft_multi_grid_overlay_path": "D:\\Coding\\SignalLens\\analyzed\\final_acceptance_audit\\instagram\\Curvy Leggings Outfit_subject_background_tmp_fft_multi_grid_overlay.png"
+    },
+    "peaks": [
+      {
+        "x": 280,
+        "y": 557,
+        "value": 4.0446,
+        "radius": 46.114,
+        "angle_deg": 99.36
+      },
+      {
+        "x": 301,
+        "y": 461,
+        "value": 3.903,
+        "radius": 52.2733,
+        "angle_deg": -75.03
+      },
+      {
+        "x": 275,
+        "y": 563,
+        "value": 3.903,
+        "radius": 52.9953,
+        "angle_deg": 103.64
+      },
+      {
+        "x": 333,
+        "y": 492,
+        "value": 3.862,
+        "radius": 49.5025,
+        "angle_deg": -23.2
+      },
+      {
+        "x": 243,
+        "y": 532,
+        "value": 3.862,
+        "radius": 48.9949,
+        "angle_deg": 155.27
+      },
+      {
+        "x": 296,
+        "y": 465,
+        "value": 3.8483,
+        "radius": 47.2705,
+        "angle_deg": -79.64
+      },
+      {
+        "x": 280,
+        "y": 559,
+        "value": 3.8483,
+        "radius": 48.0885,
+        "angle_deg": 98.97
+      },
+      {
+        "x": 262,
+        "y": 550,
+        "value": 3.8119,
+        "radius": 46.179,
+        "angle_deg": 123.52
+      },
+      {
+        "x": 296,
+        "y": 463,
+        "value": 3.8077,
+        "radius": 49.2392,
+        "angle_deg": -80.06
+      },
+      {
+        "x": 280,
+        "y": 561,
+        "value": 3.8077,
+        "radius": 50.065,
+        "angle_deg": 98.62
+      },
+      {
+        "x": 325,
+        "y": 484,
+        "value": 3.7924,
+        "radius": 46.5027,
+        "angle_deg": -36.25
+      },
+      {
+        "x": 251,
+        "y": 540,
+        "value": 3.7924,
+        "radius": 46.3087,
+        "angle_deg": 142.02
+      },
+      {
+        "x": 329,
+        "y": 486,
+        "value": 3.7866,
+        "radius": 48.7083,
+        "angle_deg": -31.57
+      },
+      {
+        "x": 247,
+        "y": 538,
+        "value": 3.7866,
+        "radius": 48.3994,
+        "angle_deg": 146.8
+      },
+      {
+        "x": 313,
+        "y": 463,
+        "value": 3.763,
+        "radius": 54.7951,
+        "angle_deg": -62.27
+      },
+      {
+        "x": 263,
+        "y": 561,
+        "value": 3.763,
+        "radius": 55.2313,
+        "angle_deg": 116.33
+      },
+      {
+        "x": 283,
+        "y": 558,
+        "value": 3.7533,
+        "radius": 46.7172,
+        "angle_deg": 95.53
+      },
+      {
+        "x": 302,
+        "y": 467,
+        "value": 3.7441,
+        "radius": 46.8028,
+        "angle_deg": -71.95
+      },
+      {
+        "x": 274,
+        "y": 557,
+        "value": 3.7441,
+        "radius": 47.4605,
+        "angle_deg": 106.53
+      },
+      {
+        "x": 316,
+        "y": 473,
+        "value": 3.7061,
+        "radius": 47.9009,
+        "angle_deg": -53.49
+      },
+      {
+        "x": 260,
+        "y": 551,
+        "value": 3.7061,
+        "radius": 48.13,
+        "angle_deg": 124.85
+      },
+      {
+        "x": 311,
+        "y": 463,
+        "value": 3.6941,
+        "radius": 53.8934,
+        "angle_deg": -64.15
+      },
+      {
+        "x": 265,
+        "y": 561,
+        "value": 3.6941,
+        "radius": 54.3737,
+        "angle_deg": 114.44
+      },
+      {
+        "x": 271,
+        "y": 464,
+        "value": 3.6769,
+        "radius": 50.2842,
+        "angle_deg": -109.16
+      },
+      {
+        "x": 305,
+        "y": 560,
+        "value": 3.6769,
+        "radius": 51.5606,
+        "angle_deg": 70.16
+      },
+      {
+        "x": 331,
+        "y": 492,
+        "value": 3.6742,
+        "radius": 47.6707,
+        "angle_deg": -24.15
+      },
+      {
+        "x": 245,
+        "y": 532,
+        "value": 3.6742,
+        "radius": 47.1858,
+        "angle_deg": 154.25
+      },
+      {
+        "x": 321,
+        "y": 478,
+        "value": 3.6649,
+        "radius": 47.3762,
+        "angle_deg": -45.0
+      },
+      {
+        "x": 255,
+        "y": 546,
+        "value": 3.6649,
+        "radius": 47.3973,
+        "angle_deg": 133.29
+      },
+      {
+        "x": 267,
+        "y": 553,
+        "value": 3.6433,
+        "radius": 46.2871,
+        "angle_deg": 116.29
+      },
+      {
+        "x": 296,
+        "y": 461,
+        "value": 3.6266,
+        "radius": 51.2104,
+        "angle_deg": -80.45
+      },
+      {
+        "x": 280,
+        "y": 563,
+        "value": 3.6266,
+        "radius": 52.0433,
+        "angle_deg": 98.29
+      },
+      {
+        "x": 311,
+        "y": 471,
+        "value": 3.6045,
+        "radius": 46.8241,
+        "angle_deg": -59.88
+      },
+      {
+        "x": 265,
+        "y": 553,
+        "value": 3.6045,
+        "radius": 47.207,
+        "angle_deg": 118.47
+      },
+      {
+        "x": 331,
+        "y": 486,
+        "value": 3.5863,
+        "radius": 50.4232,
+        "angle_deg": -30.38
+      },
+      {
+        "x": 245,
+        "y": 538,
+        "value": 3.5863,
+        "radius": 50.0849,
+        "angle_deg": 148.06
+      },
+      {
+        "x": 261,
+        "y": 469,
+        "value": 3.5722,
+        "radius": 50.0849,
+        "angle_deg": -121.94
+      },
+      {
+        "x": 315,
+        "y": 555,
+        "value": 3.5722,
+        "radius": 51.4636,
+        "angle_deg": 57.7
+      },
+      {
+        "x": 269,
+        "y": 466,
+        "value": 3.5661,
+        "radius": 49.1172,
+        "angle_deg": -112.13
+      },
+      {
+        "x": 307,
+        "y": 558,
+        "value": 3.5661,
+        "radius": 50.4232,
+        "angle_deg": 67.25
+      },
+      {
+        "x": 299,
+        "y": 464,
+        "value": 3.5644,
+        "radius": 48.8723,
+        "angle_deg": -76.39
+      },
+      {
+        "x": 277,
+        "y": 560,
+        "value": 3.5644,
+        "radius": 49.6236,
+        "angle_deg": 102.22
+      },
+      {
+        "x": 335,
+        "y": 492,
+        "value": 3.5576,
+        "radius": 51.3469,
+        "angle_deg": -22.32
+      },
+      {
+        "x": 241,
+        "y": 532,
+        "value": 3.5576,
+        "radius": 50.8183,
+        "angle_deg": 156.21
+      },
+      {
+        "x": 301,
+        "y": 465,
+        "value": 3.5547,
+        "radius": 48.42,
+        "angle_deg": -73.81
+      },
+      {
+        "x": 275,
+        "y": 559,
+        "value": 3.5547,
+        "radius": 49.1172,
+        "angle_deg": 104.74
+      },
+      {
+        "x": 271,
+        "y": 466,
+        "value": 3.5521,
+        "radius": 48.3994,
+        "angle_deg": -109.93
+      },
+      {
+        "x": 305,
+        "y": 558,
+        "value": 3.5521,
+        "radius": 49.684,
+        "angle_deg": 69.38
+      },
+      {
+        "x": 246,
+        "y": 490,
+        "value": 3.5507,
+        "radius": 46.7386,
+        "angle_deg": -152.61
+      },
+      {
+        "x": 330,
+        "y": 534,
+        "value": 3.5507,
+        "radius": 48.0885,
+        "angle_deg": 27.9
+      },
+      {
+        "x": 269,
+        "y": 469,
+        "value": 3.5451,
+        "radius": 46.3519,
+        "angle_deg": -113.52
+      },
+      {
+        "x": 307,
+        "y": 555,
+        "value": 3.5451,
+        "radius": 47.6707,
+        "angle_deg": 65.85
+      },
+      {
+        "x": 315,
+        "y": 471,
+        "value": 3.5367,
+        "radius": 48.9541,
+        "angle_deg": -55.82
+      },
+      {
+        "x": 261,
+        "y": 553,
+        "value": 3.5367,
+        "radius": 49.2392,
+        "angle_deg": 122.56
+      },
+      {
+        "x": 311,
+        "y": 552,
+        "value": 3.5272,
+        "radius": 46.8241,
+        "angle_deg": 59.88
+      },
+      {
+        "x": 330,
+        "y": 489,
+        "value": 3.5226,
+        "radius": 48.0885,
+        "angle_deg": -27.9
+      },
+      {
+        "x": 246,
+        "y": 535,
+        "value": 3.5226,
+        "radius": 47.6917,
+        "angle_deg": 150.48
+      },
+      {
+        "x": 345,
+        "y": 473,
+        "value": 3.5182,
+        "radius": 69.199,
+        "angle_deg": -33.8
+      },
+      {
+        "x": 231,
+        "y": 551,
+        "value": 3.5182,
+        "radius": 68.9384,
+        "angle_deg": 145.04
+      },
+      {
+        "x": 313,
+        "y": 471,
+        "value": 3.5017,
+        "radius": 47.8592,
+        "angle_deg": -57.8
+      },
+      {
+        "x": 263,
+        "y": 553,
+        "value": 3.5017,
+        "radius": 48.1923,
+        "angle_deg": 120.56
+      },
+      {
+        "x": 327,
+        "y": 484,
+        "value": 3.498,
+        "radius": 48.13,
+        "angle_deg": -34.85
+      },
+      {
+        "x": 249,
+        "y": 540,
+        "value": 3.498,
+        "radius": 47.9009,
+        "angle_deg": 143.49
+      },
+      {
+        "x": 269,
+        "y": 464,
+        "value": 3.4912,
+        "radius": 50.9755,
+        "angle_deg": -111.28
+      },
+      {
+        "x": 307,
+        "y": 560,
+        "value": 3.4912,
+        "radius": 52.2733,
+        "angle_deg": 68.1
+      },
+      {
+        "x": 317,
+        "y": 462,
+        "value": 3.4866,
+        "radius": 57.6238,
+        "angle_deg": -59.21
+      },
+      {
+        "x": 259,
+        "y": 562,
+        "value": 3.4866,
+        "radius": 57.9871,
+        "angle_deg": 119.44
+      },
+      {
+        "x": 334,
+        "y": 483,
+        "value": 3.4854,
+        "radius": 54.539,
+        "angle_deg": -31.5
+      },
+      {
+        "x": 242,
+        "y": 541,
+        "value": 3.4854,
+        "radius": 54.2264,
+        "angle_deg": 147.04
+      },
+      {
+        "x": 273,
+        "y": 464,
+        "value": 3.4787,
+        "radius": 49.6639,
+        "angle_deg": -106.98
+      },
+      {
+        "x": 303,
+        "y": 560,
+        "value": 3.4787,
+        "radius": 50.9166,
+        "angle_deg": 72.28
+      },
+      {
+        "x": 263,
+        "y": 472,
+        "value": 3.4759,
+        "radius": 46.4812,
+        "angle_deg": -121.81
+      },
+      {
+        "x": 313,
+        "y": 552,
+        "value": 3.4759,
+        "radius": 47.8592,
+        "angle_deg": 57.8
+      },
+      {
+        "x": 330,
+        "y": 531,
+        "value": 3.4699,
+        "radius": 46.76,
+        "angle_deg": 24.65
+      },
+      {
+        "x": 327,
+        "y": 486,
+        "value": 3.4627,
+        "radius": 47.016,
+        "angle_deg": -32.85
+      },
+      {
+        "x": 249,
+        "y": 538,
+        "value": 3.4627,
+        "radius": 46.7386,
+        "angle_deg": 145.46
+      },
+      {
+        "x": 338,
+        "y": 484,
+        "value": 3.4608,
+        "radius": 57.5022,
+        "angle_deg": -28.57
+      },
+      {
+        "x": 238,
+        "y": 540,
+        "value": 3.4608,
+        "radius": 57.1183,
+        "angle_deg": 150.07
+      },
+      {
+        "x": 263,
+        "y": 452,
+        "value": 3.4463,
+        "radius": 64.3467,
+        "angle_deg": -112.38
+      },
+      {
+        "x": 313,
+        "y": 572,
+        "value": 3.4463,
+        "radius": 65.6544,
+        "angle_deg": 67.15
+      },
+      {
+        "x": 347,
+        "y": 473,
+        "value": 3.438,
+        "radius": 70.8696,
+        "angle_deg": -32.91
+      },
+      {
+        "x": 229,
+        "y": 551,
+        "value": 3.438,
+        "radius": 70.5868,
+        "angle_deg": 145.97
+      },
+      {
+        "x": 323,
+        "y": 466,
+        "value": 3.4354,
+        "radius": 57.7105,
+        "angle_deg": -52.04
+      },
+      {
+        "x": 253,
+        "y": 558,
+        "value": 3.4354,
+        "radius": 57.9008,
+        "angle_deg": 126.57
+      },
+      {
+        "x": 267,
+        "y": 467,
+        "value": 3.4336,
+        "radius": 48.9949,
+        "angle_deg": -114.73
+      },
+      {
+        "x": 309,
+        "y": 557,
+        "value": 3.4336,
+        "radius": 50.324,
+        "angle_deg": 64.71
+      },
+      {
+        "x": 337,
+        "y": 478,
+        "value": 3.4284,
+        "radius": 59.7704,
+        "angle_deg": -34.09
+      },
+      {
+        "x": 239,
+        "y": 546,
+        "value": 3.4284,
+        "radius": 59.5189,
+        "angle_deg": 144.57
+      },
+      {
+        "x": 343,
+        "y": 473,
+        "value": 3.4261,
+        "radius": 67.5463,
+        "angle_deg": -34.75
+      },
+      {
+        "x": 233,
+        "y": 551,
+        "value": 3.4261,
+        "radius": 67.309,
+        "angle_deg": 144.07
+      },
+      {
+        "x": 267,
+        "y": 469,
+        "value": 3.4243,
+        "radius": 47.1858,
+        "angle_deg": -115.75
+      },
+      {
+        "x": 309,
+        "y": 555,
+        "value": 3.4243,
+        "radius": 48.5232,
+        "angle_deg": 63.7
+      },
+      {
+        "x": 263,
+        "y": 469,
+        "value": 3.4228,
+        "radius": 49.0561,
+        "angle_deg": -119.96
+      },
+      {
+        "x": 313,
+        "y": 555,
+        "value": 3.4228,
+        "radius": 50.4232,
+        "angle_deg": 59.62
+      },
+      {
+        "x": 314,
+        "y": 461,
+        "value": 3.4222,
+        "radius": 57.0307,
+        "angle_deg": -62.31
+      },
+      {
+        "x": 262,
+        "y": 563,
+        "value": 3.4222,
+        "radius": 57.4674,
+        "angle_deg": 116.34
+      },
+      {
+        "x": 309,
+        "y": 464,
+        "value": 3.4213,
+        "radius": 52.1392,
+        "angle_deg": -65.65
+      },
+      {
+        "x": 267,
+        "y": 560,
+        "value": 3.4213,
+        "radius": 52.6545,
+        "angle_deg": 112.91
+      },
+      {
+        "x": 275,
+        "y": 466,
+        "value": 3.4212,
+        "radius": 47.1858,
+        "angle_deg": -105.36
+      },
+      {
+        "x": 301,
+        "y": 558,
+        "value": 3.4212,
+        "radius": 48.42,
+        "angle_deg": 73.81
+      }
+    ]
+  }
+}

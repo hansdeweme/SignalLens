@@ -124,6 +124,27 @@ def test_background_export_uses_captured_snapshot_off_gui_thread(window,source,t
     assert 'Export saved' in workspace.status.text()
 
 
+def test_hidden_report_defers_layout_and_shows_latest_snapshot(window,source,app,monkeypatch):
+    publish(window,source)
+    workspace=window.workspace.reports
+    layouts=[]
+    original=workspace.preview.setHtml
+    def observe(html):
+        layouts.append(html)
+        return original(html)
+    monkeypatch.setattr(workspace.preview,'setHtml',observe)
+    workspace.refresh_preview()
+    assert workspace.presentation and workspace._render_pending and not layouts
+    window.show()
+    window.workspace.navigate('Reports');app.processEvents()
+    assert len(layouts)==1 and not workspace._render_pending
+    assert workspace.preview.toPlainText()
+    window.workspace.navigate('Overview')
+    window.clear_ui()
+    window.workspace.navigate('Reports');app.processEvents()
+    assert not workspace.preview.toPlainText() and not workspace._render_pending
+
+
 def test_obsolete_preview_and_late_export_cannot_become_current(window,source,tmp_path):
     publish(window,source)
     workspace=window.workspace.reports

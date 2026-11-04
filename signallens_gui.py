@@ -1062,6 +1062,10 @@ class SignalLensGui(QMainWindow):
 #-----------------------------------------
 
 def main() -> None:
+    # The portable Windows bundle keeps settings/tools next to its executable.
+    # Shell/shortcut launchers may otherwise inherit an unrelated, unwritable cwd.
+    if getattr(sys, 'frozen', False):
+        os.chdir(Path(sys.executable).resolve().parent)
     app = QApplication(sys.argv)
     window = SignalLensGui()
     window.show()
@@ -1072,6 +1076,8 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as exc:
+        if getattr(sys, 'frozen', False):
+            raise  # Let the windowed bootloader show the original startup error.
         import traceback
         print("[SignalLens] Fatal startup error:")
         traceback.print_exc()

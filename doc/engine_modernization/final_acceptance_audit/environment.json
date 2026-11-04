@@ -1,0 +1,11 @@
+{
+  "pytest": "9.1.1",
+  "mediapipe": "1.2.0",
+  "numpy": "2.2.6",
+  "Pillow": "12.3.0",
+  "opencv-python": "4.13.0.92",
+  "PyQt6": "6.10.2",
+  "python": "3.13.13 (tags/v3.13.13:01104ce, Apr  7 2026, 19:25:48) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\Users\\hans\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "platform": "Windows-11-10.0.26300-SP0"
+}

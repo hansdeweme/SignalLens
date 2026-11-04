@@ -1,0 +1,13 @@
+[SignalLens] Analysis started for: test_images\midjourney\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0.png
+[SignalLens] Stage failed: Person-derived region masks after 0.00s (Person subject mask is not reliable enough and no legacy fallback exists: low)
+[SignalLens] Stage skipped: Region segmentation analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage failed: Cross-signal analysis after 0.00s ('NoneType' object is not subscriptable)
+[SignalLens] Stage skipped: Boundary-focused analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Region-aware FFT analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Segmentation alignment analysis (missing dependency: cross_signal_payload)
+[SignalLens] Stage skipped: Subject texture consistency analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Subject process asymmetry analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Subject material realism analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Patch spatial analysis (missing dependency: region_masks_payload)
+[SignalLens] Stage skipped: Shared boundary overlays (missing dependency: cross_signal_payload)
+[SignalLens] Full analysis completed in 3.75s

@@ -1,0 +1,1119 @@
+--- a/decision_logic.py
++++ b/decision_logic.py
+@@ -25,6 +25,9 @@
+     has_real_photo_context_prior,
+ )
+ from scorecard_integrity import ScorecardIntegrityError, available_sections
++from production_corroboration import (
++    CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate,
++)
+ from metadata_evidence import (
+     ProvenanceState, metadata_provenance_state,
+ )
+@@ -105,6 +108,7 @@
+     primary_hypothesis: str | None = None,
+     selection_reason: str | None = None,
+     confidence_rationale: list[str] | None = None,
++    corroboration_gates: list[dict] | None = None,
+ ) -> dict:
+     assessment = next((h for h in (hypotheses or []) if h.hypothesis_id == primary_hypothesis), None)
+     presentation = evidence_presentation(assessment)
+@@ -123,6 +127,14 @@
+         "derived_signals": _object_to_dict(ds),
+         "scorecard": _object_to_dict(card),
+         "scorecard_calculation": _jsonable_scalar(card.calculation),
++        "corroboration_audit": {
++            "version": "2b3",
++            "evaluated_gates": _jsonable_scalar(sorted(corroboration_gates or [], key=lambda item: item['gate_id'])),
++            "limitations": [
++                "Measurement-disjoint ancestry is a structural diversity check, not statistical independence.",
++                "Compound conditions allow related interpretations; numerical scores and shadow policy are unchanged.",
++            ],
++        },
+         "decision_route_trace": [
+             _object_to_dict(item) for item in (route_trace or [])
+         ],        
+@@ -270,20 +282,33 @@
+     return "inconclusive"
+ 
+ # same principle
+-def determine_confidence(card, sections):
++def determine_confidence(card, sections, *, corroboration_gates=None):
+     mat = sections.get("subject_material_realism")
+     asym = sections.get("subject_process_asymmetry")
+     boundary = sections.get("boundary")
+     cross = sections.get("cross_signal")
+     mat_score = mat.score if mat and mat.score is not None else 0.0
+-    strong_signals = sum([
+-        mat_score >= 0.58,
+-        bool(asym and asym.pattern == "subject_process_asymmetry_strong"),
+-        bool(boundary and boundary.pattern == "possible_foreground_background_processing_mismatch"),
+-        bool(cross and cross.pattern == "strong_hotspot_convergence"),
+-    ])
++    from numbers import Real
++    considered = [key for key, matched in (
++        ('subject_material_realism', isinstance(mat_score, Real) and not isinstance(mat_score, bool) and isfinite(mat_score) and mat_score >= 0.58),
++        ('subject_process_asymmetry', bool(asym and asym.pattern == 'subject_process_asymmetry_strong')),
++        ('boundary', bool(boundary and boundary.pattern == 'possible_foreground_background_processing_mismatch')),
++        ('cross_signal', bool(cross and cross.pattern == 'strong_hotspot_convergence')),
++    ) if matched]
++    active = available_sections(sections)
++    strong_signals = sum(key in active and active[key].polarity == 'suspicious' for key in considered)
++    source_check = evaluate_corroboration(
++        sections, ['evidence:' + key for key in considered],
++        CorroborationRequirement('confidence.strong_source_diversity', 'unresolved_anomaly',
++            RequirementKind.DISTINCT_SOURCES, minimum_indicators=2, minimum_sources=2),
++    )
+     score = card.suspicious_score
+-    if strong_signals >= 2 and score >= 3.0:
++    source_check.update(observed_strong_indicator_count=strong_signals,
++        score_requirement_satisfied=score >= 3.0,
++        gate_passed=source_check['requirement_satisfied'] and score >= 3.0,
++        production_correction='Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged.')
++    record_gate(corroboration_gates, source_check)
++    if source_check['gate_passed']:
+         return "High"
+     if strong_signals >= 1 and score >= 2.0:
+         return "Medium"
+@@ -454,6 +479,7 @@
+     hypotheses: list[HypothesisAssessment] = field(default_factory=list)
+     primary_hypothesis: str | None = None
+     selection_reason: str | None = None
++    corroboration_gates: list[dict] = field(default_factory=list)
+ 
+ @dataclass(frozen=True)
+ class DecisionResult:
+@@ -552,10 +578,23 @@
+     for section in (boundary_focus_section, subject_boundary_section, boundary_section):
+         if section is not None and section.score is not None:
+             boundary_specific_strength = max(boundary_specific_strength, float(section.score))
+-    return (
++    passed = (
+         boundary_corroboration_count >= 2
+         and boundary_specific_strength >= 0.45
+     )
++    check = evaluate_corroboration(
++        env.sections, ['evidence:' + key for key, supported in (
++            ('boundary', boundary_signal_strong), ('boundary_focus', boundary_focus_strong),
++            ('subject_boundary', subject_boundary_strong), ('segmentation_alignment', segmentation_alignment_supportive),
++        ) if supported],
++        CorroborationRequirement('boundary.compound_support', 'localized_editing',
++            RequirementKind.COMPOUND, minimum_indicators=2),
++    )
++    check.update(strength_requirement_satisfied=boundary_specific_strength >= 0.45,
++        gate_passed=passed, production_condition_changed=False,
++        interpretation='Related boundary checks establish compound spatial/processing agreement; they are not counted as separate independent measurement sources.')
++    record_gate(env.corroboration_gates, check)
++    return passed
+ 
+ def _photo_like_clean_signals(env: DecisionEnv) -> bool:
+     ev = env.ev
+@@ -627,6 +666,8 @@
+         real_photo_context_prior = False
+     if card.camera_counter_support >= 2.5 and ds.local_signals_weak:
+         dominant_pattern = "photo_like_consistency_supported"
++    corroboration_gates = []
++    confidence_tier = determine_confidence(card, sections, corroboration_gates=corroboration_gates) if card.is_valid else "Inconclusive"
+     return DecisionEnv(
+         sections=sections,
+         ctx=ctx,
+@@ -634,10 +675,11 @@
+         ds=ds,
+         card=card,
+         dominant_pattern=dominant_pattern,
+-        confidence_tier=determine_confidence(card, sections) if card.is_valid else "Inconclusive",
++        confidence_tier=confidence_tier,
+         real_photo_context_prior=real_photo_context_prior,
+         analysis_mode=analysis_mode,
+         route_trace=[],
++        corroboration_gates=corroboration_gates,
+     )
+ 
+ def finish_decision(
+@@ -691,6 +733,7 @@
+         primary_hypothesis=env.primary_hypothesis,
+         selection_reason=env.selection_reason,
+         confidence_rationale=rationale,
++        corroboration_gates=env.corroboration_gates,
+     )
+     return (pattern, text, result.confidence, polarity, reasoning_trace)
+ 
+@@ -911,6 +954,20 @@
+     return None
+ 
+ def route_synthetic_multi_signal(env: DecisionEnv) -> DecisionResult | None:
++    # These are compound patterns / accumulation, not separate-source tests.
++    for gate_id, keys, matched, kind in (
++        ('synthetic.fft_patch_compound', [('fft', env.ds.fft_structured), ('patch_similarity', env.ds.patch_structured)],
++            env.ds.fft_structured and env.ds.patch_structured, RequirementKind.COMPOUND),
++        ('synthetic.material_asymmetry_compound', [('subject_material_realism', env.ds.material_realism_strong), ('subject_process_asymmetry', env.ds.subject_process_asymmetry_strong)],
++            env.ds.material_realism_strong and env.ds.subject_process_asymmetry_strong and not env.ds.region_geometry_unreliable, RequirementKind.COMPOUND),
++        ('synthetic.additional_support_flag', [('metadata', env.ds.metadata_synthetic), ('osint', env.ds.osint_ai_context), ('subject_material_realism', env.ds.material_realism_strong)],
++            env.card.synthetic_supported_by_other_domains, RequirementKind.ACCUMULATION),
++    ):
++        check = evaluate_corroboration(env.sections, ['evidence:' + key for key, active in keys if active],
++            CorroborationRequirement(gate_id, 'synthetic_origin', kind, minimum_indicators=2 if kind == RequirementKind.COMPOUND else 1))
++        check.update(gate_passed=bool(matched), production_condition_changed=False,
++            interpretation='Existing compound/accumulation predicate retained; no claim of independent corroboration.')
++        record_gate(env.corroboration_gates, check)
+     if (
+         env.card.synthetic_boost >= 1.0
+         and env.card.suspicious_score >= 5.0
+@@ -1188,6 +1245,10 @@
+ 
+ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
+     """Evaluate every candidate, then apply scoped safeguards and synthesis rules."""
++    # Retain the confidence gate that established env.confidence_tier; rebuild
++    # candidate-specific audits so a reused environment cannot retain old gates.
++    env.corroboration_gates[:] = [entry for entry in env.corroboration_gates
++        if entry['gate_id'] == 'confidence.strong_source_diversity']
+     if not env.card.is_valid:
+         explanation = "Scorecard calculation is invalid; a forensic conclusion is withheld. " + "; ".join(env.card.validation_errors)
+         env.primary_hypothesis = "unresolved_anomaly"
+@@ -1220,8 +1281,8 @@
+     local = group("localized_editing")
+     safeguards = [(s, r) for s, r in local if s.boundary_safeguard]
+     if safeguards:
+-        independent_clone = [(s, r) for s, r in local if s.evaluate == route_clone_reuse]
+-        local_choice = (independent_clone or safeguards)[0]
++        clone_specific = [(s, r) for s, r in local if s.evaluate == route_clone_reuse]
++        local_choice = (clone_specific or safeguards)[0]
+     else:
+         local_choice = local[0] if local else None
+     synthetic = group("synthetic_origin")
+@@ -1246,7 +1307,7 @@
+         why = "A supported localized mechanism leads over unverified generation context; neither establishes the other."
+     elif _specific_finding(synthetic_result):
+         chosen = synthetic_choice
+-        why = "An explicit unverified declaration supports AI-mediated creation independently of inconclusive localized editing."
++        why = "An explicit unverified declaration supports AI-mediated creation without requiring a conclusive localized-editing result."
+     elif local_choice:
+         chosen = local_choice
+         why = "Localized evidence remains limited by its own corroboration or reliability safeguards."
+--- a/reasoning_persistence.py
++++ b/reasoning_persistence.py
+@@ -311,6 +311,17 @@
+     derived = reasoning_trace.get("derived_signals", {}) or {}
+     sections = reasoning_trace.get("section_snapshot", {}) or {}
+     pipeline = reasoning_trace.get("pipeline_status", {})
++    corroboration = reasoning_trace.get('corroboration_audit')
++    if corroboration:
++        _add_heading(lines, 'Production Corroboration Audit')
++        _add_kv(lines, 'Version', corroboration.get('version'))
++        for gate in corroboration.get('evaluated_gates', []):
++            lines.append(f"- {gate['gate_id']}: passed={gate.get('gate_passed', gate['requirement_satisfied'])}; {gate['explanation']}")
++            _add_kv(lines, '  Eligible Evidence', gate['eligible_evidence'])
++            _add_kv(lines, '  Distinct Ancestry Groups', gate['distinct_ancestry_groups'])
++            _add_kv(lines, '  Shared Ancestry', gate['shared_ancestry'])
++        _add_list(lines, 'Corroboration Limitations', corroboration.get('limitations'))
++        lines.append('')
+     dependency = reasoning_trace.get('evidence_dependency_analysis')
+     if dependency:
+         _add_heading(lines, 'Evidence Dependency Analysis (Shadow Only)')
+--- a/signal_language.py
++++ b/signal_language.py
+@@ -105,7 +105,7 @@
+         "polarity": "suspicious",
+     },
+     "no_meaningful_convergence": {
+-        "label": "independent forensic signals do not converge meaningfully",
++        "label": "ELA and residual hotspot checks do not meaningfully overlap",
+         "short": "no convergence",
+         "polarity": "neutral",
+     },
+--- /dev/null
++++ b/production_corroboration.py
+@@ -0,0 +1,164 @@
++"""Production corroboration semantics over Phase 2B.2 lineage.
++
++Measurement-disjoint witnesses are a structural diversity check, never a test
++of statistical independence. Compound mechanisms retain related interpretations.
++"""
++from dataclasses import dataclass
++from enum import Enum
++from math import isfinite
++from numbers import Real
++
++from evidence_lineage import Addition, Family, Kind, LineageError, build_lineage, lineage_from_json, lineage_to_json
++
++
++class RequirementKind(str, Enum):
++    DISTINCT_SOURCES = 'distinct_measurement_sources'
++    COMPOUND = 'compound_interpretations'
++    ACCUMULATION = 'general_accumulation'
++
++
++@dataclass(frozen=True)
++class CorroborationRequirement:
++    gate_id: str
++    hypothesis: str
++    kind: RequirementKind
++    minimum_indicators: int = 1
++    minimum_sources: int = 1
++    distinct_families: bool = False
++
++    def __post_init__(self):
++        if not self.gate_id or not self.hypothesis or not isinstance(self.kind,RequirementKind):
++            raise LineageError('A gate needs an identifier, hypothesis and declared semantics.')
++        if any(type(v) is not int or v<1 for v in (self.minimum_indicators,self.minimum_sources)) or type(self.distinct_families) is not bool:
++            raise LineageError('Corroboration requirements must be positive integer counts and a boolean family rule.')
++
++
++CONTROL_ANCESTRY = frozenset({'measurement:selected_mask_geometry'})
++ACTIVE = frozenset({'weak','medium','strong'})
++
++
++def _valid_observation(section):
++    if section is None or section.status not in ACTIVE:
++        return False
++    score=section.score
++    return score is None or (not isinstance(score,bool) and isinstance(score,Real) and isfinite(score))
++
++
++def _disjoint_witnesses(candidates, require_families):
++    """Largest disjoint subset, deterministic tie-break; never greedy clustering.
++
++    Adding a composite AB must not collapse genuinely separate primary A and B.
++    Identical ancestry/family candidates can be coalesced for the search only.
++    """
++    unique={}
++    for key,ancestry,family in sorted(candidates):
++        token=(ancestry,family if require_families else '')
++        unique.setdefault(token,(key,ancestry,family))
++    rows=sorted(unique.values())
++    best=()
++    def search(index,chosen,used_measurements,used_families):
++        nonlocal best
++        if len(chosen)>len(best) or (len(chosen)==len(best) and chosen<best):
++            best=chosen
++        if len(chosen)+len(rows)-index<len(best):
++            return
++        for i in range(index,len(rows)):
++            key,ancestry,family=rows[i]
++            if not used_measurements.intersection(ancestry) and (not require_families or family not in used_families):
++                search(i+1,chosen+(key,),used_measurements.union(ancestry),used_families|{family})
++    search(0,(),set(),set())
++    return best
++
++
++def evaluate_corroboration(sections, evidence_ids, requirement, *, lineage=None, roles=None):
++    """Pure hypothesis-scoped source/compound assessment; never mutates evidence.
++
++    An observed compound summary may remain interpretable when callers omit its
++    raw parent summaries. Such provisional lineage cannot count as a distinct
++    measurement source. This preserves legacy compound-summary APIs without
++    inventing upstream observations.
++    """
++    records=lineage_from_json(lineage_to_json(tuple(lineage))) if lineage is not None else build_lineage(sections)
++    nodes={record.evidence_id:record for record in records}
++    if len(nodes)!=len(records):
++        raise LineageError('Duplicate lineage identifiers in corroboration input.')
++    considered=tuple(sorted(set(evidence_ids)))
++    eligible=[]; excluded={}; provisional={}; increments=[]; candidates=[]
++    limitations=[]; all_ancestry={}; role_map={}
++    for key in considered:
++        node=nodes.get(key)
++        section=sections.get(key.removeprefix('evidence:'))
++        role=(roles or {}).get(key,'supporting_evidence')
++        role_map[key]=role
++        if not node or not node.known:
++            excluded[key]='Unknown lineage cannot establish corroboration.'
++            continue
++        if role not in {'supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence'}:
++            raise LineageError('Unknown hypothesis evidence role.')
++        if role!='supporting_evidence':
++            excluded[key]='Retained as '+role+'; not counted as supporting corroboration.'
++            continue
++        if requirement.hypothesis!='unresolved_anomaly' and requirement.hypothesis not in node.hypotheses:
++            excluded[key]='The observation is outside this hypothesis scope.'
++            continue
++        expected='benign' if requirement.hypothesis=='camera_acquisition' else 'suspicious'
++        if not _valid_observation(section) or not node.available or section.polarity!=expected:
++            excluded[key]='No valid available supporting observation in this hypothesis polarity.'
++            continue
++        roots=tuple(sorted(set(node.measurement_ancestry)-CONTROL_ANCESTRY))
++        all_ancestry[key]=roots
++        if node.addition in {Addition.LOCALIZATION,Addition.RELATIONSHIP,Addition.INTERPRETATION}:
++            increments.append({'evidence_id':key,'addition':node.addition.value,
++                'new_measurement_claim':bool(node.kind==Kind.PRIMARY),
++                'numeric_weight_changed':False})
++        complete=not node.missing_dependencies and bool(roots)
++        if not complete:
++            provisional[key]=list(node.missing_dependencies) or ['No non-control measurement ancestry is established.']
++        if requirement.kind==RequirementKind.DISTINCT_SOURCES and not complete:
++            excluded[key]='Required measurement ancestry is missing or provisional.'
++            continue
++        eligible.append(key)
++        if complete:
++            candidates.append((key,roots,node.family.value))
++    selected=_disjoint_witnesses(candidates,requirement.distinct_families)
++    shared={}
++    for root in sorted({r for roots in all_ancestry.values() for r in roots}):
++        ids=[key for key,roots in sorted(all_ancestry.items()) if root in roots]
++        if len(ids)>1:
++            shared[root]=ids
++    overlapping={}
++    for key in eligible:
++        for group in nodes[key].overlap_groups:
++            if group!='selected_geometry': overlapping.setdefault(group,[]).append(key)
++    overlapping={k:v for k,v in sorted(overlapping.items()) if len(v)>1}
++    satisfied=len(eligible)>=requirement.minimum_indicators
++    if requirement.kind==RequirementKind.DISTINCT_SOURCES:
++        satisfied=satisfied and len(selected)>=requirement.minimum_sources
++        explanation=(f'{len(selected)} measurement-disjoint supporting indicator(s) satisfy' if satisfied else
++            f'{len(selected)} measurement-disjoint supporting indicator(s) do not satisfy')+f' the existing {requirement.minimum_sources}-source diversity requirement.'
++    else:
++        explanation=f'{len(eligible)} observed supporting indicator(s) '+('satisfy' if satisfied else 'do not satisfy')+f' the {requirement.minimum_indicators}-indicator {requirement.kind.value} condition; shared ancestry is allowed and is not independent confirmation.'
++    if provisional:
++        limitations.append('Provisional compound summaries do not establish missing upstream measurements or additional distinct sources.')
++    if overlapping:
++        limitations.append('Feature-definition/content overlap remains; disjoint extraction IDs do not demonstrate statistical independence.')
++    limitations.append('Source groups are structural measurement ancestry, not probabilities or statistically independent samples.')
++    return {'gate_id':requirement.gate_id,'hypothesis':requirement.hypothesis,
++        'requirement_kind':requirement.kind.value,
++        'minimum_indicators':requirement.minimum_indicators,'minimum_sources':requirement.minimum_sources if requirement.kind==RequirementKind.DISTINCT_SOURCES else None,
++        'distinct_families_required':requirement.distinct_families,
++        'considered_evidence':list(considered),'eligible_evidence':sorted(eligible),
++        'excluded_evidence':excluded,'evidence_roles':role_map,
++        'distinct_ancestry_groups':[{'witness':key,'measurements':list(all_ancestry[key]),'family':nodes[key].family.value} for key in selected],
++        'corroborating_source_count':len(selected),'shared_ancestry':shared,
++        'overlapping_feature_groups':overlapping,'incremental_support_findings':increments,
++        'provisional_lineage':provisional,'requirement_satisfied':satisfied,
++        'explanation':explanation,'limitations':limitations}
++
++
++def record_gate(collector, result):
++    """Replace an existing gate result, avoiding repeated-evaluation state growth."""
++    if collector is not None:
++        collector[:]=[entry for entry in collector if entry['gate_id']!=result['gate_id']]+[result]
++        collector.sort(key=lambda entry:entry['gate_id'])
++    return result
+--- /dev/null
++++ b/tests/test_production_corroboration.py
+@@ -0,0 +1,254 @@
++"""Phase 2B.3: source diversity is distinct from compound mechanism evidence."""
++from copy import deepcopy
++from dataclasses import asdict, replace
++import json
++
++import pytest
++
++import decision_logic as logic
++from evidence_dependency_analysis import build_dependency_analysis
++from evidence_lineage import Addition, EvidenceSpec, Family, Kind, LineageError, build_lineage, validate_registry
++from production_corroboration import CorroborationRequirement, RequirementKind, evaluate_corroboration
++from reasoning_persistence import build_reasoning_trace_text
++from scorecard_integrity import reconstruct_scorecard_calculation, validate_scorecard
++from signal_language import humanize_signal
++from test_reasoning import metadata, section
++from test_scorecard_integrity import boundary_sections
++
++
++def requirement(kind=RequirementKind.DISTINCT_SOURCES, **kwargs):
++    return CorroborationRequirement('test.sources','localized_editing',kind,minimum_indicators=2,minimum_sources=2,**kwargs)
++
++
++def measured_boundary(ratio=.02):
++    sections=boundary_sections(ratio)
++    sections['cross_signal'].status='medium'
++    sections.update(ela=section('ela','ela_localized_hotspots',polarity='neutral',status='weak'),
++        noise=section('noise','noise_localized_hotspots',polarity='neutral',status='weak'))
++    return sections
++
++
++def evaluate(sections, *keys, spec=None, **kwargs):
++    return evaluate_corroboration(sections,['evidence:'+key for key in keys],spec or requirement(),**kwargs)
++
++
++def test_one_primary_counts_once():
++    sections={'ela':section('ela','anomaly')}
++    result=evaluate(sections,'ela')
++    assert result['corroborating_source_count']==1
++    assert not result['requirement_satisfied']
++
++
++def test_primary_and_two_descendants_cannot_be_three_sources():
++    sections=measured_boundary()
++    sections['ela'].polarity='suspicious'
++    result=evaluate(sections,'ela','cross_signal','boundary')
++    assert result['corroborating_source_count']==1
++    assert not result['requirement_satisfied']
++    assert len(result['shared_ancestry']['measurement:ela_recompression_difference'])==3
++
++
++def test_two_primary_extractions_can_satisfy_existing_two_source_requirement():
++    sections={key:section(key,'anomaly') for key in ('ela','noise')}
++    result=evaluate(sections,'ela','noise')
++    assert result['corroborating_source_count']==2 and result['requirement_satisfied']
++    assert result['overlapping_feature_groups']  # Still not statistical independence.
++
++
++def test_composite_does_not_become_third_source_or_collapse_distinct_primaries():
++    sections=measured_boundary()
++    sections['ela'].polarity=sections['noise'].polarity='suspicious'
++    result=evaluate(sections,'ela','noise','cross_signal')
++    assert result['corroborating_source_count']==2
++    assert {g['witness'] for g in result['distinct_ancestry_groups']}=={'evidence:ela','evidence:noise'}
++
++
++def test_true_compound_boundary_condition_is_not_replaced_by_source_uniqueness():
++    sections=measured_boundary(.04)
++    sections['boundary_focus']=section('focus','boundary_focused_processing_mismatch',score=8)
++    sections['segmentation_alignment']=section('alignment','segmentation_boundary_alignment',score=.6)
++    separate=evaluate(sections,'boundary','boundary_focus')
++    compound=evaluate(sections,'boundary','boundary_focus',spec=requirement(RequirementKind.COMPOUND))
++    assert not separate['requirement_satisfied']
++    assert compound['requirement_satisfied']
++    env=logic.build_decision_env(sections)
++    assert logic._boundary_corroborated(env)
++    assert logic.route_strong_local_edit(env).confidence=='High'
++
++
++def test_patch_pair_localization_is_not_another_source():
++    sections=measured_boundary()
++    sections.update(patch_similarity=section('patch','possible_clone_reuse'),
++        patch_spatial=section('spatial','cross_region_patch_recurrence'))
++    result=evaluate(sections,'patch_similarity','patch_spatial')
++    assert result['corroborating_source_count']==1 and not result['requirement_satisfied']
++    assert any(r['addition']=='localization' for r in result['incremental_support_findings'])
++
++
++def test_texture_and_asymmetry_share_ancestry_while_own_measurements_remain_visible():
++    sections=measured_boundary()
++    sections.update(subject_texture_consistency=section('texture','subject_internal_stochastic_repetition'),
++        subject_process_asymmetry=section('asym','subject_process_asymmetry_strong'))
++    result=evaluate(sections,'subject_texture_consistency','subject_process_asymmetry')
++    assert result['corroborating_source_count']==1
++    assert result['shared_ancestry']['measurement:masked_hybrid_texture_descriptors']
++
++
++def test_shared_feature_code_is_not_automatically_identical_observation():
++    sections=measured_boundary()
++    sections.update(subject_material_realism=section('material','subject_material_realism_failure_strong',score=.65),
++        subject_process_asymmetry=section('asym','subject_process_asymmetry_strong'))
++    result=evaluate(sections,'subject_material_realism','subject_process_asymmetry')
++    assert result['corroborating_source_count']==2
++    assert 'surface_feature_definitions' in result['overlapping_feature_groups']
++    assert 'statistical independence' in ' '.join(result['limitations'])
++
++
++def test_metadata_and_pixels_are_different_sources_without_authenticating_declaration():
++    sections={'metadata':metadata('DECLARED_SYNTHETIC'),'fft':section('fft','possible_decoder_grid_signature')}
++    spec=replace(requirement(),hypothesis='synthetic_origin',distinct_families=True)
++    result=evaluate(sections,'metadata','fft',spec=spec)
++    assert result['requirement_satisfied'] and result['corroborating_source_count']==2
++    assert result['distinct_families_required']
++    assert logic.synthesize_overall({'metadata':sections['metadata']})[4]['provenance_evidence']['metadata_authenticity_verified'] is False
++
++
++@pytest.mark.parametrize('status',['not_run','unavailable','skipped','failed','error','inconclusive'])
++def test_missing_or_inactive_parent_cannot_supply_extra_source(status):
++    sections=measured_boundary()
++    sections['noise'].status=status
++    if status=='inconclusive':
++        # Inconclusive parents may have measured maps. They still add no *third* source.
++        result=evaluate(sections,'boundary','cross_signal')
++        assert result['corroborating_source_count']==1
++    else:
++        result=evaluate(sections,'boundary','cross_signal')
++        assert result['corroborating_source_count']==0 and result['provisional_lineage']
++    assert not result['requirement_satisfied']
++
++
++def test_unknown_lineage_cannot_confirm_and_original_observation_remains():
++    sections={'future':section('future','anomaly'),'ela':section('ela','anomaly')}
++    before=deepcopy(sections)
++    result=evaluate(sections,'ela','future')
++    assert result['corroborating_source_count']==1
++    assert 'evidence:future' in result['excluded_evidence']
++    assert sections==before
++
++
++def test_contradictions_remain_scoped_and_are_not_counted_as_support():
++    sections={'ela':section('ela','anomaly'),'noise':section('noise','anomaly')}
++    result=evaluate(sections,'ela','noise',roles={'evidence:noise':'contradicting_evidence'})
++    assert result['evidence_roles']['evidence:noise']=='contradicting_evidence'
++    assert result['corroborating_source_count']==1
++    assert sections['noise'].pattern=='anomaly'
++
++
++def test_wrong_hypothesis_does_not_create_support():
++    sections={'metadata':metadata('DECLARED_SYNTHETIC'),'ela':section('ela','anomaly')}
++    result=evaluate(sections,'metadata','ela')
++    assert 'evidence:metadata' in result['excluded_evidence']
++
++
++def test_order_repeat_and_serialization_are_deterministic():
++    sections=measured_boundary()
++    sections['ela'].polarity=sections['noise'].polarity='suspicious'
++    first=evaluate(sections,'ela','noise','cross_signal')
++    assert first==evaluate(dict(reversed(list(sections.items()))),'cross_signal','noise','ela')
++    assert first==evaluate(sections,'ela','noise','cross_signal')
++    assert json.loads(json.dumps(first,allow_nan=False))==first
++
++
++def test_corrected_gate_changes_only_generic_high_confidence_eligibility():
++    sections=measured_boundary()
++    env=logic.build_decision_env(sections)
++    before=deepcopy(asdict(env.card))
++    assert env.card.suspicious_score==pytest.approx(4.905)
++    # Previous predicate: two strong indicator flags plus S>=3 -> High.
++    assert env.ds.strong_cross and env.ds.strong_local_edit and env.card.suspicious_score>=3
++    assert env.confidence_tier=='Medium'
++    result=logic.synthesize_overall(sections,evidence_dependency_shadow=True)
++    assert result[0]=='moderate_suspicious_convergence' and result[2]=='Medium'
++    assert asdict(env.card)==before
++    hs={h['hypothesis_id']:h for h in result[4]['hypothesis_assessments']}
++    assert hs['unresolved_anomaly']['confidence_tier']=='Medium'
++    assert hs['synthetic_origin']['confidence_tier']=='Inconclusive'
++    gates={g['gate_id']:g for g in result[4]['corroboration_audit']['evaluated_gates']}
++    gate=gates['confidence.strong_source_diversity']
++    assert gate['observed_strong_indicator_count']==2 and gate['corroborating_source_count']==1
++    assert not gate['gate_passed'] and gate['score_requirement_satisfied']
++    assert result[4]['scorecard_calculation']==env.card.calculation
++    validate_scorecard(env.card)
++    replay=reconstruct_scorecard_calculation(result[4]['scorecard_calculation'])
++    assert replay['suspicious_score']==pytest.approx(result[4]['scorecard']['suspicious_score'])
++    assert result[4]['evidence_dependency_analysis']['comparison']['suspicious_score']['difference']==0
++
++
++def test_distinct_strong_sources_still_qualify_high():
++    sections=measured_boundary()
++    sections['subject_process_asymmetry']=section('asym','subject_process_asymmetry_strong')
++    env=logic.build_decision_env(sections)
++    assert env.confidence_tier=='High'
++    gate=env.corroboration_gates[0]
++    assert gate['corroborating_source_count']==2 and gate['gate_passed']
++
++
++@pytest.mark.parametrize('status',['unavailable','inconclusive','failed'])
++def test_stale_inactive_strong_scores_cannot_manufacture_confidence(status):
++    sections={'subject_material_realism':section('material','subject_material_realism_failure_strong',score=.9,status=status),
++        'subject_process_asymmetry':section('asym','subject_process_asymmetry_strong',status=status)}
++    from hypothesis_engine import ScoreCard
++    assert logic.determine_confidence(ScoreCard(suspicious_score=4),sections)=='Low'
++
++
++def test_compound_material_asymmetry_route_keeps_existing_hypothesis_behavior():
++    from test_reasoning import visual_generation_env, assess
++    result=assess(visual_generation_env())
++    assert result[0]=='synthetic_multi_signal_convergence' and result[2]=='High'
++    gates={g['gate_id']:g for g in result[4]['corroboration_audit']['evaluated_gates']}
++    assert gates['synthetic.material_asymmetry_compound']['gate_passed']
++    assert gates['synthetic.material_asymmetry_compound']['production_condition_changed'] is False
++
++
++def test_trace_is_compact_and_repeated_environment_evaluation_does_not_accumulate():
++    env=logic.build_decision_env(measured_boundary())
++    first=logic.finish_decision(env,logic.evaluate_hypotheses(env))
++    second=logic.finish_decision(env,logic.evaluate_hypotheses(env))
++    assert first==second
++    audit=first[4]['corroboration_audit']
++    ids=[g['gate_id'] for g in audit['evaluated_gates']]
++    assert len(ids)==len(set(ids))
++    assert 'lineage' not in audit
++    assert 'Production Corroboration Audit' in build_reasoning_trace_text(first[4])
++    assert len(first)==5
++
++
++def test_shadow_policy_and_arithmetic_remain_unmodified_by_production_gate():
++    sections=measured_boundary()
++    env=logic.build_decision_env(sections)
++    before=build_dependency_analysis(sections,env.card,env.ds,context=env.ctx)
++    logic.evaluate_hypotheses(env)
++    after=build_dependency_analysis(sections,env.card,env.ds,context=env.ctx)
++    assert before==after
++    assert before['policy']=='structural_restatement_only'
++
++
++def test_unsupported_independence_language_is_not_emitted():
++    assert humanize_signal('no_meaningful_convergence')=='ELA and residual hotspot checks do not meaningfully overlap'
++    result=logic.synthesize_overall({'metadata':metadata('DECLARED_SYNTHETIC')})
++    assert 'independently of inconclusive' not in result[1]
++    assert 'without requiring a conclusive localized-editing result' in result[1]
++
++
++def test_distinct_family_requirement_is_explicit_not_a_universal_rule():
++    sections={k:section(k,'anomaly') for k in ('ela','noise')}
++    assert evaluate(sections,'ela','noise')['requirement_satisfied']
++    assert not evaluate(sections,'ela','noise',spec=requirement(distinct_families=True))['requirement_satisfied']
++
++
++def test_bad_requirement_and_duplicate_or_cyclic_external_lineage_fail_clearly():
++    with pytest.raises(LineageError): replace(requirement(),minimum_sources=0)
++    records=build_lineage(measured_boundary())
++    with pytest.raises(LineageError): evaluate(measured_boundary(),'boundary',lineage=records+records[:1])
++    cyclic=(replace(records[0],direct_dependencies=(records[0].evidence_id,)),)+records[1:]
++    with pytest.raises(LineageError): evaluate(measured_boundary(),'boundary',lineage=cyclic)
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b3_corroboration_gate_audit.md
+@@ -0,0 +1,104 @@
++# Phase 2B.3 production corroboration gate audit
++
++## Inventory boundary and classification
++
++Inspected **20 gate groups** across `decision_logic.py`, `hypothesis_engine.py`,
++`hypothesis_evidence.py`, `signal_language.py` and narrative/trace consumers.
++Groups collect related predicates and their route consumers; this is not a count
++of every Python `if` or every ledger operation. The existing Phase 2B.1 operation
++inventory remains the exhaustive numerical lineage reference.
++
++- **A:** a multiplicity/source-diversity requirement: one observation must not
++  satisfy it by being relabeled as several detector outputs.
++- **B:** accumulation/moderation, without a defined independent-source requirement.
++- **C:** a mechanism-specific compound observation, where related measurements
++  and added localization can legitimately be required together.
++
++**One source-diversity predicate was corrected; 19 other groups retain their
++production conditions and numerical policy.** The confidence group's single-
++indicator fallback also now excludes inactive/non-supporting observations,
++consistent with Phase 2A availability. No new weight, score threshold, family
++budget or confidence tier was introduced.
++
++## Complete gate inventory
++
++| # / function or group | Type / hypothesis | Inputs and existing condition | Shared ancestry / risk | Action and expected effect |
++| --- | --- | --- | --- | --- |
++| 1. `determine_confidence` generic High path | A diversity predicate; general anomaly | Material score >=0.58, strong asymmetry, strong boundary, strong cross; originally count >=2 and S>=3 | Boundary and cross reuse ELA/residual; texture/asymmetry can also share measured inputs. Counting module flags can inflate multiplicity | Corrected to >=2 eligible measurement-disjoint indicator witnesses, keeping S>=3. Unknown/incomplete sources cannot satisfy it. Medium S>=2 / one valid indicator and Low S>=1.2 thresholds remain |
++| 2. `_boundary_corroborated` | C; localized editing | >=2 suspicious medium/strong boundary/focus/intrinsic subject-boundary/alignment summaries; max boundary-specific strength >=0.45 | Boundary/focus/alignment reuse maps or masks; localization/contour comparisons add mechanism information | Preserve compound predicate. Audit shared ancestry and label it compound agreement, not independent-source proof. No new source requirement imposed |
++| 3. `determine_dominant_pattern`: local compound | C; localized editing | `(boundary_strong or segmentation_strong) and cross_strong` | Cross/contour/alignment related | Preserve pattern conjunction; preliminary pattern is not an independent measurement count |
++| 4. `determine_dominant_pattern`: structure/subject compounds | C; synthetic structure | FFT + patch, or material + asymmetry | Frequency/recurrence overlap; subject metrics can share helpers or optional payloads | Preserve. Does not directly establish statistical independence or a calibrated generation probability |
++| 5. `route_localized_multi_mechanism` | C; localized editing | Local and clone support >=3, difference <1, no context risk | Clone recurrence and local processing can use shared supporting checks | Preserve distinct mechanism interpretations. A new independent-family threshold would change policy |
++| 6. `route_synthetic_multi_signal`: structure alternatives | C; synthetic origin | Synthetic boost >=1, S>=5, support flag, `(FFT and patch) or (strong material and strong asymmetry and reliable geometry)` with existing caveat | Related interpretation may still add information; different feature definitions do not prove independence | Preserve all route conditions; instrument FFT/patch and material/asymmetry predicates separately |
++| 7. `ScoreCard.synthetic_supported_by_other_domains` | B; synthetic origin | OR of metadata declaration, AI-gallery context, strong material | Material can already be part of a compound; metadata/OSINT can describe same assertion | Preserve flag and its consumer. Name is not proof of a distinct/independent family. Further requirement would need separately defined semantics/validation |
++| 8. Provenance / context routes | B; synthetic/camera context | `route_provenance` generation/enhancement/OSINT branches; `route_real_photo_context_prior` camera metadata + supplied smartphone context, boost <=0.25 | Assertions/context can co-occur and are not authenticated measurements | Preserve declaration categories and context routing; remove ambiguous “independently of” selection wording only |
++| 9. Camera convergence / damping | B; acquisition moderation | Measured camera support >=2 adds 0.5; piecewise damping/cautions, local tempering and clone damping | Sensor/CFA share phase/residual families; metadata is a separate assertion family | Preserve every numerical term. Dependence-aware numerical changes are prohibited here |
++| 10. `compute_base_scores`: domain diversity | B; separate S/B accumulation | 0.25 per additional weighted domain | Composite domain labels may reward shared ancestors | Preserve coefficients and aggregation. Domain identifiers are not promoted to independent-source counts |
++| 11. `compute_scorecard`: local/edit synergies | C; localized processing | Boundary stack with cross/FFT, alignment/cross, material/cross, material/asymmetry and subject-boundary combinations | Parent reuse is intentional compound weighting but empirically uncalibrated | Preserve all 2A operations; no new coefficients or silent suppression |
++| 12. Clone/spatial recurrence support | C; localized reuse | Candidate/quality/coverage/separation, supportive or inconclusive spatial interpretation, camera/natural repetition controls | Spatial analysis consumes original retained pairs | Preserve localization value and clone routing. It is not a second independent matching observation |
++| 13. FFT/patch synthetic boost | C; synthetic structure | Existing joint spectral/pair-metric thresholds and context factors | Similar regularity may appear in several measurements | Preserve numerical/pattern conjunction. Independence is unestablished |
++| 14. Sensor/CFA/compression corroboration boosts | C; localized processing | Inconsistency plus cross/local/boundary patterns | Residual and processing features overlap | Preserve boosts; this is numerical compound policy, not a separate source-diversity gate |
++| 15. Local and subject-boundary routes | C; localized editing | Strong/moderated local thresholds use group 2; standalone `route_subject_boundary` / `route_boundary_transition` require existing boundary/cross/patch conditions | Contour/ring/localization comparisons related | Preserve route conditions and fixed tiers. Generic diversity does not replace a valid compound mechanism |
++| 16. Clone ambiguity / structured recurrence caution | C; localized/synthetic ambiguity | Clone ambiguity/score, material override, natural/geometry/smartphone context, FFT+patch and weak local signals | Shared patches and material/context moderators | Preserve predicates. Branches inheriting generic confidence can reflect group 1; no other tier changed |
++| 17. `route_camera_like`, `_photo_like_clean_signals` | B; camera compatibility | Camera support, no adverse declaration, weak local signals, low S; clean/absent pattern conjunctions | Absence/compatibility is not authentication or independent verification | Preserve existing acquisition interpretation and caveats; availability already handled by snapshot logic |
++| 18. General anomaly / moderate / fallback routes | B; unresolved anomaly | `route_multi_signal_suspicious` S>=7 plus named support/no camera/context; moderate S>=3.5; fallback uses generic confidence | Aggregate and OR flags do not prove source independence | Predicates/fixed High anomaly tier unchanged. Generic inherited tier can change through group 1 only |
++| 19. Geometry / boundary support safeguards | C reliability controls | Region unreliable, person-mask support/reliability, boundary r thresholds | Shared spatial support, not new forensic evidence | Preserve masks, coefficients, safeguard priority and scope |
++| 20. Hypothesis selection, evidence roles, rationale | B scope/presentation | Candidate specificity/priority, declaration versus visual/local mechanisms; roles by section/pattern | Repeated reporting does not add numerical evidence; list length is not an independence measure | Preserve selection architecture and roles; narrow wording corrections only; negative independence/probability caveats retained |
++
++## Why group 1 is a justified narrow correction
++
++The generic High path explicitly distinguishes **two strong indicators** from
++the Medium path's **one strong indicator**, separately from the numerical score.
++Its multiplicity check is therefore formalized as structural source diversity,
++not simply a second accumulation of already scored module flags. The old code
++had no formal definition of independence; this change does not retroactively
++claim that its outputs were statistically independent. It defines and audits
++the narrow existing “more than one” purpose without selecting a new threshold.
++
++The minimum remains two, and all score/tier boundaries remain exactly the same.
++Only eligibility to satisfy multiplicity changes. A candidate witness must have
++known, valid, hypothesis-appropriate, complete non-control measurement ancestry.
++Two selected witnesses must not share a measurement extraction ID. The helper
++does not infer statistical independence from this property.
++
++A maximum disjoint subset is used rather than naive connected components. For
++primary A, primary B and composite AB, A+B can still provide two sources; adding
++AB neither creates a third source nor merges A and B into a single source.
++Primary A plus descendants A or AB cannot automatically manufacture multiple
++disjoint witnesses. Added localization/relationships remain in the result as
++incremental findings, without invented numeric credit.
++
++Sharing a broad family or feature-code group is **not** automatic identity.
++Material and asymmetry may have distinct extracted statistics while sharing
++feature definitions; the helper reports that limitation. Optional distinct-family
++requirements are explicit API semantics, not enabled universally or added to
++the production generic confidence gate.
++
++## Compound versus independent-source semantics
++
++Group 2's use of the word “corroborated” is spatial/mechanism agreement, not a
++pre-existing requirement for independent source families. Replacing its count
++with a universal distinct-family rule would destroy meaningful compound
++conditions and violate the task's type-C boundary. It is left unchanged and
++explicitly audited as compound.
++
++Older summary-only callers can provide valid compound summaries without the
++raw parent summaries. Such outputs remain eligible for the existing compound
++predicate, with provisional-parent limitations. They cannot supply a distinct
++measurement witness to group 1. No missing upstream measurement is invented.
++
++The “other domains” flag is an unresolved naming/weighting concern. Existing
++tests and route structure deliberately support material/asymmetry compounds
++without mandatory metadata. Requiring a new third-family observation would be a
++new model rule. This phase records the flag as accumulation and does not silently
++introduce that requirement.
++
++## Runtime coverage
++
++The additive `corroboration_audit` records the evaluated generic diversity gate,
++boundary compound gate when requested by a qualifying route, the two synthetic
++compound alternatives, and the synthetic support OR flag. Existing
++`decision_route_trace` retains full route candidate pass/fail/selection outcomes.
++Numerical and presentation groups are documented here rather than duplicating
++the entire score ledger or lineage graph in every gate result. A lower-level
++condition passing does not mean its complete route qualifies.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b3_implementation.md
+@@ -0,0 +1,155 @@
++# Phase 2B.3 production corroboration integrity
++
++## Baseline and protected scope
++
++Branch: `fix/scorecard-integrity-phase2a`; HEAD: `f64f226` (`phase 1`). The
++existing Phase 2A, 2B.1 and 2B.2 work was uncommitted. Baseline validation:
++**232 passed, 0 failed, 0 skipped**. All seven requested audit/lineage references
++and the current registry were reviewed. No implementation branch was created.
++
++An exact 69-file inherited snapshot/manifest is preserved under ignored
++`analyzed/phase2b3_validation/inherited_baseline/`. Python copies use a
++`.py.baseline` suffix so they cannot affect test discovery. The isolated
++`analyzed/phase2b3_validation/phase2b3_only.patch` records only this phase against
++that snapshot, allowing review separately from inherited uncommitted work.
++
++## Implementation
++
++| File | Change |
++| --- | --- |
++| `production_corroboration.py` (new) | Frozen typed requirements; pure hypothesis/availability-aware evaluation; deterministic disjoint witness selection; compound/accumulation semantics; compact serializable audit results |
++| `decision_logic.py` | Correct generic High multiplicity check; record production corroboration; preserve compound route predicates; narrow selection wording correction |
++| `signal_language.py` | Replace unsupported “independent forensic signals” label with a specific ELA/residual overlap description |
++| `reasoning_persistence.py` | Render the additive production corroboration audit while preserving old traces |
++| `tests/test_production_corroboration.py` (new) | 30 focused unit/integration cases |
++| Four `phase2b3_*.md` reports | Gate inventory, implementation, actual reference comparison and remaining limitations |
++
++`hypothesis_engine.py`, Phase 2A integrity/aggregation, all three Phase 2B.2
++lineage/shadow modules, detector modules, masking rules and existing tests remain
++byte-for-byte unchanged relative to this phase's entry snapshot.
++
++## Production rule
++
++The generic confidence High path formerly used two strong module flags plus
++S>=3. It now uses two eligible, measurement-disjoint supporting indicator
++witnesses plus the same S>=3. Valid existing strong definitions are preserved:
++material >=0.58; strong asymmetry; strong boundary; strong cross. Inactive or
++non-supporting observations cannot supply multiplicity. Medium still uses one
++valid strong observation and S>=2; Low remains S>=1.2.
++
++This is a source-eligibility correction, not new weights or tier calibration.
++No confidence probability is introduced. It is not a universal requirement for
++every High mechanism-specific route: those routes can legitimately rely on
++compound forensic evidence, and their definitions are unchanged.
++
++The audit classified 20 gate groups. One source-diversity predicate is corrected;
++19 retain their conditions and numerical policy. See
++[phase2b3_corroboration_gate_audit.md](phase2b3_corroboration_gate_audit.md) for exact
++functions, inputs, ancestry risks, classifications and expected effects.
++
++## Helper contract
++
++`CorroborationRequirement` declares a gate ID, hypothesis, semantics and existing
++minimum counts. `evaluate_corroboration()` reuses the 2B.2 registry and immutable
++lineage records; it does not change summaries or record new image measurements.
++
++The result records considered/eligible/excluded evidence, hypothesis roles,
++selected ancestry groups, shared roots, overlapping feature groups, incremental
++findings, provisional limitations, satisfaction and explanation. Unknown lineage,
++invalid/inactive observations and missing required ancestry cannot satisfy a
++distinct-source requirement. Inconclusive parent interpretation can still have
++measured upstream features, matching the existing cross-signal architecture.
++Counter-evidence remains visible in its own role and is not counted as support.
++
++The witness search finds a deterministic maximum pairwise-disjoint subset of
++measurement ancestries, excluding selected-mask geometry. It is not an estimate
++of independent samples, and it does not delete related observations. Identical
++ancestry candidates coalesce for search, while all original indicators remain
++in the audit. Optional distinct-family semantics exist for explicitly defined
++requirements but are not imposed across production gates.
++
++For compound conditions, related indicators can remain eligible; missing raw
++parent summaries are disclosed as provisional and create no distinct source.
++This maintains existing summary-only callers and genuine spatial interpretations.
++No additional coefficient, family cap, lineage credit adjustment or detector
++execution is used in production.
++
++## Trace and API compatibility
++
++The five-element `synthesize_overall()` API, scorecard fields, route ordering,
++selection priorities and hypothesis structure remain compatible. The optional
++2B.2 shadow flag/policy is unchanged. `DecisionEnv` adds a default empty gate
++collection; `determine_confidence()` retains its original positional interface
++and accepts an optional keyword-only audit collector.
++
++The additive trace field is:
++
++```json
++{
++  "corroboration_audit": {
++    "version": "2b3",
++    "evaluated_gates": [],
++    "limitations": []
++  }
++}
++```
++
++Each evaluated gate includes `requirement_kind`, `considered_evidence`,
++`eligible_evidence`, `distinct_ancestry_groups`, `shared_ancestry`,
++`incremental_support_findings`, `requirement_satisfied`, `gate_passed`, an
++explanation and limitations. Source satisfaction and score/strength conditions
++are separate; a compound subcondition passing does not imply its entire route
++matched. Compound records explicitly state that their production condition is
++unchanged. No full lineage graph is copied into every record.
++
++Results are sorted/deduplicated by gate ID. Candidate-specific audits are rebuilt
++on repeated environment evaluation; the confidence audit records the condition
++that established the environment tier. Text persistence supports both new and
++legacy traces. The Phase 2A calculation and 2B.2 dependency sidecar retain their
++separate existing purposes and fields.
++
++The unchanged 2B.2 shadow gate descriptions remain descriptive diagnostics; the
++new `corroboration_audit` is the authoritative record of the production source-
++diversity predicate. No shadow assessment is used to make a production decision.
++
++## Wording-only changes
++
++1. `signal_language.no_meaningful_convergence`: “ELA and residual hotspot checks
++   do not meaningfully overlap” replaces the unsupported independence adjective.
++2. Declaration selection: “without requiring a conclusive localized-editing
++   result” replaces ambiguous “independently of inconclusive localized editing.”
++3. The internal variable `independent_clone` is renamed `clone_specific`, with
++   identical selection behavior.
++
++Negative caveats stating that module outputs are not assumed statistically
++independent and tiers are not probabilities are retained. Unrelated forensic
++descriptions and production confidence rationale policy are not rewritten.
++
++## Verification
++
++Final automated suite: **262 passed, 0 failed, 0 skipped**, including all original
++232 and 30 new cases. Coverage includes source/descendant counts, distinct
++primaries, composites, compound mechanisms, patch localization, subject overlap,
++metadata/pixels, missing/unknown lineage, contradictions, ordering/repetition,
++strict JSON, language, production routing and Phase 2A/2B.2 invariants. No test
++dependency was added.
++
++The controlled integration counterexample was also replayed against the exact
++inherited `decision_logic.py` snapshot: `moderate_suspicious_convergence` changes
++High -> Medium while S remains 4.905 and B remains 0. Its two strong indicators,
++boundary and cross, share the same ELA/residual ancestry. The corrected gate
++reports one witness, so its existing two-source diversity condition fails. The
++production numerical ledger is exactly identical. This is an explained logical
++change, not a claim that a lower tier is empirically more accurate.
++
++Both actual references ran full headless `subject_based` pipelines. The
++scorecards, complete Phase 2A calculations, section snapshots, hypothesis
++assessments and normalized serialized 2B.2 sidecars match the baseline exactly.
++Instagram remains High at 20.47705; Midjourney Medium at 6.0375; both have zero
++failed stages. Image hashes match. Midjourney's selection wording changes only
++as described above. See [phase2b3_reference_comparison.md](phase2b3_reference_comparison.md).
++
++No detector output, scoring coefficient, numerical aggregate, shadow marginal
++policy, mask/provenance rule, dependency, GUI layout, packaging or workflow was
++modified. No staging, commits, pushes, merges, tags, stashes, resets or discards
++were performed.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b3_reference_comparison.md
+@@ -0,0 +1,111 @@
++# Phase 2B.3 reference comparison
++
++Both existing images ran the full headless pipeline in `subject_based` mode. They were read-only; SHA-256 image hashes matched before/after. Before traces are the preserved Phase 2B.2 results. No raw image, prompt, creator value or complete detector payload is exported here.
++
++## Before / after overview
++
++| Metric | Instagram before | Instagram after | Midjourney before | Midjourney after |
++| --- | --- | --- | --- | --- |
++| Suspicious score | 20.47705 | 20.47705 | 6.0375 | 6.0375 |
++| Benign score | 2.25 | 2.25 | 1.5 | 1.5 |
++| Final pattern | possible_foreground_background_processing_mismatch | possible_foreground_background_processing_mismatch | provenance_supported_synthetic_context | provenance_supported_synthetic_context |
++| Confidence | High | High | Medium | Medium |
++| Primary hypothesis | localized_editing | localized_editing | synthetic_origin | synthetic_origin |
++| Completed stages | 23 | 23 | 14 | 14 |
++| Unavailable / skipped | 0 | 0 | 9 | 9 |
++| Failed stages | 0 | 0 | 0 | 0 |
++| Default shadow S | 20.47705 | 20.47705 | 6.0375 | 6.0375 |
++| Audit-A diagnostic S | 13.46455 | not activated; policy unchanged | 3.9125 | not activated; policy unchanged |
++
++Production scorecards, the entire Phase 2A calculation ledger, section snapshots and hypothesis assessments match the baseline exactly. Phase 2B.2 dependency sidecars match after normal JSON tuple/list normalization; their policy and numbers are unchanged. The first validation equality check was tightened to compare serialized representations rather than in-memory tuples against JSON lists. This representation adjustment was not a production or shadow-policy change.
++
++## Evaluated gate results
++
++The table reports actual production subpredicate results. A passed compound subpredicate does not imply its entire route passed. Complete route pass/fail/selection remains in `decision_route_trace`. The source-diversity gate uses its existing score threshold as well as its source requirement.
++
++### Instagram
++
++| Gate / semantics | Passed | Eligible indicators | Disjoint witness count | Selected ancestry |
++| --- | --- | --- | --- | --- |
++| boundary.compound_support / compound_interpretations | True | evidence:boundary, evidence:boundary_focus, evidence:subject_boundary | 2 | evidence:boundary: measurement:ela_recompression_difference, measurement:luminance_residual; evidence:subject_boundary: measurement:intrinsic_edge_ring_features |
++| confidence.strong_source_diversity / distinct_measurement_sources | False | evidence:boundary | 1 | evidence:boundary: measurement:ela_recompression_difference, measurement:luminance_residual |
++| synthetic.additional_support_flag / general_accumulation | False | none | 0 | none |
++| synthetic.fft_patch_compound / compound_interpretations | True | evidence:fft, evidence:patch_similarity | 2 | evidence:fft: measurement:global_spectral_features; evidence:patch_similarity: measurement:retained_patch_matches |
++| synthetic.material_asymmetry_compound / compound_interpretations | False | none | 0 | none |
++
++Shared ancestry / limitations:
++
++- `boundary.compound_support`: 3 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
++  Shared `measurement:ela_recompression_difference`: evidence:boundary, evidence:boundary_focus.
++  Shared `measurement:luminance_residual`: evidence:boundary, evidence:boundary_focus.
++- `confidence.strong_source_diversity`: 1 measurement-disjoint supporting indicator(s) do not satisfy the existing 2-source diversity requirement.
++- `synthetic.additional_support_flag`: 0 observed supporting indicator(s) do not satisfy the 1-indicator general_accumulation condition; shared ancestry is allowed and is not independent confirmation.
++- `synthetic.fft_patch_compound`: 2 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
++- `synthetic.material_asymmetry_compound`: 0 observed supporting indicator(s) do not satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
++
++Hypothesis assessments (unchanged):
++
++| Hypothesis | Tier | Polarity | Decision branch |
++| --- | --- | --- | --- |
++| synthetic_origin | Inconclusive | neutral | none |
++| localized_editing | High | suspicious | possible_foreground_background_processing_mismatch |
++| camera_acquisition | Medium | benign | camera_acquisition_compatibility |
++
++Stage statuses: `{"success": 23}`; no stage errors. Mask status `reliable`, coverage 0.5961422390407987.
++
++### Midjourney
++
++| Gate / semantics | Passed | Eligible indicators | Disjoint witness count | Selected ancestry |
++| --- | --- | --- | --- | --- |
++| confidence.strong_source_diversity / distinct_measurement_sources | False | evidence:cross_signal | 1 | evidence:cross_signal: measurement:ela_recompression_difference, measurement:luminance_residual |
++| synthetic.additional_support_flag / general_accumulation | True | evidence:metadata | 1 | evidence:metadata: measurement:embedded_assertions |
++| synthetic.fft_patch_compound / compound_interpretations | True | evidence:fft, evidence:patch_similarity | 2 | evidence:fft: measurement:global_spectral_features; evidence:patch_similarity: measurement:retained_patch_matches |
++| synthetic.material_asymmetry_compound / compound_interpretations | False | none | 0 | none |
++
++Shared ancestry / limitations:
++
++- `confidence.strong_source_diversity`: 1 measurement-disjoint supporting indicator(s) do not satisfy the existing 2-source diversity requirement.
++- `synthetic.additional_support_flag`: 1 observed supporting indicator(s) satisfy the 1-indicator general_accumulation condition; shared ancestry is allowed and is not independent confirmation.
++- `synthetic.fft_patch_compound`: 2 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
++- `synthetic.material_asymmetry_compound`: 0 observed supporting indicator(s) do not satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
++
++Hypothesis assessments (unchanged):
++
++| Hypothesis | Tier | Polarity | Decision branch |
++| --- | --- | --- | --- |
++| synthetic_origin | Medium | suspicious | provenance_supported_synthetic_context |
++| localized_editing | Inconclusive | neutral | none |
++| camera_acquisition | Medium | benign | camera_acquisition_compatibility |
++
++Stage statuses: `{"skipped": 8, "success": 14, "unavailable": 1}`; no stage errors. Mask status `unreliable`, coverage 0.9181777419747081.
++
++## Why the reference decisions remain unchanged
++
++Instagram: the generic diversity check has only one strong indicator (boundary), so it does not provide generic High confidence. The localized mechanism route still has strong compound boundary evidence. Boundary, focus and intrinsic subject-boundary summaries satisfy the unchanged compound count/strength condition. Boundary and focus share ELA/residual ancestry; intrinsic edge-ring features are a distinguishable additional extraction. The compound result does not assert statistical independence. This supports the same localized-editing route at its existing High tier.
++
++Midjourney: cross is the only eligible strong generic indicator. The two-source High requirement fails, and the unverified declaration route remains Medium. FFT/patch compound structure and the declaration support flag can individually pass, but the full synthetic-visual route still lacks its required synthetic boost. The boundary compound predicate is not evaluated because no qualifying boundary-route condition reaches it; it is not fabricated as a pass or a failure.
++
++Midjourney mask coverage remains 0.9181777419747081, rejected under the unchanged 0.90 maximum. Region selection is unavailable and eight regional consumers skip; global cross-signal continues. No unavailable regional measurement supplies a source witness. Instagram coverage remains 0.5961422390407987 with reliable segmentation and all 23 stages completed.
++
++The only reference wording change is Midjourney selection scope: the declaration supports creation ?without requiring a conclusive localized-editing result.? The former ?independently of inconclusive localized editing? wording was ambiguous about logical scope versus independence. No reference hypothesis explanation, evidence role or tier changed.
++
++## Controlled changed-decision regression
++
++| Metric | Inherited production module | Corrected production module |
++| --- | --- | --- |
++| Pattern | moderate_suspicious_convergence | moderate_suspicious_convergence |
++| Confidence | High | Medium |
++| Suspicious score | 4.905 | 4.905 |
++| Benign score | 0.0 | 0.0 |
++| Strong detector indicators | 2 | 2 |
++| Source diversity test | two flags treated as multiple support | one measurement-disjoint witness; requirement fails |
++
++This synthetic fixture contains measured neutral ELA/residual parents, strong boundary, strong cross and reliable-but-reduced boundary support r=0.75. Raw local support is 3; adjusted local is 2.25; edit is 0.405; caution is 0.25; base S is 4.75; therefore S=4.75+0.405-0.25=4.905. No specific local mechanism route dominates, so `route_moderate_suspicious` inherits the generic tier.
++
++The exact inherited `decision_logic.py` module was loaded read-only from the baseline snapshot and replayed against the same fixture. Its card and full numerical ledger equal the new card/ledger exactly. Only `confidence.strong_source_diversity` changes multiplicity interpretation: boundary and cross both derive from the same ELA/residual ancestry, giving one disjoint witness rather than two. The fallback changes High to Medium; no weight was adjusted to force it.
++
++This demonstrates the intended logical correction. It does not establish an empirical improvement, recalibrate confidence or prove statistical independence of other sources.
++
++## Artifacts and reproducibility
++
++Ignored local outputs: `analyzed/phase2b3_validation/{instagram,midjourney}/summary/reasoning_trace.json`, `.txt`, final summaries, `validation_result.json`, `console.txt`, and `regression_case_comparison.json`. Reports retain only identifiers/aggregates and gate ancestry. The 69-file inherited snapshot and isolated Phase 2B.3 patch allow review separately from earlier uncommitted work.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b3_remaining_limitations.md
+@@ -0,0 +1,90 @@
++# Phase 2B.3 remaining correction #6 limitations
++
++## Fixed logical defect
++
++The generic two-strong-indicator diversity check now requires eligible
++measurement-disjoint witnesses. One observation and its descendants cannot
++satisfy this source requirement by receiving different module/domain labels.
++Unknown or missing upstream lineage cannot silently count as another source.
++Unsupported affirmative independence wording is removed, and production traces
++explain source diversity separately from compound agreement.
++
++This fixes a specific structural corroboration defect. It does not establish
++statistical independence or solve every form of correlated evidence weighting.
++The general-confidence fallback can change without changing a numerical score.
++
++## Intentionally unresolved numerical issues
++
++- Status/domain sums still award the existing 0.25 domain diversity bonus.
++  Several domains may share measurements. Replacing domain credit with family
++  budgets would be a new numerical model, prohibited in this task.
++- Local/edit, sensor/compression and material/texture/asymmetry synergies retain
++  all existing weights and multi-role effects. Exact arithmetic reconciliation
++  does not demonstrate calibrated incremental information.
++- Camera compatibility still affects benign bases, damping, cautions, local
++  tempering and clone moderation. Their combined statistical strength needs
++  labeled validation rather than a structural deletion rule.
++- The “synthetic support from other domains” field is an OR support flag, not a
++  proof of independent corroboration. Material can appear both in the compound
++  and in that flag. Requiring a new third source would redefine the intended
++  compound model, so the current predicate is explicitly classified as
++  accumulation and retained.
++- Global/regional spectra and surface metrics can have disjoint extraction IDs
++  while sharing content, feature definitions and preprocessing. Disjoint IDs are
++  only a structural diversity witness; actual covariance and redundancy remain
++  unmeasured.
++
++## Compound mechanisms are not an independence loophole
++
++Boundary contour interpretation, map intensity localization, person-mask
++alignment, intrinsic edge-ring comparisons and patch topology can add useful
++mechanism information even when related. They remain available under explicit
++compound semantics, without a claim of independent measurement confirmation.
++
++Their existing fixed route tiers remain unchanged. Therefore not every High
++route requires two disjoint measurement witnesses: that requirement belongs to
++the corrected generic diversity gate, not every compound detector model. Any
++proposal to impose a universal multi-family rule requires a separately defined
++evidentiary purpose and benchmark validation.
++
++Summary-only APIs may omit raw parent summaries while providing observed child
++interpretations. These are marked provisional and cannot count as distinct
++sources. A compound condition can retain its historical interpretation-level
++behavior; the trace states this explicitly. No missing parent measurement is
++invented to make the source-diversity gate pass.
++
++## Geometric and feature-contract limitations
++
++- Intrinsic subject-boundary rings are image-edge-derived and are not proven to
++  coincide with the selected person contour merely because a person mask exists.
++- Boundary-specific strength values retain heterogeneous units. Their existing
++  maximum comparison is preserved as part of a compound gate; standardizing it
++  would require separately scoped feature/interpretation validation.
++- The mask-morphology stage remains unscored in normal section synthesis, with
++  the existing snapshot alias to region masks. Connecting it would introduce a
++  new scoring interpretation and is not included.
++- Registry availability is based on current summary/parent contracts. Future
++  detectors should expose explicit feature availability when an active summary
++  does not imply the underlying extraction occurred.
++
++## Validation still required
++
++Two selected reference images and synthetic regressions demonstrate code
++behavior, not forensic accuracy, false-positive rate or confidence calibration.
++Further work needs source-separated labeled authentic/computational/social-
++recompressed/conventionally edited/AI-enhanced/generated/local-insertion cohorts,
++multiple camera/generator/processing families, and independently varied explicit,
++stripped and forged metadata. Keep root variants and near-duplicates in the same
++evaluation split.
++
++Measure incremental value conditional on parents, per-hypothesis errors,
++coverage/abstention and tier reliability. Evaluate resizing/recompression and
++mask quality strata. Do not infer that lower diagnostic scores or the controlled
++High -> Medium change are automatically more accurate. No probabilities or
++empirical independence estimates are introduced here.
++
++Phase 2B.2 default and experimental shadow policies remain diagnostic. The
++audit-A scores are not activated or compared with production thresholds.
++Empirical numerical weighting/calibration requires a separate task and approval;
++this phase does not attempt correction #9 or alter the general hypothesis-
++selection architecture.

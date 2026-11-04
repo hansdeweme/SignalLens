@@ -1,0 +1,90 @@
+{
+  "case": "midjourney",
+  "mode": "subject_based",
+  "mask": {
+    "mask_status": "unreliable",
+    "mask_source": "mediapipe_tasks_image_segmenter",
+    "mask_reliability": "low",
+    "person_specific": true,
+    "person_mask_reliability": "low",
+    "person_mask_reliable": false,
+    "fallback_used": false,
+    "fallback_reason": "Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90].",
+    "rejection_reasons": [
+      "Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90]."
+    ],
+    "backend": "mediapipe_tasks_image_segmenter",
+    "backend_version": "1.2.0",
+    "model_name": "selfie_segmenter.tflite",
+    "model_version": null,
+    "confidence_kind": "mean foreground confidence, not a person-detection probability",
+    "detection_confidence": 0.9260292053222656,
+    "foreground_area_ratio": 0.9181777419747081,
+    "mask_coverage": 0.9181777419747081,
+    "quality": {
+      "pattern": "person_subject_mask_unreliable",
+      "person_detected": true,
+      "detector_confidence": 0.9260292053222656,
+      "subject_area_ratio": 0.9181777419747081,
+      "largest_component_ratio": 0.9987391451293618,
+      "component_count": 3,
+      "mask_reliability": "low",
+      "quality_reasons": [
+        "Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90]."
+      ],
+      "person_instance_count": 1,
+      "backend_error": null
+    },
+    "mask_dimensions": {
+      "width": 1024,
+      "height": 771
+    },
+    "backend_errors": [],
+    "disabled_stages": [
+      "Region segmentation analysis",
+      "Boundary-focused analysis",
+      "Region-aware FFT analysis",
+      "Segmentation alignment analysis",
+      "Subject texture consistency analysis",
+      "Subject process asymmetry analysis",
+      "Subject material realism analysis",
+      "Patch spatial analysis"
+    ],
+    "fallback_selection": "Legacy fallback disabled."
+  },
+  "completed": 14,
+  "skipped": 9,
+  "failed": 0,
+  "errors": [],
+  "pattern": "possible_subject_background_segmentation_artifact",
+  "confidence": "Medium",
+  "polarity": "suspicious",
+  "cross_signal_status": "success",
+  "coverage": {
+    "status": "partial",
+    "stage_counts": {
+      "success": 14,
+      "skipped": 8,
+      "unavailable": 1,
+      "failed": 0
+    },
+    "elapsed_seconds": 3.5716,
+    "unavailable_stages": [
+      "Person-derived region masks",
+      "Region segmentation analysis",
+      "Boundary-focused analysis",
+      "Region-aware FFT analysis",
+      "Segmentation alignment analysis",
+      "Subject texture consistency analysis",
+      "Subject process asymmetry analysis",
+      "Subject material realism analysis",
+      "Patch spatial analysis"
+    ]
+  },
+  "cross_signal_geometry": {
+    "height": 928,
+    "width": 1232,
+    "source": "ELA/residual image grid"
+  },
+  "alignment": null
+}

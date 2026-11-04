@@ -1,0 +1,35 @@
+{
+    "supported_extensions": [".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp", ".heic", ".heif"],
+    "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+    "output_root": "./analyzed/",
+    "patch_similarity_profiles": {
+        "normal": {
+            "patch_size": 24,
+            "stride": 12,
+            "descriptor_size": 8,
+            "similarity_threshold": 0.965,
+            "max_pairs_to_keep": 300,
+            "max_pairs_for_overlay": 60
+        },
+        "subject_based": {
+            "patch_size": 16,
+            "stride": 8,
+            "descriptor_size": 8,
+            "similarity_threshold": 0.945,
+            "max_pairs_to_keep": 500,
+            "max_pairs_for_overlay": 80
+        }
+    },
+    "subject_background_profiles": {
+        "normal":{
+            "subject": 96,
+            "boundry": 64,
+            "background": 128   
+        },
+        "subject_based":{
+            "subject": 160,
+            "boundry": 64,
+            "background": 64   
+        }
+    }
+}

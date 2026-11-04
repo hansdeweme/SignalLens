@@ -1,0 +1,10 @@
+{
+  "branch": "main",
+  "head": "24705fed434fb6cb76945190995d7c535a42bced",
+  "matches_reviewed_branch": true,
+  "working_tree_clean": true,
+  "intended_files_tracked": 51,
+  "tested_source_blobs_unchanged": 19,
+  "excluded_data_tracked": false,
+  "local_phase_patch_preserved": true
+}

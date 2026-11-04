@@ -1,0 +1,375 @@
+{
+  "case": "midjourney",
+  "mode": "subject_based",
+  "production": {
+    "suspicious_score": 6.0375,
+    "benign_score": 1.5,
+    "edit_boost": 0.0,
+    "caution_penalty": 2.25
+  },
+  "shadow": {
+    "suspicious_score": 6.0375,
+    "benign_score": 1.5,
+    "base_suspicious": 9.0,
+    "base_benign": 1.5
+  },
+  "experimental_A": {
+    "suspicious_score": 3.9124999999999996,
+    "benign_score": 1.5,
+    "base_suspicious": 6.5,
+    "base_benign": 1.5
+  },
+  "pattern": "provenance_supported_synthetic_context",
+  "confidence": "Medium",
+  "primary_hypothesis": "synthetic_origin",
+  "stage_counts": {
+    "success": 14,
+    "unavailable": 1,
+    "skipped": 8
+  },
+  "errors": [],
+  "mask_status": "unreliable",
+  "mask_coverage": 0.9181777419747081,
+  "image_unchanged": true,
+  "production_invariance_passed": true,
+  "phase2a_trace_invariance_passed": true,
+  "scoring_indicators": {
+    "scoring_indicator_count": 6,
+    "known_scoring_indicator_count": 6,
+    "unknown_base_credit_ids": [],
+    "unknown_component_rule_ids": []
+  },
+  "ancestry": {
+    "supporting_indicator_count": 6,
+    "distinct_measurement_ancestries": [
+      "measurement:ela_recompression_difference",
+      "measurement:embedded_assertions",
+      "measurement:global_spectral_features",
+      "measurement:luminance_phase_residual",
+      "measurement:luminance_residual",
+      "measurement:retained_patch_matches"
+    ],
+    "measurement_ancestry_count": 6,
+    "distinct_measurement_families": [
+      "camera_pipeline",
+      "patch_recurrence",
+      "processing_residual",
+      "provenance",
+      "spectral"
+    ],
+    "shared_ancestry": {
+      "measurement:ela_recompression_difference": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ],
+      "measurement:luminance_residual": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ]
+    },
+    "overlapping_feature_groups": {
+      "processing_anomalies": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ]
+    },
+    "derived_or_composite_indicators": [
+      "evidence:boundary",
+      "evidence:cross_signal"
+    ],
+    "missing_required_ancestry": {},
+    "only_one_measurement_family": false,
+    "independent_observation_count": null,
+    "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count."
+  },
+  "families": {
+    "provenance": {
+      "evidence_ids": [
+        "evidence:metadata"
+      ],
+      "existing_suspicious_base": 1.5,
+      "shadow_suspicious_base": 1.5,
+      "existing_benign_base": 0.0,
+      "shadow_benign_base": 0.0,
+      "pending_incremental_credit_ids": [],
+      "component_operation_ids": [
+        "component:clone_support_score:add:8f8d629e66a2",
+        "component:clone_support_score:maximum:e178608a7259",
+        "component:provenance_boost:add:5f319fecfb33"
+      ],
+      "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+    },
+    "processing_residual": {
+      "evidence_ids": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ],
+      "existing_suspicious_base": 2.0,
+      "shadow_suspicious_base": 2.0,
+      "existing_benign_base": 0.0,
+      "shadow_benign_base": 0.0,
+      "pending_incremental_credit_ids": [
+        "base:boundary",
+        "base:cross_signal"
+      ],
+      "component_operation_ids": [
+        "component:local_edit_support_score:add:3f8a352180a4",
+        "component:local_edit_support_score:add:2c842354df0b",
+        "component:edit_boost:add:c23e1f06e42c",
+        "component:edit_boost:add:aa546f95922d"
+      ],
+      "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+    },
+    "spectral": {
+      "evidence_ids": [
+        "evidence:fft"
+      ],
+      "existing_suspicious_base": 3.0,
+      "shadow_suspicious_base": 3.0,
+      "existing_benign_base": 0.0,
+      "shadow_benign_base": 0.0,
+      "pending_incremental_credit_ids": [],
+      "component_operation_ids": [],
+      "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+    },
+    "patch_recurrence": {
+      "evidence_ids": [
+        "evidence:patch_similarity"
+      ],
+      "existing_suspicious_base": 1.5,
+      "shadow_suspicious_base": 1.5,
+      "existing_benign_base": 0.0,
+      "shadow_benign_base": 0.0,
+      "pending_incremental_credit_ids": [],
+      "component_operation_ids": [
+        "component:clone_support_score:add:5891622e87a7",
+        "component:clone_support_score:add:8f8d629e66a2",
+        "component:clone_support_score:maximum:e178608a7259"
+      ],
+      "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+    },
+    "camera_pipeline": {
+      "evidence_ids": [
+        "evidence:sensor_origin"
+      ],
+      "existing_suspicious_base": 0.0,
+      "shadow_suspicious_base": 0.0,
+      "existing_benign_base": 1.5,
+      "shadow_benign_base": 1.5,
+      "pending_incremental_credit_ids": [],
+      "component_operation_ids": [
+        "component:camera_counter_support:add:a76e4bd840d9",
+        "component:local_edit_support_score:add:a76e4bd840d9",
+        "component:edit_boost:add:aa546f95922d",
+        "component:clone_support_score:add:8f8d629e66a2",
+        "component:clone_support_score:maximum:e178608a7259",
+        "component:caution_penalty:add:fe153252e2fe"
+      ],
+      "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+    }
+  },
+  "gates": {
+    "_boundary_corroborated": {
+      "supporting_indicator_count": 0,
+      "distinct_measurement_ancestries": [],
+      "measurement_ancestry_count": 0,
+      "distinct_measurement_families": [],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": false,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [],
+      "production_indicator_count": 0,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "camera_convergence_bonus": {
+      "supporting_indicator_count": 1,
+      "distinct_measurement_ancestries": [
+        "measurement:luminance_phase_residual"
+      ],
+      "measurement_ancestry_count": 1,
+      "distinct_measurement_families": [
+        "camera_pipeline"
+      ],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": true,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [
+        "evidence:sensor_origin"
+      ],
+      "production_indicator_count": 1,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "determine_confidence.strong_signals": {
+      "supporting_indicator_count": 1,
+      "distinct_measurement_ancestries": [
+        "measurement:ela_recompression_difference",
+        "measurement:luminance_residual"
+      ],
+      "measurement_ancestry_count": 2,
+      "distinct_measurement_families": [
+        "processing_residual"
+      ],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [
+        "evidence:cross_signal"
+      ],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": true,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [
+        "evidence:cross_signal"
+      ],
+      "production_indicator_count": 1,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "suspicious_domain_bonus": {
+      "supporting_indicator_count": 5,
+      "distinct_measurement_ancestries": [
+        "measurement:ela_recompression_difference",
+        "measurement:embedded_assertions",
+        "measurement:global_spectral_features",
+        "measurement:luminance_residual",
+        "measurement:retained_patch_matches"
+      ],
+      "measurement_ancestry_count": 5,
+      "distinct_measurement_families": [
+        "patch_recurrence",
+        "processing_residual",
+        "provenance",
+        "spectral"
+      ],
+      "shared_ancestry": {
+        "measurement:ela_recompression_difference": [
+          "evidence:boundary",
+          "evidence:cross_signal"
+        ],
+        "measurement:luminance_residual": [
+          "evidence:boundary",
+          "evidence:cross_signal"
+        ]
+      },
+      "overlapping_feature_groups": {
+        "processing_anomalies": [
+          "evidence:boundary",
+          "evidence:cross_signal"
+        ]
+      },
+      "derived_or_composite_indicators": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": false,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [
+        "evidence:boundary",
+        "evidence:cross_signal",
+        "evidence:fft",
+        "evidence:metadata",
+        "evidence:patch_similarity"
+      ],
+      "production_indicator_count": 5,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": true,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "synthetic_fft_patch_conjunction": {
+      "supporting_indicator_count": 2,
+      "distinct_measurement_ancestries": [
+        "measurement:global_spectral_features",
+        "measurement:retained_patch_matches"
+      ],
+      "measurement_ancestry_count": 2,
+      "distinct_measurement_families": [
+        "patch_recurrence",
+        "spectral"
+      ],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": false,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [
+        "evidence:fft",
+        "evidence:patch_similarity"
+      ],
+      "production_indicator_count": 2,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "synthetic_material_asymmetry_conjunction": {
+      "supporting_indicator_count": 0,
+      "distinct_measurement_ancestries": [],
+      "measurement_ancestry_count": 0,
+      "distinct_measurement_families": [],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": false,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [],
+      "production_indicator_count": 0,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    },
+    "synthetic_supported_by_other_domains": {
+      "supporting_indicator_count": 1,
+      "distinct_measurement_ancestries": [
+        "measurement:embedded_assertions"
+      ],
+      "measurement_ancestry_count": 1,
+      "distinct_measurement_families": [
+        "provenance"
+      ],
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "derived_or_composite_indicators": [],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": true,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+      "production_indicator_ids": [
+        "evidence:metadata"
+      ],
+      "production_indicator_count": 1,
+      "production_gate_changed": false,
+      "ancestry_review_recommended": false,
+      "counterfactual_gate_result": null,
+      "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+    }
+  },
+  "overhead_ms": {
+    "median": 0.5267500091576949,
+    "max": 1.577599992742762,
+    "samples": 30
+  }
+}

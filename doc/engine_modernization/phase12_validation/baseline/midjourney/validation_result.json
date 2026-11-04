@@ -1,0 +1,38 @@
+{
+  "case": "midjourney",
+  "mode": "subject_based",
+  "backend": "mediapipe_tasks_image_segmenter",
+  "quality": {
+    "pattern": "person_subject_mask_unreliable",
+    "person_detected": true,
+    "detector_confidence": 0.9260292053222656,
+    "subject_area_ratio": 0.9181777419747081,
+    "largest_component_ratio": 0.9987391451293618,
+    "component_count": 3,
+    "mask_reliability": "low",
+    "person_instance_count": 1,
+    "backend_error": null
+  },
+  "completed": 12,
+  "skipped": 9,
+  "failed": 2,
+  "skipped_stages": [
+    "Skipping Region segmentation analysis (missing dependency: region_masks_payload)",
+    "Skipping Boundary-focused analysis (missing dependency: region_masks_payload)",
+    "Skipping Region-aware FFT analysis (missing dependency: region_masks_payload)",
+    "Skipping Segmentation alignment analysis (missing dependency: cross_signal_payload)",
+    "Skipping Subject texture consistency analysis (missing dependency: region_masks_payload)",
+    "Skipping Subject process asymmetry analysis (missing dependency: region_masks_payload)",
+    "Skipping Subject material realism analysis (missing dependency: region_masks_payload)",
+    "Skipping Patch spatial analysis (missing dependency: region_masks_payload)",
+    "Skipping Shared boundary overlays (missing dependency: cross_signal_payload)"
+  ],
+  "errors": [
+    "Person-derived region masks failed: Person subject mask is not reliable enough and no legacy fallback exists: low",
+    "Cross-signal analysis failed: 'NoneType' object is not subscriptable"
+  ],
+  "pattern": "possible_subject_background_segmentation_artifact",
+  "confidence": "Medium",
+  "polarity": "suspicious",
+  "cross_signal_status": "unavailable"
+}

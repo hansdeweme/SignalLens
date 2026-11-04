@@ -1,0 +1,96 @@
+{
+  "file": {
+    "input_path": "test_images\\insta_fake\\Curvy Leggings Outfit.jpg",
+    "input_name": "Curvy Leggings Outfit.jpg"
+  },
+  "ela": {
+    "native_jpeg_ela": true,
+    "input_format": ".jpg",
+    "recompression_quality": 75,
+    "mean_diff": 0.9729654947916667,
+    "std_diff": 1.081677137102804,
+    "max_diff": 12,
+    "p95_diff": 3.0,
+    "high_diff_pixel_ratio": 0.0,
+    "ela_scale_factor": 21.25,
+    "status": "ok",
+    "note": "Native JPEG ELA completed.",
+    "ela_image_path": "analyzed\\phase12_validation\\after\\instagram\\Curvy Leggings Outfit_ela.png",
+    "ela_hotspot_overlay_original_path": "analyzed\\phase12_validation\\after\\instagram\\Curvy Leggings Outfit_ela_overlay_original.png",
+    "ela_hotspot_overlay_diff_path": "analyzed\\phase12_validation\\after\\instagram\\Curvy Leggings Outfit_ela_overlay_diff.png",
+    "recompressed_jpeg_path": "analyzed\\phase12_validation\\after\\instagram\\Curvy Leggings Outfit_ela_recompressed_q75.jpg",
+    "blockwise": {
+      "block_size": 64,
+      "grid_rows": 20,
+      "grid_cols": 12,
+      "median_block_mean": 0.9561767578125,
+      "max_block_mean": 2.029296875,
+      "p95_block_mean": 1.7399170398712158,
+      "max_block_to_median_ratio": 2.122303076726669,
+      "hot_block_ratio": 0.0125,
+      "top_5pct_block_energy_share": 0.09430535964335578,
+      "top_blocks": [
+        {
+          "row": 5,
+          "col": 11,
+          "mean": 2.029296875
+        },
+        {
+          "row": 2,
+          "col": 5,
+          "mean": 1.96533203125
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "mean": 1.958740234375
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "mean": 1.87744140625
+        },
+        {
+          "row": 1,
+          "col": 5,
+          "mean": 1.8701171875
+        },
+        {
+          "row": 3,
+          "col": 11,
+          "mean": 1.8681640625
+        },
+        {
+          "row": 1,
+          "col": 9,
+          "mean": 1.833251953125
+        },
+        {
+          "row": 5,
+          "col": 8,
+          "mean": 1.83203125
+        },
+        {
+          "row": 5,
+          "col": 10,
+          "mean": 1.80322265625
+        },
+        {
+          "row": 3,
+          "col": 10,
+          "mean": 1.799560546875
+        }
+      ],
+      "hottest_block": {
+        "row": 5,
+        "col": 11,
+        "mean": 2.029296875
+      }
+    },
+    "pattern": {
+      "ela_pattern": "ela_inconclusive",
+      "ela_signal_strength": "low",
+      "ela_note": "ELA results do not clearly indicate either a localized anomaly or a uniform pattern."
+    }
+  }
+}

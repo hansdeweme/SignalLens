@@ -1,0 +1,43 @@
+         509082 function calls (506566 primitive calls) in 1.114 seconds
+
+   Ordered by: cumulative time
+   List reduced from 269 to 35 due to restriction <35>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    1.127    1.127 D:\Coding\SignalLens\signallens_gui.py:393(update_summary)
+        1    0.000    0.000    0.975    0.975 D:\Coding\SignalLens\signallens_gui.py:129(_publish_snapshot)
+     16/2    0.003    0.000    0.958    0.479 {method 'emit' of 'PyQt6.QtCore.pyqtBoundSignal' objects}
+        1    0.000    0.000    0.958    0.958 D:\Coding\SignalLens\gui_workspace.py:312(bind_snapshot)
+        1    0.001    0.001    0.635    0.635 D:\Coding\SignalLens\report_workspace.py:110(bind)
+        2    0.615    0.308    0.615    0.308 {built-in method setHtml}
+        1    0.001    0.001    0.550    0.550 D:\Coding\SignalLens\report_workspace.py:137(render)
+        1    0.000    0.000    0.202    0.202 D:\Coding\SignalLens\gui_workspace.py:276(refresh_explorers)
+        1    0.000    0.000    0.104    0.104 D:\Coding\SignalLens\explorer_workspace.py:469(bind)
+        8    0.000    0.000    0.091    0.011 D:\Coding\SignalLens\explorer_workspace.py:114(bind)
+        1    0.014    0.014    0.086    0.086 D:\Coding\SignalLens\explorer_presenter.py:82(build_explorer)
+        1    0.001    0.001    0.084    0.084 D:\Coding\SignalLens\report_presentation.py:19(build_report_presentation)
+        2    0.003    0.001    0.079    0.039 D:\Coding\SignalLens\gui_design_system.py:185(display_html)
+       21    0.078    0.004    0.078    0.004 {built-in method setPlainText}
+        6    0.000    0.000    0.070    0.012 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\re\__init__.py:183(sub)
+        6    0.070    0.012    0.070    0.012 {method 'sub' of 're.Pattern' objects}
+       26    0.000    0.000    0.065    0.002 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py:185(dumps)
+       26    0.000    0.000    0.065    0.002 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py:185(encode)
+       26    0.065    0.002    0.065    0.002 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py:207(iterencode)
+        8    0.040    0.005    0.062    0.008 {built-in method resizeColumnsToContents}
+       14    0.000    0.000    0.058    0.004 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py:304(loads)
+       14    0.000    0.000    0.057    0.004 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\decoder.py:340(decode)
+       14    0.057    0.004    0.057    0.004 C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\json\decoder.py:351(raw_decode)
+        4    0.002    0.000    0.037    0.009 D:\Coding\SignalLens\explorer_workspace.py:548(update_references)
+        1    0.002    0.002    0.036    0.036 D:\Coding\SignalLens\investigation_reports.py:61(create_report_snapshot)
+    10014    0.034    0.000    0.034    0.000 {built-in method addItem}
+        6    0.000    0.000    0.034    0.006 D:\Coding\SignalLens\investigation_session.py:158(summary_data)
+        1    0.000    0.000    0.029    0.029 D:\Coding\SignalLens\image_forensics_workspace.py:26(run)
+        5    0.000    0.000    0.029    0.006 {built-in method selectRow}
+        1    0.000    0.000    0.028    0.028 D:\Coding\SignalLens\investigation_session.py:22(json_snapshot)
+        4    0.000    0.000    0.028    0.007 D:\Coding\SignalLens\explorer_workspace.py:126(select)
+        3    0.000    0.000    0.024    0.008 D:\Coding\SignalLens\explorer_workspace.py:423(<lambda>)
+        1    0.000    0.000    0.023    0.023 D:\Coding\SignalLens\image_forensics_workspace.py:124(bind)
+2545/2543    0.003    0.000    0.021    0.000 {method 'join' of 'str' objects}
+        1    0.000    0.000    0.018    0.018 D:\Coding\SignalLens\artifact_presenter.py:103(discover_artifacts)
+
+

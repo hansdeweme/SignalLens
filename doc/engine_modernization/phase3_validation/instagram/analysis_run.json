@@ -1,0 +1,314 @@
+{
+  "app": "SignalLens",
+  "version": "0.0.1-Beta",
+  "run_id": "20261101_141449_ba24672c",
+  "started_at": "2026-11-01T14:14:49+01:00",
+  "finished_at": "2026-11-01T14:14:55+01:00",
+  "status": "completed",
+  "input": {
+    "selected_file": "test_images\\insta_fake\\Curvy Leggings Outfit.jpg",
+    "input_name": "Curvy Leggings Outfit.jpg"
+  },
+  "stages": [
+    {
+      "name": "Prepared image gatekeeper",
+      "started_at": "2026-11-01T14:14:49+01:00",
+      "finished_at": "2026-11-01T14:14:49+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.2136,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "EXIF analysis",
+      "started_at": "2026-11-01T14:14:49+01:00",
+      "finished_at": "2026-11-01T14:14:49+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.3248,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "ELA analysis",
+      "started_at": "2026-11-01T14:14:49+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.2737,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Noise analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1861,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Sensor-origin analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0459,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "CFA / demosaicing analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1161,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-aware subject mask",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.3878,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person-derived region masks",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0366,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Person mask reliability",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0002,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject-boundary analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0867,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Region segmentation analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:50+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0054,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "FFT analysis",
+      "started_at": "2026-11-01T14:14:50+01:00",
+      "finished_at": "2026-11-01T14:14:51+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.6243,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Patch similarity analysis",
+      "started_at": "2026-11-01T14:14:51+01:00",
+      "finished_at": "2026-11-01T14:14:52+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.7463,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Cross-signal analysis",
+      "started_at": "2026-11-01T14:14:52+01:00",
+      "finished_at": "2026-11-01T14:14:52+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0025,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Boundary-focused analysis",
+      "started_at": "2026-11-01T14:14:52+01:00",
+      "finished_at": "2026-11-01T14:14:52+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0564,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Region-aware FFT analysis",
+      "started_at": "2026-11-01T14:14:52+01:00",
+      "finished_at": "2026-11-01T14:14:53+01:00",
+      "status": "success",
+      "elapsed_seconds": 1.5791,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Segmentation alignment analysis",
+      "started_at": "2026-11-01T14:14:53+01:00",
+      "finished_at": "2026-11-01T14:14:53+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0031,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject texture consistency analysis",
+      "started_at": "2026-11-01T14:14:53+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 1.2557,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject process asymmetry analysis",
+      "started_at": "2026-11-01T14:14:55+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1569,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Subject material realism analysis",
+      "started_at": "2026-11-01T14:14:55+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.3821,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Patch spatial analysis",
+      "started_at": "2026-11-01T14:14:55+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0036,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Compression-history analysis",
+      "started_at": "2026-11-01T14:14:55+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.0659,
+      "error": null,
+      "reason": null
+    },
+    {
+      "name": "Shared boundary overlays",
+      "started_at": "2026-11-01T14:14:55+01:00",
+      "finished_at": "2026-11-01T14:14:55+01:00",
+      "status": "success",
+      "elapsed_seconds": 0.1719,
+      "error": null,
+      "reason": null
+    }
+  ],
+  "artifacts": {
+    "output_dir": "analyzed\\phase3_validation\\instagram",
+    "output_json": "analyzed\\phase3_validation\\instagram\\exif_signals.json"
+  },
+  "errors": [],
+  "warnings": [],
+  "diagnostics": {
+    "mask": {
+      "mask_status": "reliable",
+      "mask_source": "mediapipe_tasks_image_segmenter",
+      "mask_reliability": "high",
+      "person_specific": true,
+      "person_mask_reliability": "high",
+      "person_mask_reliable": true,
+      "fallback_used": false,
+      "fallback_reason": null,
+      "rejection_reasons": [],
+      "backend": "mediapipe_tasks_image_segmenter",
+      "backend_version": "1.2.0",
+      "model_name": "selfie_segmenter.tflite",
+      "model_version": null,
+      "confidence_kind": "mean foreground confidence, not a person-detection probability",
+      "detection_confidence": 0.6004539132118225,
+      "foreground_area_ratio": 0.5961422390407987,
+      "mask_coverage": 0.5961422390407987,
+      "quality": {
+        "pattern": "person_subject_mask_generated",
+        "person_detected": true,
+        "detector_confidence": 0.6004539132118225,
+        "subject_area_ratio": 0.5961422390407987,
+        "largest_component_ratio": 1.0,
+        "component_count": 1,
+        "mask_reliability": "high",
+        "quality_reasons": [],
+        "person_instance_count": 1,
+        "backend_error": null
+      },
+      "mask_dimensions": {
+        "width": 576,
+        "height": 1024
+      },
+      "backend_errors": [],
+      "disabled_stages": [],
+      "segmentation_outcome": {
+        "mask_status": "reliable",
+        "mask_source": "mediapipe_tasks_image_segmenter",
+        "mask_reliability": "high",
+        "person_specific": true,
+        "person_mask_reliability": "high",
+        "person_mask_reliable": true,
+        "fallback_used": false,
+        "fallback_reason": null,
+        "rejection_reasons": [],
+        "backend": "mediapipe_tasks_image_segmenter",
+        "backend_version": "1.2.0",
+        "model_name": "selfie_segmenter.tflite",
+        "model_version": null,
+        "confidence_kind": "mean foreground confidence, not a person-detection probability",
+        "detection_confidence": 0.6004539132118225,
+        "foreground_area_ratio": 0.5961422390407987,
+        "mask_coverage": 0.5961422390407987,
+        "quality": {
+          "pattern": "person_subject_mask_generated",
+          "person_detected": true,
+          "detector_confidence": 0.6004539132118225,
+          "subject_area_ratio": 0.5961422390407987,
+          "largest_component_ratio": 1.0,
+          "component_count": 1,
+          "mask_reliability": "high",
+          "quality_reasons": [],
+          "person_instance_count": 1,
+          "backend_error": null
+        },
+        "mask_dimensions": {
+          "width": 576,
+          "height": 1024
+        },
+        "backend_errors": [],
+        "disabled_stages": []
+      }
+    },
+    "coverage": {
+      "status": "complete",
+      "stage_counts": {
+        "success": 23,
+        "skipped": 0,
+        "unavailable": 0,
+        "failed": 0
+      },
+      "elapsed_seconds": 6.7375,
+      "unavailable_stages": []
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "case": "instagram",
+  "mode": "subject_based",
+  "backend": "mediapipe_tasks_image_segmenter",
+  "quality": {
+    "pattern": "person_subject_mask_generated",
+    "person_detected": true,
+    "detector_confidence": 0.6004539132118225,
+    "subject_area_ratio": 0.5961422390407987,
+    "largest_component_ratio": 1.0,
+    "component_count": 1,
+    "mask_reliability": "high",
+    "person_instance_count": 1,
+    "backend_error": null
+  },
+  "completed": 23,
+  "skipped": 0,
+  "failed": 0,
+  "skipped_stages": [],
+  "errors": [],
+  "pattern": "possible_foreground_background_processing_mismatch",
+  "confidence": "High",
+  "polarity": "suspicious",
+  "cross_signal_status": "success"
+}

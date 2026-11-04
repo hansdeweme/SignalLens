@@ -1,0 +1,2 @@
+[SignalLens] Analysis started for: test_images\insta_fake\Curvy Leggings Outfit.jpg
+[SignalLens] Analysis completed in 19.03s (coverage=complete, stages={'success': 23, 'skipped': 0, 'unavailable': 0, 'failed': 0})

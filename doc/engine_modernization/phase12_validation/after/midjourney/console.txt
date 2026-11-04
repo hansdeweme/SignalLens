@@ -1,0 +1,11 @@
+[SignalLens] Analysis started for: test_images\midjourney\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0.png
+[SignalLens] Stage unavailable: Person-derived region masks (unreliable: Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90]. Legacy fallback disabled.)
+[SignalLens] Stage unavailable: Region segmentation analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Boundary-focused analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Region-aware FFT analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Segmentation alignment analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Subject texture consistency analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Subject process asymmetry analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Subject material realism analysis (No usable subject/background region masks are available.)
+[SignalLens] Stage unavailable: Patch spatial analysis (No usable subject/background region masks are available.)
+[SignalLens] Analysis completed in 3.57s (coverage=partial, stages={'success': 14, 'skipped': 8, 'unavailable': 1, 'failed': 0})

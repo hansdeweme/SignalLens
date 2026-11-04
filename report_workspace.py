@@ -66,6 +66,7 @@ class ReportsWorkspace(QWidget):
         self.key=None
         self.pending={}
         self.saved_paths={}
+        self._render_pending=False
         body=QVBoxLayout(self)
         body.setContentsMargins(SPACE[3],SPACE[1],0,0)
         body.addWidget(label('Reports','section',bold=True))
@@ -136,10 +137,21 @@ class ReportsWorkspace(QWidget):
 
     def render(self,*args):
         if not self.presentation:
+            self._render_pending=False
             self.preview.clear();return
+        # Building the snapshot remains immediate; Qt document layout is only
+        # needed when this workspace is visible. Export uses the snapshot.
+        self._render_pending=True
+        if not self.isVisible():
+            self.preview.clear();return
+        self._render_pending=False
         format=self.format.currentText()
         if format=='HTML':self.preview.setHtml(display_html(self.presentation.html))
         else:self.preview.setPlainText(self.presentation.text if format=='TXT' else self.presentation.structured_json)
+
+    def showEvent(self,event):
+        super().showEvent(event)
+        if self._render_pending:self.render()
 
     def choose_folder(self):
         path=QFileDialog.getExistingDirectory(self,'Report export directory',self.output.text())

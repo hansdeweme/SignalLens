@@ -1,0 +1,39 @@
+{
+  "stage": "person_subject_mask",
+  "image_path": "analyzed\\phase3_validation\\instagram\\prepared_images\\Curvy Leggings Outfit_subject.png",
+  "output_dir": "analyzed\\phase3_validation\\instagram",
+  "frozen": false,
+  "executable": "C:\\Users\\hans\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "cwd": "D:\\Coding\\SignalLens",
+  "app_dir": "D:\\Coding\\SignalLens",
+  "_MEIPASS": "",
+  "selfie_segmenter_resource_path": "D:\\Coding\\SignalLens\\selfie_segmenter.tflite",
+  "selfie_segmenter_resource_exists": true,
+  "detection_backend": "mediapipe_tasks_image_segmenter",
+  "backend_error": null,
+  "person_detected": true,
+  "person_count": 1,
+  "detector_confidence": 0.6004539132118225,
+  "mask_shape": [
+    1024,
+    576
+  ],
+  "mask_nonzero": 351619,
+  "mask_area_ratio": 0.5961422390407987,
+  "quality": {
+    "pattern": "person_subject_mask_generated",
+    "person_detected": true,
+    "detector_confidence": 0.6004539132118225,
+    "subject_area_ratio": 0.5961422390407987,
+    "largest_component_ratio": 1.0,
+    "component_count": 1,
+    "mask_reliability": "high",
+    "quality_reasons": [],
+    "person_instance_count": 1,
+    "backend_error": null
+  },
+  "backend_version": "1.2.0",
+  "mask_status": "reliable",
+  "rejection_reasons": [],
+  "backend_errors": []
+}

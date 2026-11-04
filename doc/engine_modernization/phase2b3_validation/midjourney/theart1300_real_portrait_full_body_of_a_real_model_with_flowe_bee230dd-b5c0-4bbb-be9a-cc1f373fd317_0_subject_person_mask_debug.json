@@ -1,0 +1,43 @@
+{
+  "stage": "person_subject_mask",
+  "image_path": "analyzed\\phase2b3_validation\\midjourney\\prepared_images\\theart1300_real_portrait_full_body_of_a_real_model_with_flowe_bee230dd-b5c0-4bbb-be9a-cc1f373fd317_0_subject.png",
+  "output_dir": "analyzed\\phase2b3_validation\\midjourney",
+  "frozen": false,
+  "executable": "C:\\Users\\hans\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+  "cwd": "D:\\Coding\\SignalLens",
+  "app_dir": "D:\\Coding\\SignalLens",
+  "_MEIPASS": "",
+  "selfie_segmenter_resource_path": "D:\\Coding\\SignalLens\\selfie_segmenter.tflite",
+  "selfie_segmenter_resource_exists": true,
+  "detection_backend": "mediapipe_tasks_image_segmenter",
+  "backend_error": null,
+  "person_detected": true,
+  "person_count": 1,
+  "detector_confidence": 0.9260292053222656,
+  "mask_shape": [
+    771,
+    1024
+  ],
+  "mask_nonzero": 724905,
+  "mask_area_ratio": 0.9181777419747081,
+  "quality": {
+    "pattern": "person_subject_mask_unreliable",
+    "person_detected": true,
+    "detector_confidence": 0.9260292053222656,
+    "subject_area_ratio": 0.9181777419747081,
+    "largest_component_ratio": 0.9987391451293618,
+    "component_count": 3,
+    "mask_reliability": "low",
+    "quality_reasons": [
+      "Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90]."
+    ],
+    "person_instance_count": 1,
+    "backend_error": null
+  },
+  "backend_version": "1.2.0",
+  "mask_status": "unreliable",
+  "rejection_reasons": [
+    "Foreground area ratio 0.918178 is outside the existing usable range [0.03, 0.90]."
+  ],
+  "backend_errors": []
+}

@@ -1,0 +1,11 @@
+{
+  "attempt": "final-source build before SciPy collection correction",
+  "native_window_title": "Unhandled exception in script",
+  "exception": "ModuleNotFoundError: No module named 'scipy._external.array_api_compat.numpy.fft'",
+  "import_chain": ["signallens_gui", "investigation_workers", "analysis_worker", "signallens_controller", "vf_patch_similarity", "sklearn", "scipy.sparse", "scipy._lib._array_api", "scipy._external.array_api_compat.numpy"],
+  "observed_via": "native Windows exception dialog accessibility tree and screenshot",
+  "correction": "collect scipy._external.array_api_compat.numpy submodules in the existing CLI/spec build paths",
+  "dependency_upgrade": false,
+  "second_failure_after_import_correction": "Portable app inherited an unrelated unwritable working directory; load_settings attempted to create signallens_settings.json there. The console input fallback then raised RuntimeError: lost sys.stdin.",
+  "second_correction": "Frozen main changes cwd to the portable executable directory; frozen startup exceptions are re-raised for the native bootloader to display the original cause."
+}

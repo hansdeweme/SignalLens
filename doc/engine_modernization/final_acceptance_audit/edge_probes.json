@@ -1,0 +1,80 @@
+{
+  "oversized_integer_score": {
+    "returned": false,
+    "error_type": "OverflowError",
+    "error": "int too large to convert to float"
+  },
+  "nan_score": {
+    "returned": true,
+    "confidence": "Inconclusive",
+    "policy_rules": [
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard"
+    ]
+  },
+  "infinite_score": {
+    "returned": true,
+    "confidence": "Inconclusive",
+    "policy_rules": [
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard",
+      "integrity.invalid_scorecard"
+    ]
+  },
+  "route_subset_declaration": {
+    "primary": "unresolved_anomaly",
+    "overall_pattern": "provenance_supported_synthetic_context",
+    "overall_confidence": "Low",
+    "synthetic": {
+      "hypothesis_id": "synthetic_origin",
+      "polarity": "neutral",
+      "confidence_tier": "Medium",
+      "supporting_evidence": [
+        "metadata:DECLARED_SYNTHETIC"
+      ],
+      "moderating_evidence": [],
+      "limitations": [
+        "Heuristic support levels are not probabilities.",
+        "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+        "Coverage limitation (not negative evidence): unavailable fft, patch_similarity, subject_material_realism, subject_process_asymmetry."
+      ],
+      "decision_branch": null,
+      "explanation": "Synthetic origin is not established by the available evidence.",
+      "contradicting_evidence": [],
+      "contextual_evidence": [],
+      "evidence_details": {
+        "metadata:DECLARED_SYNTHETIC": {
+          "section": "metadata",
+          "pattern": "declared_synthetic_candidate",
+          "role": "supporting_evidence",
+          "interpretation": "Embedded metadata explicitly declares generation; metadata authenticity remains unverified.",
+          "observations": [],
+          "label": "explicit generation declaration in metadata",
+          "observed_status": "medium",
+          "observed_score": 0.75
+        }
+      },
+      "confidence_policy_rule": "synthetic.unverified_generation_declaration",
+      "confidence_rationale": [
+        "Confidence policy synthetic.unverified_generation_declaration: An explicit generation declaration supports declared creation context; metadata authenticity is unverified.",
+        "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+      ]
+    }
+  },
+  "direct_finisher": {
+    "primary": "unresolved_anomaly",
+    "pattern": "provenance_supported_synthetic_context",
+    "confidence": "Low",
+    "hypotheses": [
+      "unresolved_anomaly"
+    ]
+  },
+  "inconclusive_bad_metadata_details": {
+    "returned": false,
+    "error_type": "AttributeError",
+    "error": "'list' object has no attribute 'get'"
+  }
+}

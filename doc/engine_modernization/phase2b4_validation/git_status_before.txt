@@ -1,0 +1,27 @@
+ M decision_logic.py
+ M hypothesis_engine.py
+ M hypothesis_evidence.py
+ M reasoning_persistence.py
+ M signal_language.py
+ M summary_synthesizer.py
+?? "Evidence Lineage & Marginal Corroboration.md"
+?? "Final Acceptance Audit Original 10 Reasoning-Engine Corrections.md"
+?? "Forensic Evidence Dependency & Double-Counting Audit.md"
+?? "Hypothesis-Aware Confidence Policy Consolidation.md"
+?? "Production Corroboration Integrity.md"
+?? "Production Numerical Evidence Deduplication.md"
+?? confidence_policy.py
+?? confidence_policy_inputs.py
+?? doc/final_reasoning_engine_acceptance_audit.md
+?? doc/phase2b_evidence_dependency/
+?? doc/phase3_confidence_policy/
+?? doc/scorecard_integrity_phase2a.md
+?? evidence_dependency_analysis.py
+?? evidence_lineage.py
+?? marginal_corroboration.py
+?? production_corroboration.py
+?? scorecard_integrity.py
+?? tests/test_confidence_policy.py
+?? tests/test_evidence_lineage.py
+?? tests/test_production_corroboration.py
+?? tests/test_scorecard_integrity.py

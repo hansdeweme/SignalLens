@@ -1,0 +1,94 @@
+{
+  "file": {
+    "input_path": "D:\\Coding\\SignalLens\\test_images\\insta_fake\\Curvy Leggings Outfit.jpg",
+    "input_name": "Curvy Leggings Outfit.jpg"
+  },
+  "noise": {
+    "input_format": ".jpg",
+    "blur_radius": 1.5,
+    "mean_residual": 2.4385581016540527,
+    "std_residual": 4.222931385040283,
+    "max_residual": 80,
+    "p95_residual": 9.849998474121094,
+    "high_residual_pixel_ratio": 0.01178927951388889,
+    "residual_scale_factor": 3.1773722350870783,
+    "status": "ok",
+    "note": "Residual analysis completed using luminance minus Gaussian-blurred luminance.",
+    "residual_image_path": "D:\\Coding\\SignalLens\\analyzed\\phase2b4_validation\\instagram\\Curvy Leggings Outfit_noise_residual.png",
+    "noise_overlay_original_path": "D:\\Coding\\SignalLens\\analyzed\\phase2b4_validation\\instagram\\Curvy Leggings Outfit_noise_overlay_original.png",
+    "noise_overlay_residual_path": "D:\\Coding\\SignalLens\\analyzed\\phase2b4_validation\\instagram\\Curvy Leggings Outfit_noise_overlay_residual.png",
+    "blockwise": {
+      "block_size": 64,
+      "grid_rows": 20,
+      "grid_cols": 12,
+      "median_block_mean": 2.232471466064453,
+      "max_block_mean": 8.408233642578125,
+      "p95_block_mean": 5.276472568511963,
+      "max_block_to_median_ratio": 3.7663342042174945,
+      "hot_block_ratio": 0.05,
+      "top_5pct_block_energy_share": 0.1251795919929126,
+      "hottest_block": {
+        "row": 5,
+        "col": 8,
+        "mean": 8.408233642578125
+      },
+      "top_blocks": [
+        {
+          "row": 5,
+          "col": 8,
+          "mean": 8.408233642578125
+        },
+        {
+          "row": 1,
+          "col": 6,
+          "mean": 6.796135902404785
+        },
+        {
+          "row": 5,
+          "col": 2,
+          "mean": 6.333266258239746
+        },
+        {
+          "row": 9,
+          "col": 1,
+          "mean": 6.2267327308654785
+        },
+        {
+          "row": 7,
+          "col": 9,
+          "mean": 6.165297508239746
+        },
+        {
+          "row": 6,
+          "col": 8,
+          "mean": 6.116492748260498
+        },
+        {
+          "row": 2,
+          "col": 6,
+          "mean": 6.001368522644043
+        },
+        {
+          "row": 3,
+          "col": 7,
+          "mean": 5.9727582931518555
+        },
+        {
+          "row": 12,
+          "col": 8,
+          "mean": 5.8729448318481445
+        },
+        {
+          "row": 6,
+          "col": 1,
+          "mean": 5.59783411026001
+        }
+      ]
+    },
+    "pattern": {
+      "noise_pattern": "noise_inconclusive",
+      "noise_signal_strength": "low",
+      "noise_note": "Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern."
+    }
+  }
+}

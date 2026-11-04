@@ -1,0 +1,28 @@
+{
+  "platform": "native Windows portable executable",
+  "launch": "PASS",
+  "stored_load_preview_export": "PASS",
+  "exports": [
+    {
+      "result_id": "c22ea8da26954c5b8fd595967128d5a1",
+      "annotation_revision": 0,
+      "forensic_trace_matches_stored_reference": true,
+      "html_txt_json_exist": true
+    }
+  ],
+  "reanalyzed_source_sha256": "1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9",
+  "reanalysis_status": "completed",
+  "stage_counts": {
+    "success": 23
+  },
+  "elapsed_timestamp_seconds": 12.0,
+  "mask_backend": "mediapipe_tasks_image_segmenter",
+  "mask_fallback_used": false,
+  "scorecard": {
+    "suspicious_score": 21.327049999999996,
+    "benign_score": 2.25
+  },
+  "dominant_pattern": "possible_foreground_background_processing_mismatch",
+  "confidence": "High",
+  "shutdown": "See native desktop close observation in packaging_validation.md"
+}

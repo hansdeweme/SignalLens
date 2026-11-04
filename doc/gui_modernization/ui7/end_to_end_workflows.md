@@ -1,0 +1,16 @@
+# UI-7 end-to-end workflows
+
+Validation modes are explicit: native means a visible Windows Qt application with physical desktop input through the Computer Use plugin; automated means fresh integration/regression execution, commonly with offscreen Qt. Prior phase reports are context, not a new pass.
+
+| Workflow | Fresh evidence | Outcome / limit |
+|---|---|---|
+| A: select image, configure, run, inspect, report | Native Instagram normal profile: real chooser, configuration modal, progress and completion; 13.98 seconds, 23 successful stages, no skipped/unavailable/failed stages. Stored normal reference then opened natively, artifact overlay inspected, report preview/export succeeded. | PASS for exercised native journey; OSINT editor opened and cancelled natively. Committed annotations verified separately by automated integration. |
+| A: both established references | `reference_validation.py` reopens saved normal runs; visits all six workspaces, commits one local contextual annotation, exports HTML/TXT/JSON and compares exact preview bytes. | PASS; no detectors rerun, original pointer and frozen summary unchanged. |
+| B: replace investigation | Fresh final gate: `test_new_selection_clears_every_prior_trace_result_and_late_callback`; performance script selects ten new investigations. | PASS automated; not a complete manual native A-to-B-to-A journey. |
+| C: reanalysis | Fresh final gate: `test_reanalysis_out_of_order_and_context_snapshot`, two owned workers finishing in reverse order, GUI launch configuration snapshot. Packaged native stored Instagram reanalysis advanced analysis revision 1 to 2, cleared old Reports during processing and synchronized the new result, all 23 stages successful. | PASS native ordinary reanalysis and automated overlap/order cases; manual overlapping-worker stress NOT TESTED. |
+| D: failure recovery | Fresh final gate: actual failed worker cleanup/retry, invalid/missing source, corrupt stored import preserving current result, report failure/retry, background export failure. Large 81 MP preview explicitly reports unavailable without crashing. | PASS automated; complete native failure/retry journey NOT TESTED. |
+| Shutdown | First native process exited normally (exit code 0). Final gate checks deferred close during an owned worker. | PASS for observed clean idle close and automated active-worker close; manual close-during-real-analysis NOT TESTED. |
+
+Fresh reference results are in `reference_validation.json`. Instagram: SHA-256 `1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9`, normal profile, suspicious 21.327049999999996, benign 2.25, primary localized_editing / High, pattern possible_foreground_background_processing_mismatch. Midjourney: SHA-256 `08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9`, normal, suspicious 6.674999999999999, benign 1.5, primary synthetic_origin / Medium, provenance_supported_synthetic_context. The latter is unverified synthetic context, not cryptographic authentication. Historical subject_based runs were not used for numerical comparisons.
+
+Generated annotations and exports live in ignored `validation_output/`. No source/reference image or original saved report was rewritten. Source image screenshots are intentional visual QA artifacts; generated forensic payloads remain outside Git.

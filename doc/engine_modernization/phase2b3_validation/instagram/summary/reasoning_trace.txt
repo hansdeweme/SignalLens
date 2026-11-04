@@ -1,0 +1,475 @@
+Reasoning Trace
+
+Analysis Mode: subject_based
+
+Production Corroboration Audit
+------------------------------
+- Version: 2b3
+- boundary.compound_support: passed=True; 3 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
+-   Eligible Evidence: ['evidence:boundary', 'evidence:boundary_focus', 'evidence:subject_boundary']
+-   Distinct Ancestry Groups: [{'witness': 'evidence:boundary', 'measurements': ['measurement:ela_recompression_difference', 'measurement:luminance_residual'], 'family': 'processing_residual'}, {'witness': 'evidence:subject_boundary', 'measurements': ['measurement:intrinsic_edge_ring_features'], 'family': 'intrinsic_edge_transition'}]
+-   Shared Ancestry: {'measurement:ela_recompression_difference': ['evidence:boundary', 'evidence:boundary_focus'], 'measurement:luminance_residual': ['evidence:boundary', 'evidence:boundary_focus']}
+- confidence.strong_source_diversity: passed=False; 1 measurement-disjoint supporting indicator(s) do not satisfy the existing 2-source diversity requirement.
+-   Eligible Evidence: ['evidence:boundary']
+-   Distinct Ancestry Groups: [{'witness': 'evidence:boundary', 'measurements': ['measurement:ela_recompression_difference', 'measurement:luminance_residual'], 'family': 'processing_residual'}]
+-   Shared Ancestry: {}
+- synthetic.additional_support_flag: passed=False; 0 observed supporting indicator(s) do not satisfy the 1-indicator general_accumulation condition; shared ancestry is allowed and is not independent confirmation.
+-   Eligible Evidence: []
+-   Distinct Ancestry Groups: []
+-   Shared Ancestry: {}
+- synthetic.fft_patch_compound: passed=True; 2 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
+-   Eligible Evidence: ['evidence:fft', 'evidence:patch_similarity']
+-   Distinct Ancestry Groups: [{'witness': 'evidence:fft', 'measurements': ['measurement:global_spectral_features'], 'family': 'spectral'}, {'witness': 'evidence:patch_similarity', 'measurements': ['measurement:retained_patch_matches'], 'family': 'patch_recurrence'}]
+-   Shared Ancestry: {}
+- synthetic.material_asymmetry_compound: passed=False; 0 observed supporting indicator(s) do not satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.
+-   Eligible Evidence: []
+-   Distinct Ancestry Groups: []
+-   Shared Ancestry: {}
+Corroboration Limitations
+- Measurement-disjoint ancestry is a structural diversity check, not statistical independence.
+- Compound conditions allow related interpretations; numerical scores and shadow policy are unchanged.
+
+
+Evidence Dependency Analysis (Shadow Only)
+------------------------------------------
+- lineage_version: 2b2
+- status: complete
+- policy: structural_restatement_only
+- production_score_unchanged: true
+- comparison: {'suspicious_score': {'production': 20.47705, 'shadow': 20.47705, 'difference': 0.0}, 'benign_score': {'production': 2.25, 'shadow': 2.25, 'difference': 0.0}}
+- families: {'processing_residual': {'evidence_ids': ['evidence:boundary', 'evidence:boundary_focus', 'evidence:cross_signal'], 'existing_suspicious_base': 5.0, 'shadow_suspicious_base': 5.0, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': ['base:boundary', 'base:boundary_focus', 'base:cross_signal'], 'component_operation_ids': ['component:local_edit_support_score:add:b8de1b4b184d', 'component:edit_boost:add:aa546f95922d', 'component:compression_boost:add:e448c9fdd8ab'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'spectral': {'evidence_ids': ['evidence:fft'], 'existing_suspicious_base': 3.0, 'shadow_suspicious_base': 3.0, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': [], 'component_operation_ids': [], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'patch_recurrence': {'evidence_ids': ['evidence:patch_similarity', 'evidence:patch_spatial'], 'existing_suspicious_base': 3.0, 'shadow_suspicious_base': 3.0, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': ['base:patch_spatial'], 'component_operation_ids': ['component:clone_support_score:add:8f8d629e66a2', 'component:clone_support_score:maximum:e178608a7259'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'subject_surface': {'evidence_ids': ['evidence:subject_material_realism', 'evidence:subject_process_asymmetry', 'evidence:subject_texture_consistency'], 'existing_suspicious_base': 3.5, 'shadow_suspicious_base': 3.5, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': ['base:subject_material_realism', 'base:subject_process_asymmetry'], 'component_operation_ids': ['component:local_edit_support_score:add:5be21e7bc2e2', 'component:local_edit_support_score:add:90eb71610350', 'component:local_edit_support_score:add:edecc123b6f0', 'component:edit_boost:add:5be21e7bc2e2', 'component:edit_boost:add:90eb71610350', 'component:edit_boost:add:edecc123b6f0', 'component:edit_boost:add:aa546f95922d', 'component:synthetic_boost:add:edecc123b6f0'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'camera_pipeline': {'evidence_ids': ['evidence:cfa_demosaic', 'evidence:sensor_origin'], 'existing_suspicious_base': 0.0, 'shadow_suspicious_base': 0.0, 'existing_benign_base': 2.0, 'shadow_benign_base': 2.0, 'pending_incremental_credit_ids': [], 'component_operation_ids': ['component:camera_counter_support:add:a76e4bd840d9', 'component:caution_penalty:add:feb000b080cd', 'component:local_edit_support_score:add:a76e4bd840d9', 'component:edit_boost:add:aa546f95922d', 'component:clone_support_score:add:8f8d629e66a2', 'component:clone_support_score:maximum:e178608a7259', 'component:caution_penalty:add:fe153252e2fe'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'compression_history': {'evidence_ids': ['evidence:compression_history'], 'existing_suspicious_base': 3.0, 'shadow_suspicious_base': 3.0, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': [], 'component_operation_ids': ['component:local_edit_support_score:add:0a03cef2e0de', 'component:edit_boost:add:aa546f95922d', 'component:compression_boost:add:e448c9fdd8ab'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}, 'intrinsic_edge_transition': {'evidence_ids': ['evidence:subject_boundary'], 'existing_suspicious_base': 3.0, 'shadow_suspicious_base': 3.0, 'existing_benign_base': 0.0, 'shadow_benign_base': 0.0, 'pending_incremental_credit_ids': [], 'component_operation_ids': ['component:local_edit_support_score:add:74b3b317ebb0', 'component:edit_boost:add:aa546f95922d', 'component:compression_boost:add:e448c9fdd8ab'], 'component_attribution_note': 'Operation references can span families; do not sum mixed-family references as disjoint credits.'}}
+- shared_ancestry: {'supporting_indicator_count': 13, 'distinct_measurement_ancestries': ['measurement:aligned_offgrid_boundary_energy', 'measurement:chroma_phase_directionality', 'measurement:ela_recompression_difference', 'measurement:global_spectral_features', 'measurement:intrinsic_edge_ring_features', 'measurement:luminance_phase_residual', 'measurement:luminance_residual', 'measurement:masked_hybrid_texture_descriptors', 'measurement:regional_patch_statistics', 'measurement:regional_spectral_features', 'measurement:retained_patch_matches', 'measurement:subject_material_patch_statistics'], 'measurement_ancestry_count': 12, 'distinct_measurement_families': ['camera_pipeline', 'compression_history', 'intrinsic_edge_transition', 'patch_recurrence', 'processing_residual', 'spectral', 'subject_surface'], 'shared_ancestry': {'measurement:ela_recompression_difference': ['evidence:boundary', 'evidence:boundary_focus', 'evidence:cross_signal'], 'measurement:luminance_residual': ['evidence:boundary', 'evidence:boundary_focus', 'evidence:cross_signal'], 'measurement:masked_hybrid_texture_descriptors': ['evidence:subject_process_asymmetry', 'evidence:subject_texture_consistency'], 'measurement:retained_patch_matches': ['evidence:patch_similarity', 'evidence:patch_spatial']}, 'overlapping_feature_groups': {'acquisition_phase_features': ['evidence:cfa_demosaic', 'evidence:sensor_origin'], 'highpass_features': ['evidence:cfa_demosaic', 'evidence:sensor_origin', 'evidence:subject_boundary', 'evidence:subject_material_realism', 'evidence:subject_process_asymmetry'], 'processing_anomalies': ['evidence:boundary', 'evidence:boundary_focus', 'evidence:compression_history', 'evidence:cross_signal'], 'selected_geometry': ['evidence:boundary_focus', 'evidence:patch_spatial', 'evidence:subject_material_realism', 'evidence:subject_process_asymmetry', 'evidence:subject_texture_consistency'], 'surface_feature_definitions': ['evidence:subject_material_realism', 'evidence:subject_process_asymmetry', 'evidence:subject_texture_consistency'], 'texture_recurrence': ['evidence:patch_similarity', 'evidence:patch_spatial', 'evidence:subject_texture_consistency']}, 'derived_or_composite_indicators': ['evidence:boundary', 'evidence:boundary_focus', 'evidence:cross_signal', 'evidence:patch_spatial', 'evidence:subject_material_realism', 'evidence:subject_process_asymmetry'], 'missing_required_ancestry': {}, 'only_one_measurement_family': False, 'independent_observation_count': None, 'interpretation': 'Distinct extractions/families are descriptive, not a statistical independence count.'}
+Shadow Limitations
+- Shadow totals have no confidence tier, hypothesis selection or probability interpretation.
+- Measurement ancestry does not establish statistical independence or forensic redundancy.
+- Added localization/interpretation has no calibrated marginal weight; existing credit is provisional.
+- Existing component synergies, camera moderation, penalties and domain bonus policy remain fixed. This is not a full causal ablation.
+- Measurement IDs describe feature extractions; overlapping helper code and masks are recorded separately.
+- The morphology segmentation stage is not scored in normal summary synthesis; its snapshot alias is region_masks.
+
+No shadow confidence tier or forensic decision is assigned.
+
+Scorecard Calculation
+---------------------
+- Version: 2a
+- Status: valid
+- base_suspicious: 23.0000
+- base_benign: 2.2500
+- raw_contributions: {'camera_counter_support': 1.25, 'local_edit_support_score': 4.85, 'clone_support_score': 0.0, 'synthetic_boost': 0.4, 'edit_boost': 1.823, 'provenance_boost': 0.0, 'sensor_boost': 0.0, 'compression_boost': 0.75, 'caution_penalty': 1.6}
+- final_contributions: {'camera_counter_support': 1.25, 'local_edit_support_score': 4.85, 'clone_support_score': 0.0, 'synthetic_boost': 0.4, 'edit_boost': 1.823, 'provenance_boost': 0.0, 'sensor_boost': 0.0, 'compression_boost': 0.75, 'caution_penalty': 1.6}
+- reliability_adjustments: {'boundary_reliability': 1.0, 'boundary_adjustment_applicable': True, 'region_geometry_unreliable': False, 'geometry_mechanism_multiplier': 1.0}
+- aggregate_transforms: {'measured_camera_support': 1.25, 'camera_multiplier': 0.85, 'geometry_multiplier': 1.0, 'photo_context_multiplier': 1.0, 'photo_context_prior': False, 'suspicious_floor': 0.0}
+- aggregate_scores: {'suspicious_score': 20.47705, 'benign_score': 2.25}
+- camera_counter_support add 1.25: ds.camera_like_support
+- caution_penalty add 0.35: ds.camera_like_support and ds.provenance_clean
+- local_edit_support_score add 2.0: ds.strong_local_edit
+- local_edit_support_score add 0.75: boundary_strong
+- local_edit_support_score add 0.4: ds.compression_inconsistency
+- local_edit_support_score add 0.75: ds.subject_texture_strong
+- local_edit_support_score add 0.4: otherwise / asym_medium
+- local_edit_support_score add 0.75: otherwise / ds.material_realism_medium
+- local_edit_support_score add -0.2: ds.camera_like_support
+- edit_boost add 0.4: ds.subject_texture_strong
+- edit_boost add 0.15: otherwise / asym_medium
+- edit_boost add 0.4: otherwise / ds.material_realism_medium
+- edit_boost add 0.8729999999999999: local_support_conversion
+- clone_support_score add -0.9: usable_observation(ev.patch_similarity) / camera_benign
+- clone_support_score maximum 0.0: clone_floor
+- synthetic_boost add 0.4: otherwise / ds.material_realism_medium
+- compression_boost add 0.75: ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong)
+- caution_penalty add 1.25: measured_camera_caution
+
+Pipeline Coverage
+-----------------
+- Coverage: complete
+- Stage Counts: {'success': 23, 'skipped': 0, 'unavailable': 0, 'failed': 0}
+- mask_status: reliable
+- mask_source: mediapipe_tasks_image_segmenter
+- mask_reliability: high
+- fallback_used: false
+- fallback_reason: null
+Final Decision
+--------------
+- Branch: possible_foreground_background_processing_mismatch
+- Dominant Pattern: possible_foreground_background_processing_mismatch
+- Confidence Tier: High
+- Polarity: suspicious
+- Primary Hypothesis: localized_editing
+
+synthetic_origin
+----------------
+- polarity: neutral
+- confidence_tier: Inconclusive
+- decision_branch: null
+- explanation: Synthetic origin is not established by the available evidence.
+Moderating Signals
+- weak camera cfa supported: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+
+Contextual Signals
+- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- repeated patch structures are concentrated within the subject: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject material appears overly regularized and lacks natural variability: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- texture characteristics differ between subject and background: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject texture shows repeated stochastic patterns: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+
+Limitations
+- Heuristic support levels are not probabilities.
+- Missing provenance coverage is a limitation, not positive generation evidence.
+- No substantive generation declaration or specific visual generation finding is established.
+
+localized_editing
+-----------------
+- polarity: suspicious
+- confidence_tier: High
+- decision_branch: possible_foreground_background_processing_mismatch
+- explanation: Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.
+Contextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.
+Supporting Signals
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+
+Moderating Signals
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+
+Contextual Signals
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+
+Limitations
+- Localized editing evidence does not by itself establish AI generation.
+
+camera_acquisition
+------------------
+- polarity: benign
+- confidence_tier: Medium
+- decision_branch: camera_acquisition_compatibility
+- explanation: Camera-like acquisition evidence is present.
+Supporting Signals
+- weak camera cfa supported: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+
+Contextual Signals
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+
+Limitations
+- Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.
+
+Provenance Evidence
+-------------------
+- state: no_substantive_provenance_evidence
+- metadata_authenticity_verified: false
+Route Candidates
+----------------
+- route_real_photo_context_prior: matched=False; condition_not_met
+- route_boundary_support_limited: matched=False; condition_not_met
+- route_region_geometry_unreliable: matched=False; condition_not_met
+- route_unreliable_boundary_context: matched=False; condition_not_met
+- route_localized_multi_mechanism: matched=False; condition_not_met
+- route_strong_local_edit: matched=True; selected_overall
+- route_clone_reuse: matched=False; condition_not_met
+- route_moderated_local_edit: matched=True; alternative_candidate; scoped safeguards and specificity rules apply
+- route_clone_ambiguous: matched=False; condition_not_met
+- route_localized_processing: matched=True; alternative_candidate; scoped safeguards and specificity rules apply
+- route_subject_boundary: matched=True; alternative_candidate; scoped safeguards and specificity rules apply
+- route_boundary_transition: matched=False; condition_not_met
+- route_structured_recurrence_inconclusive: matched=False; condition_not_met
+- route_synthetic_multi_signal: matched=False; condition_not_met
+- route_provenance: matched=False; condition_not_met
+- route_camera_like: matched=False; condition_not_met
+- route_photo_like_consistency: matched=False; condition_not_met
+- route_multi_signal_suspicious: matched=False; condition_not_met
+- route_moderate_suspicious: matched=True; alternative_candidate; scoped safeguards and specificity rules apply
+- route_fallback: matched=True; alternative_candidate; scoped safeguards and specificity rules apply
+
+Decision Summary
+----------------
+Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.
+Contextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.
+Supporting Signals:
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+Contextual Signals:
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+Evidence Limitations:
+- Localized editing evidence does not by itself establish AI generation.
+Confidence Rationale:
+- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.
+- Confidence concerns localized processing or reuse, not whether AI was used.
+- Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.
+- Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities.
+synthetic_origin: Inconclusive (neutral). Synthetic origin is not established by the available evidence.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.
+Contextual Signals:
+- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- repeated patch structures are concentrated within the subject: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject material appears overly regularized and lacks natural variability: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- texture characteristics differ between subject and background: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+- subject texture shows repeated stochastic patterns: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.
+Limitations: Heuristic support levels are not probabilities. Missing provenance coverage is a limitation, not positive generation evidence. No substantive generation declaration or specific visual generation finding is established.
+localized_editing: High (suspicious). Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.
+Contextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.
+Supporting Signals:
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+Moderating Signals:
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+Contextual Signals:
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+Limitations: Localized editing evidence does not by itself establish AI generation.
+camera_acquisition: Medium (benign). Camera-like acquisition evidence is present.
+Supporting Signals:
+- weak camera cfa supported: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.
+Contextual Signals:
+- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.
+Limitations: Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.
+
+Why This Decision Won
+---------------------
+- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.
+
+Supporting Signals
+- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.
+
+Moderating Signals
+- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.
+
+Contextual Signals
+- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.
+
+Evidence Limitations
+- Localized editing evidence does not by itself establish AI generation.
+
+Confidence Rationale
+- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.
+- Confidence concerns localized processing or reuse, not whether AI was used.
+- Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.
+- Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities.
+
+Scorecard Highlights
+--------------------
+- suspicious_score: 20.4770
+- benign_score: 2.2500
+- local_edit_support_score: 4.8500
+- clone_support_score: 0.0000
+- camera_counter_support: 1.2500
+- synthetic_boost: 0.4000
+- edit_boost: 1.8230
+- provenance_boost: 0.0000
+- caution_penalty: 1.6000
+- contextual_false_positive_risk: false
+
+Derived Signals
+---------------
+- person_mask_reliable: true
+- subject_area_ratio: 0.5961
+- boundary_support_ratio: 0.1005
+- boundary_support_low: false
+- boundary_reliability_score: 1.0000
+- strong_local_edit: true
+- strong_cross: false
+- region_geometry_unreliable: false
+- patch_structured: true
+- fft_structured: true
+- camera_like_support: true
+- metadata_synthetic: false
+- metadata_enhancement: false
+- metadata_missing: true
+- provenance_state: no_substantive_provenance_evidence
+- provenance_clean: true
+- local_signals_weak: false
+
+Section Snapshot
+----------------
+- osint
+    pattern: null
+    score: null
+    polarity: neutral
+    status: not_run
+    name: OSINT
+    note: No reverse-image OSINT review has yet been recorded for this image.
+
+- metadata
+    pattern: sparse_or_stripped
+    score: 0.0000
+    polarity: neutral
+    status: weak
+    name: Metadata
+    note: Metadata is sparse or stripped, limiting provenance assessment. Absence alone does not indicate synthetic origin.
+
+- ela
+    pattern: ela_inconclusive
+    score: null
+    polarity: neutral
+    status: weak
+    name: ELA
+    note: ELA results do not clearly indicate either a localized anomaly or a uniform pattern.
+
+- noise
+    pattern: noise_inconclusive
+    score: null
+    polarity: neutral
+    status: weak
+    name: Residual
+    note: Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern.
+
+- sensor_origin
+    pattern: camera_like_acquisition_supported
+    score: 0.0539
+    polarity: benign
+    status: medium
+    name: Sensor Origin
+    note: Sensor-origin analysis detects spatially coherent microstructure compatible with a camera capture pipeline. This supports a camera-like acquisition pipeline but is not definitive on its own.
+
+- region_masks
+    pattern: region_segmentation_generated
+    score: null
+    polarity: neutral
+    status: weak
+    name: Region Mask
+    note: Image was segmented into subject, boundary, and background regions (subject=0.60, boundary=0.10, background=0.40; source=person_subject_mask, person-mask reliability=high). These regions are used for localized forensic analysis.
+
+- segmentation_alignment
+    pattern: segmentation_boundary_alignment
+    score: 0.2014
+    polarity: neutral
+    status: weak
+    name: Segmentation Alignment
+    note: Cross-signal hotspots do not meaningfully align with the subject boundary.
+
+- region_fft
+    pattern: region_frequency_elevated
+    score: 0.2080
+    polarity: neutral
+    status: inconclusive
+    name: Region Frequency
+    note: Region-aware frequency analysis completed, but the difference between subject, contour band, and background is not strong enough for a specific conclusion. Subject/background FFT gap=0.208; boundary/background FFT gap=-0.032; subject grid ratio=2.100; boundary grid ratio=1.361.
+
+- cross_signal
+    pattern: partial_hotspot_convergence
+    score: null
+    polarity: suspicious
+    status: weak
+    name: Cross-Signal
+    note: ELA and residual analysis show partial spatial agreement in localized regions.
+
+- boundary
+    pattern: possible_foreground_background_processing_mismatch
+    score: null
+    polarity: suspicious
+    status: strong
+    name: Boundary Signal
+    note: ELA and residual hotspots converge in a connected, contour-like region. This is consistent with differential foreground/background processing, localized compositing, masking, or subject-specific retouching.
+
+- boundary_focus
+    pattern: boundary_focused_processing_mismatch
+    score: 6.7117
+    polarity: suspicious
+    status: medium
+    name: Boundary Focus
+    note: Processing intensity is elevated in the boundary region relative to both the subject and the background. This supports a localized boundary mismatch.Combined boundary ratio=1.646; combined boundary boost=6.712; transition anomaly score=7.875; ELA boundary ratio=1.366; residual boundary ratio=1.926.
+
+- fft
+    pattern: possible_decoder_grid_signature
+    score: 0.6723
+    polarity: suspicious
+    status: strong
+    name: Frequency Domain
+    note: Frequency-domain analysis reveals repeated off-center spectral peaks with partial symmetry and axis-aligned structure, and a reconstructable spatial grid response. This indicates structured periodicity, but such patterns can also arise from genuine repeated scene content, camera pipeline effects, or regular image geometry.
+
+- subject_boundary
+    pattern: possible_subject_background_segmentation_artifact
+    score: 0.6771
+    polarity: suspicious
+    status: strong
+    name: Subject Boundary
+    note: Boundary-transition analysis indicates a likely subject/background segmentation or replacement artifact, with multiple cues suggesting an implausible cutout-style or background-regime transition.
+
+- subject_texture_consistency
+    pattern: subject_internal_stochastic_repetition
+    score: 1.0000
+    polarity: suspicious
+    status: medium
+    name: Subject Texture
+    note: Subject-only texture analysis finds elevated soft self-similarity across the texture-focused subject region. This supports subject-internal stochastic repetition consistent with diffusion-generated or AI-enhanced subject-surface structure. Soft recurrence score=1.000; mean neighbor similarity=0.928; p90 neighbor similarity=0.992; dense similarity ratio=0.750.
+
+- subject_process_asymmetry
+    pattern: subject_background_texture_asymmetry
+    score: 0.5893
+    polarity: suspicious
+    status: weak
+    name: Subject Process Asymmetry
+    note: Meaningful subject/background texture-process asymmetry is present, but the evidence remains contextual rather than decisive. Background baseline was treated as weak or the subject was dominant in frame, so subject-internal material regularization cues were given additional weight. Asymmetry score=0.589; regularization dominance=0.416; process divergence=0.433; boundary paradox=0.650; baseline reliability=1.000.
+
+- subject_material_realism
+    pattern: subject_material_regularization_dominant
+    score: 0.5533
+    polarity: suspicious
+    status: medium
+    name: Subject Material Realism
+    note: Subject shows moderate signs of material regularization or homogenization, consistent with synthetic or heavily processed rendering. Realism score=0.553.
+
+- patch_similarity
+    pattern: structured_patch_recurrence
+    score: 0.7200
+    polarity: suspicious
+    status: medium
+    name: Patch Similarity
+    note: Patch-similarity analysis reveals repeated local structures across spatially separated regions. The result is notable, though it may still reflect natural patterned content depending on scene context.
+
+- patch_spatial
+    pattern: subject_internal_synthetic_recurrence
+    score: 0.8052
+    polarity: suspicious
+    status: medium
+    name: Patch Spatial
+    note: Spatial patch analysis shows repeated high-similarity patch structure concentrated within the subject region, supporting subject-internal synthetic texture recurrence. Subject density ratio=21.219; boundary density ratio=13.231; subject weight ratio=21.325; boundary weight ratio=13.282; bridge ratio=0.242; bridge weight ratio=0.242; boundary involvement ratio=0.185; boundary-correlated ratio=0.140; subject-localized ratio=0.945;subject-internal ratio=0.805; subject-internal weight ratio=0.805.
+
+- compression_history
+    pattern: localized_compression_inconsistency
+    score: 0.0049
+    polarity: suspicious
+    status: strong
+    name: Compression History
+    note: Compression-history analysis detects localized inconsistency in block-grid behavior, which may indicate region-specific save-history or editing differences.
+
+- cfa_demosaic
+    pattern: weak_camera_cfa_supported
+    score: 0.0814
+    polarity: benign
+    status: weak
+    name: CFA / Demosaicing
+    note: CFA / demosaicing traces are weak, but this remains compatible with a modern camera pipeline or downstream processing. This is a supportive camera-pipeline compatibility signal, not a definitive authenticity claim.

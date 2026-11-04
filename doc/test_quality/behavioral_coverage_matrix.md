@@ -36,6 +36,10 @@ Read this map before adding tests. Names below are authoritative groups under te
 
 ## Explicit gaps and audit limits
 
+UI-7 adds one distinct regression owner: `test_provenance_reporting::test_hidden_report_defers_layout_and_shows_latest_snapshot` verifies deferred hidden report document layout, rendering on navigation, and clearing on investigation replacement. Existing snapshot/export/lifecycle and image-registration owners remain authoritative. Native and packaged validation evidence is recorded separately under `doc/gui_modernization/ui7/`; it is not inferred from offscreen tests.
+
+Native packaged launch then demonstrated a second distinct gap: `test_investigation_gui::test_packaged_main_uses_executable_directory` owns frozen-bootstrap working-directory selection. It uses a temporary portable bundle and a stub event loop; it does not duplicate forensic or session tests. UI-7 adds two collected cases in total.
+
 UI-6 adds these authoritative presentation/export boundaries without duplicating the lifecycle owners above:
 
 | Requirement | UI-6 owner | Existing coverage reused |

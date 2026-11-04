@@ -1,0 +1,1627 @@
+{
+  "patch_similarity": {
+    "input_image": "analyzed\\phase2a_validation\\instagram\\prepared_images\\Curvy Leggings Outfit_patch.png",
+    "patch_count": 5035,
+    "bucket_count": 5035,
+    "nontrivial_bucket_count": 500,
+    "candidate_comparisons": 35245,
+    "repetition_score": 0.8607,
+    "clone_suspicion_score": 0.72,
+    "pair_count": 500,
+    "coverage_ratio": 0.2151,
+    "similarity_pattern": "structured_patch_recurrence",
+    "similarity_note": "Patch-similarity analysis reveals repeated local structures across spatially separated regions. The result is notable, though it may still reflect natural patterned content depending on scene context.",
+    "top_pairs": [
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 120,
+        "by": 312,
+        "similarity": 0.993001,
+        "distance": 211.811
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 120,
+        "by": 320,
+        "similarity": 0.992861,
+        "distance": 219.672
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 120,
+        "by": 328,
+        "similarity": 0.992562,
+        "distance": 227.543
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 120,
+        "by": 328,
+        "similarity": 0.991512,
+        "distance": 219.672
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 48,
+        "by": 576,
+        "similarity": 0.991294,
+        "distance": 483.322
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 112,
+        "by": 696,
+        "similarity": 0.990671,
+        "distance": 585.969
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 144,
+        "by": 352,
+        "similarity": 0.990447,
+        "distance": 210.447
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 64,
+        "by": 592,
+        "similarity": 0.989793,
+        "distance": 495.871
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 224,
+        "by": 352,
+        "similarity": 0.989667,
+        "distance": 209.38
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 104,
+        "by": 656,
+        "similarity": 0.989639,
+        "distance": 554.833
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 120,
+        "by": 320,
+        "similarity": 0.989619,
+        "distance": 211.811
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 72,
+        "by": 608,
+        "similarity": 0.989257,
+        "distance": 510.31
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 136,
+        "by": 736,
+        "similarity": 0.98916,
+        "distance": 593.943
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 112,
+        "by": 688,
+        "similarity": 0.98904,
+        "distance": 585.969
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 112,
+        "by": 680,
+        "similarity": 0.988942,
+        "distance": 577.997
+      },
+      {
+        "ax": 224,
+        "ay": 128,
+        "bx": 88,
+        "by": 216,
+        "similarity": 0.988916,
+        "distance": 161.988
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 64,
+        "by": 576,
+        "similarity": 0.988726,
+        "distance": 480.133
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 128,
+        "by": 728,
+        "similarity": 0.988687,
+        "distance": 616.831
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 144,
+        "by": 728,
+        "similarity": 0.988601,
+        "distance": 616.208
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 56,
+        "by": 584,
+        "similarity": 0.988373,
+        "distance": 489.506
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 104,
+        "by": 664,
+        "similarity": 0.988232,
+        "distance": 554.833
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 64,
+        "by": 544,
+        "similarity": 0.988211,
+        "distance": 448.714
+      },
+      {
+        "ax": 152,
+        "ay": 104,
+        "bx": 48,
+        "by": 560,
+        "similarity": 0.988152,
+        "distance": 467.709
+      },
+      {
+        "ax": 160,
+        "ay": 112,
+        "bx": 120,
+        "by": 696,
+        "similarity": 0.987696,
+        "distance": 585.368
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 144,
+        "by": 504,
+        "similarity": 0.987561,
+        "distance": 326.435
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 144,
+        "by": 736,
+        "similarity": 0.987442,
+        "distance": 600.48
+      },
+      {
+        "ax": 160,
+        "ay": 104,
+        "bx": 152,
+        "by": 712,
+        "similarity": 0.98667,
+        "distance": 608.053
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 24,
+        "by": 456,
+        "similarity": 0.986359,
+        "distance": 422.488
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 24,
+        "by": 464,
+        "similarity": 0.985775,
+        "distance": 430.07
+      },
+      {
+        "ax": 224,
+        "ay": 112,
+        "bx": 344,
+        "by": 600,
+        "similarity": 0.985299,
+        "distance": 502.538
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 168,
+        "by": 544,
+        "similarity": 0.985027,
+        "distance": 359.288
+      },
+      {
+        "ax": 168,
+        "ay": 208,
+        "bx": 40,
+        "by": 320,
+        "similarity": 0.984818,
+        "distance": 170.082
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 128,
+        "by": 336,
+        "similarity": 0.984544,
+        "distance": 200.0
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 128,
+        "by": 336,
+        "similarity": 0.984034,
+        "distance": 203.961
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 128,
+        "by": 328,
+        "similarity": 0.983614,
+        "distance": 196.122
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 200,
+        "by": 224,
+        "similarity": 0.983571,
+        "distance": 81.584
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 136,
+        "by": 344,
+        "similarity": 0.983314,
+        "distance": 205.679
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 136,
+        "by": 344,
+        "similarity": 0.982693,
+        "distance": 203.961
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 144,
+        "by": 736,
+        "similarity": 0.982608,
+        "distance": 593.35
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 336,
+        "by": 648,
+        "similarity": 0.982433,
+        "distance": 539.748
+      },
+      {
+        "ax": 168,
+        "ay": 216,
+        "bx": 40,
+        "by": 328,
+        "similarity": 0.982241,
+        "distance": 170.082
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 184,
+        "by": 208,
+        "similarity": 0.981924,
+        "distance": 64.0
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 312,
+        "by": 720,
+        "similarity": 0.981747,
+        "distance": 606.419
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 24,
+        "by": 480,
+        "similarity": 0.98121,
+        "distance": 445.277
+      },
+      {
+        "ax": 240,
+        "ay": 200,
+        "bx": 168,
+        "by": 552,
+        "similarity": 0.981175,
+        "distance": 359.288
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 144,
+        "by": 344,
+        "similarity": 0.981085,
+        "distance": 209.38
+      },
+      {
+        "ax": 232,
+        "ay": 112,
+        "bx": 344,
+        "by": 640,
+        "similarity": 0.98097,
+        "distance": 539.748
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 24,
+        "by": 472,
+        "similarity": 0.980884,
+        "distance": 437.667
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 160,
+        "by": 336,
+        "similarity": 0.980872,
+        "distance": 200.16
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 128,
+        "by": 320,
+        "similarity": 0.980811,
+        "distance": 188.298
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 152,
+        "by": 360,
+        "similarity": 0.980647,
+        "distance": 217.329
+      },
+      {
+        "ax": 232,
+        "ay": 192,
+        "bx": 160,
+        "by": 544,
+        "similarity": 0.980567,
+        "distance": 359.288
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 328,
+        "by": 384,
+        "similarity": 0.980549,
+        "distance": 368.521
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 88,
+        "by": 400,
+        "similarity": 0.980542,
+        "distance": 311.281
+      },
+      {
+        "ax": 168,
+        "ay": 136,
+        "bx": 136,
+        "by": 736,
+        "similarity": 0.980469,
+        "distance": 600.853
+      },
+      {
+        "ax": 192,
+        "ay": 32,
+        "bx": 128,
+        "by": 496,
+        "similarity": 0.980415,
+        "distance": 468.393
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 360,
+        "by": 384,
+        "similarity": 0.980412,
+        "distance": 296.971
+      },
+      {
+        "ax": 184,
+        "ay": 144,
+        "bx": 144,
+        "by": 344,
+        "similarity": 0.980367,
+        "distance": 203.961
+      },
+      {
+        "ax": 232,
+        "ay": 176,
+        "bx": 168,
+        "by": 520,
+        "similarity": 0.97914,
+        "distance": 349.903
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 32,
+        "by": 408,
+        "similarity": 0.979043,
+        "distance": 374.55
+      },
+      {
+        "ax": 232,
+        "ay": 176,
+        "bx": 176,
+        "by": 528,
+        "similarity": 0.979025,
+        "distance": 356.427
+      },
+      {
+        "ax": 176,
+        "ay": 40,
+        "bx": 136,
+        "by": 288,
+        "similarity": 0.978555,
+        "distance": 251.205
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 152,
+        "by": 536,
+        "similarity": 0.978276,
+        "distance": 360.976
+      },
+      {
+        "ax": 200,
+        "ay": 40,
+        "bx": 136,
+        "by": 504,
+        "similarity": 0.978218,
+        "distance": 468.393
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 144,
+        "by": 528,
+        "similarity": 0.977764,
+        "distance": 355.077
+      },
+      {
+        "ax": 232,
+        "ay": 192,
+        "bx": 136,
+        "by": 528,
+        "similarity": 0.977666,
+        "distance": 349.445
+      },
+      {
+        "ax": 160,
+        "ay": 56,
+        "bx": 24,
+        "by": 448,
+        "similarity": 0.977546,
+        "distance": 414.922
+      },
+      {
+        "ax": 168,
+        "ay": 40,
+        "bx": 224,
+        "by": 416,
+        "similarity": 0.977427,
+        "distance": 380.147
+      },
+      {
+        "ax": 168,
+        "ay": 208,
+        "bx": 40,
+        "by": 576,
+        "similarity": 0.977412,
+        "distance": 389.625
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 168,
+        "by": 544,
+        "similarity": 0.977198,
+        "distance": 365.645
+      },
+      {
+        "ax": 168,
+        "ay": 208,
+        "bx": 40,
+        "by": 312,
+        "similarity": 0.977142,
+        "distance": 164.924
+      },
+      {
+        "ax": 248,
+        "ay": 200,
+        "bx": 168,
+        "by": 544,
+        "similarity": 0.977106,
+        "distance": 353.18
+      },
+      {
+        "ax": 184,
+        "ay": 208,
+        "bx": 152,
+        "by": 736,
+        "similarity": 0.976939,
+        "distance": 528.969
+      },
+      {
+        "ax": 224,
+        "ay": 112,
+        "bx": 336,
+        "by": 640,
+        "similarity": 0.976691,
+        "distance": 539.748
+      },
+      {
+        "ax": 168,
+        "ay": 208,
+        "bx": 0,
+        "by": 600,
+        "similarity": 0.97665,
+        "distance": 426.483
+      },
+      {
+        "ax": 232,
+        "ay": 112,
+        "bx": 352,
+        "by": 600,
+        "similarity": 0.976482,
+        "distance": 502.538
+      },
+      {
+        "ax": 232,
+        "ay": 176,
+        "bx": 176,
+        "by": 536,
+        "similarity": 0.976436,
+        "distance": 364.33
+      },
+      {
+        "ax": 344,
+        "ay": 16,
+        "bx": 16,
+        "by": 464,
+        "similarity": 0.976092,
+        "distance": 555.237
+      },
+      {
+        "ax": 192,
+        "ay": 40,
+        "bx": 248,
+        "by": 208,
+        "similarity": 0.975986,
+        "distance": 177.088
+      },
+      {
+        "ax": 232,
+        "ay": 120,
+        "bx": 96,
+        "by": 400,
+        "similarity": 0.975761,
+        "distance": 311.281
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 176,
+        "by": 352,
+        "similarity": 0.975545,
+        "distance": 208.614
+      },
+      {
+        "ax": 232,
+        "ay": 176,
+        "bx": 160,
+        "by": 512,
+        "similarity": 0.975379,
+        "distance": 343.628
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 160,
+        "by": 736,
+        "similarity": 0.975362,
+        "distance": 592.864
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 144,
+        "by": 528,
+        "similarity": 0.975253,
+        "distance": 349.445
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 344,
+        "by": 336,
+        "similarity": 0.975199,
+        "distance": 240.0
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 336,
+        "by": 344,
+        "similarity": 0.975145,
+        "distance": 241.859
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 152,
+        "by": 352,
+        "similarity": 0.974688,
+        "distance": 209.38
+      },
+      {
+        "ax": 168,
+        "ay": 40,
+        "bx": 216,
+        "by": 416,
+        "similarity": 0.974083,
+        "distance": 379.051
+      },
+      {
+        "ax": 248,
+        "ay": 208,
+        "bx": 168,
+        "by": 552,
+        "similarity": 0.973897,
+        "distance": 353.18
+      },
+      {
+        "ax": 168,
+        "ay": 40,
+        "bx": 208,
+        "by": 416,
+        "similarity": 0.973872,
+        "distance": 378.122
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 24,
+        "by": 480,
+        "similarity": 0.973857,
+        "distance": 457.961
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 224,
+        "by": 576,
+        "similarity": 0.973455,
+        "distance": 530.177
+      },
+      {
+        "ax": 160,
+        "ay": 48,
+        "bx": 120,
+        "by": 272,
+        "similarity": 0.973398,
+        "distance": 227.543
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 104,
+        "by": 608,
+        "similarity": 0.973239,
+        "distance": 491.203
+      },
+      {
+        "ax": 80,
+        "ay": 136,
+        "bx": 328,
+        "by": 688,
+        "similarity": 0.972939,
+        "distance": 605.151
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 96,
+        "by": 600,
+        "similarity": 0.97287,
+        "distance": 484.248
+      },
+      {
+        "ax": 232,
+        "ay": 192,
+        "bx": 224,
+        "by": 256,
+        "similarity": 0.972753,
+        "distance": 64.498
+      },
+      {
+        "ax": 224,
+        "ay": 168,
+        "bx": 56,
+        "by": 416,
+        "similarity": 0.972729,
+        "distance": 299.546
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 128,
+        "by": 736,
+        "similarity": 0.972527,
+        "distance": 593.943
+      },
+      {
+        "ax": 200,
+        "ay": 40,
+        "bx": 144,
+        "by": 512,
+        "similarity": 0.972462,
+        "distance": 475.31
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 160,
+        "by": 536,
+        "similarity": 0.972383,
+        "distance": 359.288
+      },
+      {
+        "ax": 80,
+        "ay": 136,
+        "bx": 304,
+        "by": 752,
+        "similarity": 0.972234,
+        "distance": 655.463
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 168,
+        "by": 736,
+        "similarity": 0.972205,
+        "distance": 592.864
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 328,
+        "by": 400,
+        "similarity": 0.972165,
+        "distance": 264.121
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 56,
+        "by": 576,
+        "similarity": 0.971885,
+        "distance": 467.709
+      },
+      {
+        "ax": 0,
+        "ay": 120,
+        "bx": 88,
+        "by": 224,
+        "similarity": 0.971774,
+        "distance": 136.235
+      },
+      {
+        "ax": 232,
+        "ay": 200,
+        "bx": 160,
+        "by": 552,
+        "similarity": 0.971379,
+        "distance": 359.288
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 24,
+        "by": 488,
+        "similarity": 0.97133,
+        "distance": 465.515
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 64,
+        "by": 584,
+        "similarity": 0.971259,
+        "distance": 473.827
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 160,
+        "by": 520,
+        "similarity": 0.971203,
+        "distance": 337.615
+      },
+      {
+        "ax": 224,
+        "ay": 176,
+        "bx": 152,
+        "by": 520,
+        "similarity": 0.971084,
+        "distance": 351.454
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 328,
+        "by": 352,
+        "similarity": 0.971081,
+        "distance": 244.229
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 328,
+        "by": 384,
+        "similarity": 0.97104,
+        "distance": 368.782
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 56,
+        "by": 600,
+        "similarity": 0.970969,
+        "distance": 491.137
+      },
+      {
+        "ax": 184,
+        "ay": 208,
+        "bx": 136,
+        "by": 736,
+        "similarity": 0.970969,
+        "distance": 530.177
+      },
+      {
+        "ax": 192,
+        "ay": 40,
+        "bx": 232,
+        "by": 200,
+        "similarity": 0.970787,
+        "distance": 164.924
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 88,
+        "by": 648,
+        "similarity": 0.970779,
+        "distance": 524.961
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 24,
+        "by": 464,
+        "similarity": 0.970737,
+        "distance": 440.218
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 120,
+        "by": 328,
+        "similarity": 0.970627,
+        "distance": 203.961
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 160,
+        "by": 536,
+        "similarity": 0.970548,
+        "distance": 353.18
+      },
+      {
+        "ax": 344,
+        "ay": 16,
+        "bx": 40,
+        "by": 320,
+        "similarity": 0.970417,
+        "distance": 429.921
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 232,
+        "by": 344,
+        "similarity": 0.970281,
+        "distance": 202.544
+      },
+      {
+        "ax": 240,
+        "ay": 192,
+        "bx": 152,
+        "by": 536,
+        "similarity": 0.97012,
+        "distance": 355.077
+      },
+      {
+        "ax": 168,
+        "ay": 208,
+        "bx": 40,
+        "by": 584,
+        "similarity": 0.969939,
+        "distance": 397.19
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 216,
+        "by": 488,
+        "similarity": 0.969863,
+        "distance": 344.836
+      },
+      {
+        "ax": 184,
+        "ay": 208,
+        "bx": 160,
+        "by": 328,
+        "similarity": 0.969711,
+        "distance": 122.376
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 48,
+        "by": 568,
+        "similarity": 0.969572,
+        "distance": 461.788
+      },
+      {
+        "ax": 152,
+        "ay": 56,
+        "bx": 8,
+        "by": 512,
+        "similarity": 0.969491,
+        "distance": 478.197
+      },
+      {
+        "ax": 232,
+        "ay": 112,
+        "bx": 96,
+        "by": 392,
+        "similarity": 0.969345,
+        "distance": 311.281
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 128,
+        "by": 336,
+        "similarity": 0.969317,
+        "distance": 197.909
+      },
+      {
+        "ax": 200,
+        "ay": 144,
+        "bx": 344,
+        "by": 328,
+        "similarity": 0.969255,
+        "distance": 233.649
+      },
+      {
+        "ax": 192,
+        "ay": 40,
+        "bx": 160,
+        "by": 552,
+        "similarity": 0.969127,
+        "distance": 512.999
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 24,
+        "by": 464,
+        "similarity": 0.969021,
+        "distance": 442.9
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 320,
+        "by": 392,
+        "similarity": 0.968987,
+        "distance": 252.982
+      },
+      {
+        "ax": 48,
+        "ay": 128,
+        "bx": 72,
+        "by": 664,
+        "similarity": 0.968957,
+        "distance": 536.537
+      },
+      {
+        "ax": 168,
+        "ay": 56,
+        "bx": 16,
+        "by": 512,
+        "similarity": 0.968943,
+        "distance": 480.666
+      },
+      {
+        "ax": 184,
+        "ay": 208,
+        "bx": 144,
+        "by": 736,
+        "similarity": 0.968932,
+        "distance": 529.513
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 112,
+        "by": 688,
+        "similarity": 0.968899,
+        "distance": 562.053
+      },
+      {
+        "ax": 72,
+        "ay": 64,
+        "bx": 80,
+        "by": 688,
+        "similarity": 0.968883,
+        "distance": 624.051
+      },
+      {
+        "ax": 176,
+        "ay": 48,
+        "bx": 24,
+        "by": 472,
+        "similarity": 0.968811,
+        "distance": 450.422
+      },
+      {
+        "ax": 176,
+        "ay": 144,
+        "bx": 208,
+        "by": 480,
+        "similarity": 0.968466,
+        "distance": 337.52
+      },
+      {
+        "ax": 160,
+        "ay": 120,
+        "bx": 64,
+        "by": 592,
+        "similarity": 0.968439,
+        "distance": 481.664
+      },
+      {
+        "ax": 168,
+        "ay": 144,
+        "bx": 120,
+        "by": 336,
+        "similarity": 0.968324,
+        "distance": 197.909
+      },
+      {
+        "ax": 224,
+        "ay": 192,
+        "bx": 120,
+        "by": 496,
+        "similarity": 0.968316,
+        "distance": 321.297
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 104,
+        "by": 656,
+        "similarity": 0.968313,
+        "distance": 530.961
+      },
+      {
+        "ax": 224,
+        "ay": 192,
+        "bx": 224,
+        "by": 256,
+        "similarity": 0.967828,
+        "distance": 64.0
+      },
+      {
+        "ax": 168,
+        "ay": 56,
+        "bx": 32,
+        "by": 416,
+        "similarity": 0.967797,
+        "distance": 384.832
+      },
+      {
+        "ax": 344,
+        "ay": 16,
+        "bx": 40,
+        "by": 328,
+        "similarity": 0.967559,
+        "distance": 435.615
+      },
+      {
+        "ax": 168,
+        "ay": 144,
+        "bx": 144,
+        "by": 744,
+        "similarity": 0.967457,
+        "distance": 600.48
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 104,
+        "by": 640,
+        "similarity": 0.967457,
+        "distance": 515.053
+      },
+      {
+        "ax": 176,
+        "ay": 160,
+        "bx": 248,
+        "by": 256,
+        "similarity": 0.967342,
+        "distance": 120.0
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 192,
+        "by": 352,
+        "similarity": 0.967328,
+        "distance": 208.0
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 0,
+        "by": 560,
+        "similarity": 0.967303,
+        "distance": 415.153
+      },
+      {
+        "ax": 184,
+        "ay": 208,
+        "bx": 128,
+        "by": 336,
+        "similarity": 0.967294,
+        "distance": 139.714
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 24,
+        "by": 456,
+        "similarity": 0.967258,
+        "distance": 432.666
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 104,
+        "by": 696,
+        "similarity": 0.967226,
+        "distance": 570.754
+      },
+      {
+        "ax": 200,
+        "ay": 200,
+        "bx": 144,
+        "by": 408,
+        "similarity": 0.967148,
+        "distance": 215.407
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 192,
+        "by": 440,
+        "similarity": 0.96706,
+        "distance": 296.0
+      },
+      {
+        "ax": 232,
+        "ay": 120,
+        "bx": 344,
+        "by": 648,
+        "similarity": 0.967059,
+        "distance": 539.748
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 336,
+        "by": 392,
+        "similarity": 0.967023,
+        "distance": 262.42
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 72,
+        "by": 608,
+        "similarity": 0.966967,
+        "distance": 502.41
+      },
+      {
+        "ax": 176,
+        "ay": 168,
+        "bx": 336,
+        "by": 376,
+        "similarity": 0.966883,
+        "distance": 262.42
+      },
+      {
+        "ax": 232,
+        "ay": 96,
+        "bx": 224,
+        "by": 152,
+        "similarity": 0.966765,
+        "distance": 56.569
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 304,
+        "by": 744,
+        "similarity": 0.966764,
+        "distance": 629.107
+      },
+      {
+        "ax": 200,
+        "ay": 40,
+        "bx": 240,
+        "by": 192,
+        "similarity": 0.966664,
+        "distance": 157.175
+      },
+      {
+        "ax": 232,
+        "ay": 192,
+        "bx": 120,
+        "by": 496,
+        "similarity": 0.966646,
+        "distance": 323.975
+      },
+      {
+        "ax": 160,
+        "ay": 128,
+        "bx": 128,
+        "by": 680,
+        "similarity": 0.966638,
+        "distance": 552.927
+      },
+      {
+        "ax": 224,
+        "ay": 120,
+        "bx": 24,
+        "by": 576,
+        "similarity": 0.966588,
+        "distance": 497.932
+      },
+      {
+        "ax": 160,
+        "ay": 40,
+        "bx": 200,
+        "by": 160,
+        "similarity": 0.966462,
+        "distance": 126.491
+      },
+      {
+        "ax": 184,
+        "ay": 152,
+        "bx": 136,
+        "by": 352,
+        "similarity": 0.96635,
+        "distance": 205.679
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 16,
+        "by": 512,
+        "similarity": 0.966341,
+        "distance": 488.262
+      },
+      {
+        "ax": 168,
+        "ay": 144,
+        "bx": 128,
+        "by": 344,
+        "similarity": 0.966317,
+        "distance": 203.961
+      },
+      {
+        "ax": 192,
+        "ay": 32,
+        "bx": 128,
+        "by": 520,
+        "similarity": 0.966267,
+        "distance": 492.179
+      },
+      {
+        "ax": 264,
+        "ay": 208,
+        "bx": 160,
+        "by": 440,
+        "similarity": 0.966242,
+        "distance": 254.244
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 328,
+        "by": 392,
+        "similarity": 0.966062,
+        "distance": 379.389
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 32,
+        "by": 464,
+        "similarity": 0.96604,
+        "distance": 314.859
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 208,
+        "by": 744,
+        "similarity": 0.966038,
+        "distance": 634.476
+      },
+      {
+        "ax": 192,
+        "ay": 208,
+        "bx": 192,
+        "by": 440,
+        "similarity": 0.965807,
+        "distance": 232.0
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 216,
+        "by": 440,
+        "similarity": 0.965771,
+        "distance": 296.971
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 24,
+        "by": 448,
+        "similarity": 0.965692,
+        "distance": 425.131
+      },
+      {
+        "ax": 192,
+        "ay": 152,
+        "bx": 192,
+        "by": 368,
+        "similarity": 0.965522,
+        "distance": 216.0
+      },
+      {
+        "ax": 344,
+        "ay": 16,
+        "bx": 168,
+        "by": 216,
+        "similarity": 0.965518,
+        "distance": 266.413
+      },
+      {
+        "ax": 168,
+        "ay": 200,
+        "bx": 24,
+        "by": 416,
+        "similarity": 0.965483,
+        "distance": 259.6
+      },
+      {
+        "ax": 344,
+        "ay": 24,
+        "bx": 40,
+        "by": 328,
+        "similarity": 0.965297,
+        "distance": 429.921
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 24,
+        "by": 488,
+        "similarity": 0.965234,
+        "distance": 462.964
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 224,
+        "by": 624,
+        "similarity": 0.965226,
+        "distance": 517.038
+      },
+      {
+        "ax": 168,
+        "ay": 48,
+        "bx": 32,
+        "by": 408,
+        "similarity": 0.965115,
+        "distance": 384.832
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 152,
+        "by": 528,
+        "similarity": 0.964925,
+        "distance": 353.18
+      },
+      {
+        "ax": 208,
+        "ay": 184,
+        "bx": 160,
+        "by": 392,
+        "similarity": 0.964555,
+        "distance": 213.467
+      },
+      {
+        "ax": 192,
+        "ay": 144,
+        "bx": 176,
+        "by": 344,
+        "similarity": 0.964351,
+        "distance": 200.639
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 56,
+        "by": 544,
+        "similarity": 0.964342,
+        "distance": 442.538
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 64,
+        "by": 600,
+        "similarity": 0.964191,
+        "distance": 495.871
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 336,
+        "by": 384,
+        "similarity": 0.964156,
+        "distance": 256.125
+      },
+      {
+        "ax": 152,
+        "ay": 112,
+        "bx": 88,
+        "by": 592,
+        "similarity": 0.964067,
+        "distance": 484.248
+      },
+      {
+        "ax": 344,
+        "ay": 24,
+        "bx": 40,
+        "by": 320,
+        "similarity": 0.963942,
+        "distance": 424.302
+      },
+      {
+        "ax": 176,
+        "ay": 184,
+        "bx": 24,
+        "by": 488,
+        "similarity": 0.963795,
+        "distance": 339.882
+      },
+      {
+        "ax": 304,
+        "ay": 200,
+        "bx": 208,
+        "by": 232,
+        "similarity": 0.96377,
+        "distance": 101.193
+      },
+      {
+        "ax": 248,
+        "ay": 200,
+        "bx": 128,
+        "by": 496,
+        "similarity": 0.963709,
+        "distance": 319.399
+      },
+      {
+        "ax": 232,
+        "ay": 184,
+        "bx": 136,
+        "by": 520,
+        "similarity": 0.963685,
+        "distance": 349.445
+      },
+      {
+        "ax": 216,
+        "ay": 176,
+        "bx": 160,
+        "by": 528,
+        "similarity": 0.963629,
+        "distance": 356.427
+      }
+    ],
+    "patch_size": 16,
+    "scale_info": {
+      "scale": 0.6,
+      "width": 432,
+      "height": 768
+    },
+    "artifacts": {
+      "patch_similarity_overlay": "analyzed\\phase2a_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_overlay.png",
+      "patch_similarity_heatmap": "analyzed\\phase2a_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_heatmap.png"
+    }
+  }
+}

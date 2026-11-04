@@ -1,0 +1,29 @@
+{
+  "platform": "windows",
+  "python": "3.13.13 (tags/v3.13.13:01104ce, Apr  7 2026, 19:25:48) [MSC v.1944 64 bit (AMD64)]",
+  "qt": "6.10.0",
+  "pyqt": "6.10.2",
+  "startup_seconds": 0.4265458000008948,
+  "screens": [
+    {
+      "name": "DELL U2412M",
+      "dpr": 1.0,
+      "logical_dpi": 96.0,
+      "physical_dpi": 94.11039611039611,
+      "geometry": [
+        1920,
+        1200
+      ]
+    },
+    {
+      "name": "\\\\.\\DISPLAY1",
+      "dpr": 1.5,
+      "logical_dpi": 96.0,
+      "physical_dpi": 125.86483316481294,
+      "geometry": [
+        1707,
+        1067
+      ]
+    }
+  ]
+}

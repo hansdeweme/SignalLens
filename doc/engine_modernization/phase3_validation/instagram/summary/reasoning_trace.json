@@ -1,0 +1,4230 @@
+{
+  "analysis_mode": "subject_based",
+  "section_snapshot": {
+    "osint": {
+      "name": "OSINT",
+      "status": "not_run",
+      "polarity": "neutral",
+      "pattern": null,
+      "score": null,
+      "note": "No reverse-image OSINT review has yet been recorded for this image."
+    },
+    "metadata": {
+      "name": "Metadata",
+      "status": "weak",
+      "polarity": "neutral",
+      "pattern": "sparse_or_stripped",
+      "score": 0.0,
+      "note": "Metadata is sparse or stripped, limiting provenance assessment. Absence alone does not indicate synthetic origin."
+    },
+    "ela": {
+      "name": "ELA",
+      "status": "weak",
+      "polarity": "neutral",
+      "pattern": "ela_inconclusive",
+      "score": null,
+      "note": "ELA results do not clearly indicate either a localized anomaly or a uniform pattern."
+    },
+    "noise": {
+      "name": "Residual",
+      "status": "weak",
+      "polarity": "neutral",
+      "pattern": "noise_inconclusive",
+      "score": null,
+      "note": "Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern."
+    },
+    "sensor_origin": {
+      "name": "Sensor Origin",
+      "status": "medium",
+      "polarity": "benign",
+      "pattern": "camera_like_acquisition_supported",
+      "score": 0.05393149331212044,
+      "note": "Sensor-origin analysis detects spatially coherent microstructure compatible with a camera capture pipeline. This supports a camera-like acquisition pipeline but is not definitive on its own."
+    },
+    "region_masks": {
+      "name": "Region Mask",
+      "status": "weak",
+      "polarity": "neutral",
+      "pattern": "region_segmentation_generated",
+      "score": null,
+      "note": "Image was segmented into subject, boundary, and background regions (subject=0.60, boundary=0.10, background=0.40; source=person_subject_mask, person-mask reliability=high). These regions are used for localized forensic analysis."
+    },
+    "segmentation_alignment": {
+      "name": "Segmentation Alignment",
+      "status": "weak",
+      "polarity": "neutral",
+      "pattern": "segmentation_boundary_alignment",
+      "score": 0.2013549571853685,
+      "note": "Cross-signal hotspots do not meaningfully align with the subject boundary."
+    },
+    "region_fft": {
+      "name": "Region Frequency",
+      "status": "inconclusive",
+      "polarity": "neutral",
+      "pattern": "region_frequency_elevated",
+      "score": 0.20800000000000002,
+      "note": "Region-aware frequency analysis completed, but the difference between subject, contour band, and background is not strong enough for a specific conclusion. Subject/background FFT gap=0.208; boundary/background FFT gap=-0.032; subject grid ratio=2.100; boundary grid ratio=1.361."
+    },
+    "cross_signal": {
+      "name": "Cross-Signal",
+      "status": "weak",
+      "polarity": "suspicious",
+      "pattern": "partial_hotspot_convergence",
+      "score": null,
+      "note": "ELA and residual analysis show partial spatial agreement in localized regions."
+    },
+    "boundary": {
+      "name": "Boundary Signal",
+      "status": "strong",
+      "polarity": "suspicious",
+      "pattern": "possible_foreground_background_processing_mismatch",
+      "score": null,
+      "note": "ELA and residual hotspots converge in a connected, contour-like region. This is consistent with differential foreground/background processing, localized compositing, masking, or subject-specific retouching."
+    },
+    "boundary_focus": {
+      "name": "Boundary Focus",
+      "status": "medium",
+      "polarity": "suspicious",
+      "pattern": "boundary_focused_processing_mismatch",
+      "score": 6.711709976196289,
+      "note": "Processing intensity is elevated in the boundary region relative to both the subject and the background. This supports a localized boundary mismatch.Combined boundary ratio=1.646; combined boundary boost=6.712; transition anomaly score=7.875; ELA boundary ratio=1.366; residual boundary ratio=1.926."
+    },
+    "fft": {
+      "name": "Frequency Domain",
+      "status": "strong",
+      "polarity": "suspicious",
+      "pattern": "possible_decoder_grid_signature",
+      "score": 0.6723,
+      "note": "Frequency-domain analysis reveals repeated off-center spectral peaks with partial symmetry and axis-aligned structure, and a reconstructable spatial grid response. This indicates structured periodicity, but such patterns can also arise from genuine repeated scene content, camera pipeline effects, or regular image geometry."
+    },
+    "subject_boundary": {
+      "name": "Subject Boundary",
+      "status": "strong",
+      "polarity": "suspicious",
+      "pattern": "possible_subject_background_segmentation_artifact",
+      "score": 0.6771309242149195,
+      "note": "Boundary-transition analysis indicates a likely subject/background segmentation or replacement artifact, with multiple cues suggesting an implausible cutout-style or background-regime transition."
+    },
+    "subject_texture_consistency": {
+      "name": "Subject Texture",
+      "status": "medium",
+      "polarity": "suspicious",
+      "pattern": "subject_internal_stochastic_repetition",
+      "score": 1.0,
+      "note": "Subject-only texture analysis finds elevated soft self-similarity across the texture-focused subject region. This supports subject-internal stochastic repetition consistent with diffusion-generated or AI-enhanced subject-surface structure. Soft recurrence score=1.000; mean neighbor similarity=0.928; p90 neighbor similarity=0.992; dense similarity ratio=0.750."
+    },
+    "subject_process_asymmetry": {
+      "name": "Subject Process Asymmetry",
+      "status": "weak",
+      "polarity": "suspicious",
+      "pattern": "subject_background_texture_asymmetry",
+      "score": 0.589284147850057,
+      "note": "Meaningful subject/background texture-process asymmetry is present, but the evidence remains contextual rather than decisive. Background baseline was treated as weak or the subject was dominant in frame, so subject-internal material regularization cues were given additional weight. Asymmetry score=0.589; regularization dominance=0.416; process divergence=0.433; boundary paradox=0.650; baseline reliability=1.000."
+    },
+    "subject_material_realism": {
+      "name": "Subject Material Realism",
+      "status": "medium",
+      "polarity": "suspicious",
+      "pattern": "subject_material_regularization_dominant",
+      "score": 0.5533233826460278,
+      "note": "Subject shows moderate signs of material regularization or homogenization, consistent with synthetic or heavily processed rendering. Realism score=0.553."
+    },
+    "patch_similarity": {
+      "name": "Patch Similarity",
+      "status": "medium",
+      "polarity": "suspicious",
+      "pattern": "structured_patch_recurrence",
+      "score": 0.72,
+      "note": "Patch-similarity analysis reveals repeated local structures across spatially separated regions. The result is notable, though it may still reflect natural patterned content depending on scene context."
+    },
+    "patch_spatial": {
+      "name": "Patch Spatial",
+      "status": "medium",
+      "polarity": "suspicious",
+      "pattern": "subject_internal_synthetic_recurrence",
+      "score": 0.8052254921045455,
+      "note": "Spatial patch analysis shows repeated high-similarity patch structure concentrated within the subject region, supporting subject-internal synthetic texture recurrence. Subject density ratio=21.219; boundary density ratio=13.231; subject weight ratio=21.325; boundary weight ratio=13.282; bridge ratio=0.242; bridge weight ratio=0.242; boundary involvement ratio=0.185; boundary-correlated ratio=0.140; subject-localized ratio=0.945;subject-internal ratio=0.805; subject-internal weight ratio=0.805."
+    },
+    "compression_history": {
+      "name": "Compression History",
+      "status": "strong",
+      "polarity": "suspicious",
+      "pattern": "localized_compression_inconsistency",
+      "score": 0.00486650038510561,
+      "note": "Compression-history analysis detects localized inconsistency in block-grid behavior, which may indicate region-specific save-history or editing differences."
+    },
+    "cfa_demosaic": {
+      "name": "CFA / Demosaicing",
+      "status": "weak",
+      "polarity": "benign",
+      "pattern": "weak_camera_cfa_supported",
+      "score": 0.08142067492008209,
+      "note": "CFA / demosaicing traces are weak, but this remains compatible with a modern camera pipeline or downstream processing. This is a supportive camera-pipeline compatibility signal, not a definitive authenticity claim."
+    }
+  },
+  "context": {
+    "natural_repetition": false,
+    "decorative_geometric": false,
+    "smartphone_computational": false,
+    "screen_origin": false,
+    "analysis_mode": "subject_based"
+  },
+  "contextual_priors": {
+    "real_photo_context_prior": false
+  },
+  "evidence_snapshot": {
+    "metadata": {
+      "name": "Metadata",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "metadata",
+      "pattern": "sparse_or_stripped",
+      "score": 0.0,
+      "confidence": null,
+      "note": "Metadata is sparse or stripped, limiting provenance assessment. Absence alone does not indicate synthetic origin.",
+      "artifacts": {},
+      "details": {
+        "signal_ids": [
+          "METADATA_STRIPPED_OR_SPARSE"
+        ],
+        "metadata_signals": [
+          {
+            "id": "METADATA_STRIPPED_OR_SPARSE",
+            "severity": "low",
+            "confidence": 0.55,
+            "status": "weak_hit",
+            "summary": "Metadata appears sparse or stripped of provenance-bearing fields; technical/container metadata may still be present.",
+            "evidence": [
+              {
+                "provenance_keys_detected": [],
+                "technical_keys_detected_count": 43
+              }
+            ]
+          }
+        ],
+        "provenance_state": "no_substantive_provenance_evidence",
+        "provenance_verified": false,
+        "camera_metadata_present": false
+      }
+    },
+    "osint": null,
+    "ela": {
+      "name": "ELA",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "local",
+      "pattern": "ela_inconclusive",
+      "score": null,
+      "confidence": null,
+      "note": "ELA results do not clearly indicate either a localized anomaly or a uniform pattern.",
+      "artifacts": {},
+      "details": {}
+    },
+    "noise": {
+      "name": "Residual",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "local",
+      "pattern": "noise_inconclusive",
+      "score": null,
+      "confidence": null,
+      "note": "Residual analysis does not clearly indicate either a localized anomaly or a uniform pattern.",
+      "artifacts": {},
+      "details": {}
+    },
+    "sensor_origin": {
+      "name": "Sensor Origin",
+      "status": "medium",
+      "polarity": "benign",
+      "domain": "sensor",
+      "pattern": "camera_like_acquisition_supported",
+      "score": 0.05393149331212044,
+      "confidence": null,
+      "note": "Sensor-origin analysis detects spatially coherent microstructure compatible with a camera capture pipeline. This supports a camera-like acquisition pipeline but is not definitive on its own.",
+      "artifacts": {
+        "sensor_overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_sensor_origin_overlay.jpg"
+      },
+      "details": {
+        "global_trace_strength": 0.05393149331212044,
+        "global_periodicity_strength": 0.11465946584939957,
+        "block_consistency_score": 0.8542482281724612,
+        "localized_inconsistency_score": 0.13273934918371114
+      }
+    },
+    "cfa_demosaic": {
+      "name": "CFA / Demosaicing",
+      "status": "weak",
+      "polarity": "benign",
+      "domain": "sensor_cfa",
+      "pattern": "weak_camera_cfa_supported",
+      "score": 0.08142067492008209,
+      "confidence": null,
+      "note": "CFA / demosaicing traces are weak, but this remains compatible with a modern camera pipeline or downstream processing. This is a supportive camera-pipeline compatibility signal, not a definitive authenticity claim.",
+      "artifacts": {
+        "overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_cfa_demosaic_overlay.jpg"
+      },
+      "details": {
+        "global_cfa_strength": 0.08142067492008209,
+        "block_consistency_score": 0.8520624690822193,
+        "localized_inconsistency_score": 0.15385025180876255,
+        "mean_periodicity_score": 0.12204130738973618,
+        "mean_directionality_score": 0.256747841835022,
+        "mean_energy_score": 0.29265153408050537
+      }
+    },
+    "region_masks": {
+      "name": "Region Mask",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "segmentation",
+      "pattern": "region_segmentation_generated",
+      "score": null,
+      "confidence": null,
+      "note": "Image was segmented into subject, boundary, and background regions (subject=0.60, boundary=0.10, background=0.40; source=person_subject_mask, person-mask reliability=high). These regions are used for localized forensic analysis.",
+      "artifacts": {},
+      "details": {
+        "source": "person_subject_mask",
+        "person_mask_reliability": "high",
+        "subject_ratio": 0.5961422390407987,
+        "boundary_ratio": 0.1004909939236111,
+        "background_ratio": 0.4038577609592014,
+        "shape": [
+          1024,
+          576
+        ],
+        "height": 1024,
+        "width": 576,
+        "subject_mask_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_subject_region_mask.png",
+        "boundary_band_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_boundary_band_mask.png",
+        "background_mask_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_background_mask.png",
+        "mask_source": "mediapipe_tasks_image_segmenter",
+        "mask_status": "reliable",
+        "mask_reliability": "high",
+        "person_specific": true,
+        "fallback_used": false,
+        "fallback_reason": null
+      }
+    },
+    "region_segmentation": {
+      "name": "Region Mask",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "segmentation",
+      "pattern": "region_segmentation_generated",
+      "score": null,
+      "confidence": null,
+      "note": "Image was segmented into subject, boundary, and background regions (subject=0.60, boundary=0.10, background=0.40; source=person_subject_mask, person-mask reliability=high). These regions are used for localized forensic analysis.",
+      "artifacts": {},
+      "details": {
+        "source": "person_subject_mask",
+        "person_mask_reliability": "high",
+        "subject_ratio": 0.5961422390407987,
+        "boundary_ratio": 0.1004909939236111,
+        "background_ratio": 0.4038577609592014,
+        "shape": [
+          1024,
+          576
+        ],
+        "height": 1024,
+        "width": 576,
+        "subject_mask_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_subject_region_mask.png",
+        "boundary_band_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_boundary_band_mask.png",
+        "background_mask_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_background_mask.png",
+        "mask_source": "mediapipe_tasks_image_segmenter",
+        "mask_status": "reliable",
+        "mask_reliability": "high",
+        "person_specific": true,
+        "fallback_used": false,
+        "fallback_reason": null
+      }
+    },
+    "segmentation_alignment": {
+      "name": "Segmentation Alignment",
+      "status": "weak",
+      "polarity": "neutral",
+      "domain": "segmentation",
+      "pattern": "segmentation_boundary_alignment",
+      "score": 0.2013549571853685,
+      "confidence": null,
+      "note": "Cross-signal hotspots do not meaningfully align with the subject boundary.",
+      "artifacts": {},
+      "details": {
+        "alignment_score": 0.2013549571853685,
+        "raw_overlap": 0.22384985122453652
+      }
+    },
+    "compression_history": {
+      "name": "Compression History",
+      "status": "strong",
+      "polarity": "suspicious",
+      "domain": "compression",
+      "pattern": "localized_compression_inconsistency",
+      "score": 0.00486650038510561,
+      "confidence": null,
+      "note": "Compression-history analysis detects localized inconsistency in block-grid behavior, which may indicate region-specific save-history or editing differences.",
+      "artifacts": {
+        "compression_overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_compression_history_overlay.jpg"
+      },
+      "details": {
+        "grid_strength_score": 0.00486650038510561,
+        "grid_consistency_score": 0.3462458785091128,
+        "localized_inconsistency_score": 0.6538665430112318,
+        "double_jpeg_likelihood": 0.6061389113107596,
+        "block_anomaly_score": 0.940930311652747
+      }
+    },
+    "patch_similarity": {
+      "name": "Patch Similarity",
+      "status": "medium",
+      "polarity": "suspicious",
+      "domain": "patch",
+      "pattern": "structured_patch_recurrence",
+      "score": 0.72,
+      "confidence": null,
+      "note": "Patch-similarity analysis reveals repeated local structures across spatially separated regions. The result is notable, though it may still reflect natural patterned content depending on scene context.",
+      "artifacts": {
+        "patch_similarity_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_overlay.png",
+        "patch_similarity_heatmap": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_heatmap.png"
+      },
+      "details": {
+        "repetition_score": 0.8607,
+        "clone_suspicion_score": 0.72,
+        "pair_count": 500,
+        "spatially_separated_pair_count": null,
+        "mean_similarity": null,
+        "max_similarity": null,
+        "coverage_ratio": 0.2151
+      }
+    },
+    "patch_spatial": {
+      "name": "Patch Spatial",
+      "status": "medium",
+      "polarity": "suspicious",
+      "domain": "patch_spatial",
+      "pattern": "subject_internal_synthetic_recurrence",
+      "score": 0.8052254921045455,
+      "confidence": null,
+      "note": "Spatial patch analysis shows repeated high-similarity patch structure concentrated within the subject region, supporting subject-internal synthetic texture recurrence. Subject density ratio=21.219; boundary density ratio=13.231; subject weight ratio=21.325; boundary weight ratio=13.282; bridge ratio=0.242; bridge weight ratio=0.242; boundary involvement ratio=0.185; boundary-correlated ratio=0.140; subject-localized ratio=0.945;subject-internal ratio=0.805; subject-internal weight ratio=0.805.",
+      "artifacts": {
+        "recurrence_map": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_heatmap.png",
+        "patch_similarity_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_patch_patch_similarity_overlay.png"
+      },
+      "details": {
+        "areas": {
+          "subject": 351619.0,
+          "boundary": 59272.0,
+          "background": 238205.0
+        },
+        "endpoint_counts": {
+          "subject": 352,
+          "boundary": 37,
+          "background": 11
+        },
+        "endpoint_weights": {
+          "subject": 343.16815800000023,
+          "boundary": 36.03030400000001,
+          "background": 10.663611999999999
+        },
+        "endpoint_densities": {
+          "subject": 0.0010010835591933314,
+          "boundary": 0.0006242407882305304,
+          "background": 4.617871161394597e-05
+        },
+        "weight_densities": {
+          "subject": 0.0009759659119672151,
+          "boundary": 0.0006078806856525848,
+          "background": 4.476653302827396e-05
+        },
+        "pair_category_counts": {
+          "subject_subject": 161,
+          "boundary_boundary": 0,
+          "background_background": 0,
+          "boundary_subject": 28,
+          "background_subject": 2,
+          "background_boundary": 9
+        },
+        "pair_category_weights": {
+          "subject_subject": 156.96344099999988,
+          "boundary_boundary": 0.0,
+          "background_background": 0.0,
+          "boundary_subject": 27.303984000000003,
+          "background_subject": 1.937292,
+          "background_boundary": 8.72632
+        },
+        "total_pair_count": 200,
+        "total_pair_weight": 194.931037,
+        "bridge_count": 39,
+        "bridge_weight": 37.967596,
+        "internal_count": 161,
+        "internal_weight": 156.96344099999988,
+        "subject_similarity_ratio": 21.2189677281779,
+        "boundary_similarity_ratio": 13.23140812616014,
+        "subject_weight_ratio": 21.3248819036451,
+        "boundary_weight_ratio": 13.282209628530179,
+        "bridge_ratio": 0.24223602334014893,
+        "bridge_weight_ratio": 0.24188814615826296,
+        "boundary_involvement_ratio": 0.184999999075,
+        "boundary_involvement_weight_ratio": 0.18483615728758393,
+        "boundary_correlated_ratio": 0.1399999993,
+        "boundary_correlated_weight_ratio": 0.14006996669252847,
+        "subject_localized_ratio": 0.944999995275,
+        "subject_localized_weight_ratio": 0.9452954587970741,
+        "cross_region_patch_reuse_ratio": 0.24223602334014893,
+        "subject_internal_ratio": 0.804999995975,
+        "subject_internal_weight_ratio": 0.8052254921045455
+      }
+    },
+    "cross_signal": {
+      "name": "Cross-Signal",
+      "status": "weak",
+      "polarity": "suspicious",
+      "domain": "cross_signal",
+      "pattern": "partial_hotspot_convergence",
+      "score": null,
+      "confidence": null,
+      "note": "ELA and residual analysis show partial spatial agreement in localized regions.",
+      "artifacts": {},
+      "details": {}
+    },
+    "boundary": {
+      "name": "Boundary Signal",
+      "status": "strong",
+      "polarity": "suspicious",
+      "domain": "boundary",
+      "pattern": "possible_foreground_background_processing_mismatch",
+      "score": null,
+      "confidence": null,
+      "note": "ELA and residual hotspots converge in a connected, contour-like region. This is consistent with differential foreground/background processing, localized compositing, masking, or subject-specific retouching.",
+      "artifacts": {},
+      "details": {}
+    },
+    "subject_texture_consistency": {
+      "name": "Subject Texture",
+      "status": "medium",
+      "polarity": "suspicious",
+      "domain": "subject_texture",
+      "pattern": "subject_internal_stochastic_repetition",
+      "score": 1.0,
+      "confidence": null,
+      "note": "Subject-only texture analysis finds elevated soft self-similarity across the texture-focused subject region. This supports subject-internal stochastic repetition consistent with diffusion-generated or AI-enhanced subject-surface structure. Soft recurrence score=1.000; mean neighbor similarity=0.928; p90 neighbor similarity=0.992; dense similarity ratio=0.750.",
+      "artifacts": {
+        "subject_texture_consistency_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_subject_texture_consistency_overlay.png",
+        "subject_texture_focus_mask_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_subject_texture_focus_mask.png",
+        "background_texture_focus_mask_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_background_texture_focus_mask.png"
+      },
+      "details": {
+        "patch_count": 3828,
+        "mean_neighbor_similarity": 0.9276758432388306,
+        "p90_neighbor_similarity": 0.9917147755622864,
+        "dense_similarity_ratio": 0.7502176941832114,
+        "soft_recurrence_score": 1.0,
+        "subject_support_coverage": 0.9780300680511075,
+        "texture_focus_area": 267593,
+        "full_subject_area": 351619
+      }
+    },
+    "subject_boundary": {
+      "name": "Subject Boundary",
+      "status": "strong",
+      "polarity": "suspicious",
+      "domain": "boundary_semantic",
+      "pattern": "possible_subject_background_segmentation_artifact",
+      "score": 0.6771309242149195,
+      "confidence": null,
+      "note": "Boundary-transition analysis indicates a likely subject/background segmentation or replacement artifact, with multiple cues suggesting an implausible cutout-style or background-regime transition.",
+      "artifacts": {
+        "subject_boundary_overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_boundary_overlay.jpg"
+      },
+      "details": {
+        "boundary_anomaly_score": 0.6771309242149195,
+        "texture_mismatch": 1.0,
+        "edge_softness_mismatch": 0.3981174901127815,
+        "sensor_mismatch": 1.0,
+        "color_discontinuity": 0.04624763876199722,
+        "texture_region_mismatch": 1.0,
+        "sharpness_region_mismatch": 0.30834879726171494,
+        "sensor_region_mismatch": 1.0,
+        "contrast_region_mismatch": 0.3140483879380756
+      }
+    },
+    "subject_process_asymmetry": {
+      "name": "Subject Process Asymmetry",
+      "status": "weak",
+      "polarity": "suspicious",
+      "domain": "region_asymmetry",
+      "pattern": "subject_background_texture_asymmetry",
+      "score": 0.589284147850057,
+      "confidence": null,
+      "note": "Meaningful subject/background texture-process asymmetry is present, but the evidence remains contextual rather than decisive. Background baseline was treated as weak or the subject was dominant in frame, so subject-internal material regularization cues were given additional weight. Asymmetry score=0.589; regularization dominance=0.416; process divergence=0.433; boundary paradox=0.650; baseline reliability=1.000.",
+      "artifacts": {
+        "subject_input": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_subject_region_mask.png",
+        "boundary_input": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_boundary_band_mask.png",
+        "background_input": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_background_mask.png",
+        "subject_process_asymmetry_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_subject_process_asymmetry_overlay.jpg"
+      },
+      "details": {
+        "asymmetry_score": 0.589284147850057,
+        "regularization_dominance_score": 0.41618323882112856,
+        "process_divergence_score": 0.4333749936066946,
+        "boundary_paradox_score": 0.64966563376114,
+        "baseline_reliability_score": 1.0,
+        "valid_subject_patch_count": 160,
+        "valid_boundary_patch_count": 8,
+        "valid_background_patch_count": 64,
+        "background_is_highly_repetitive": false,
+        "region_geometry_unreliable": false,
+        "subject_mask_area_ratio": 0.5961422390407987,
+        "background_mask_area_ratio": 0.4038577609592014
+      }
+    },
+    "subject_material_realism": {
+      "name": "Subject Material Realism",
+      "status": "medium",
+      "polarity": "suspicious",
+      "domain": "subject_material",
+      "pattern": "subject_material_regularization_dominant",
+      "score": 0.5533233826460278,
+      "confidence": null,
+      "note": "Subject shows moderate signs of material regularization or homogenization, consistent with synthetic or heavily processed rendering. Realism score=0.553.",
+      "artifacts": {
+        "subject_input": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_person_subject_region_mask.png",
+        "subject_material_realism_overlay": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_subject_subject_material_realism_overlay.jpg"
+      },
+      "details": {
+        "microtexture_suppression": 0.6130376303757243,
+        "material_homogenization": 0.29058907424729796,
+        "structure_without_stochasticity": 0.5273805553142419,
+        "distribution_compression": 0.7146129170905027,
+        "patch_count": 1258
+      }
+    },
+    "fft": {
+      "name": "Frequency Domain",
+      "status": "strong",
+      "polarity": "suspicious",
+      "domain": "frequency",
+      "pattern": "possible_decoder_grid_signature",
+      "score": 0.6723,
+      "confidence": null,
+      "note": "Frequency-domain analysis reveals repeated off-center spectral peaks with partial symmetry and axis-aligned structure, and a reconstructable spatial grid response. This indicates structured periodicity, but such patterns can also arise from genuine repeated scene content, camera pipeline effects, or regular image geometry.",
+      "artifacts": {
+        "fft_spectrum_image": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_spectrum.png",
+        "fft_radial_profile_image": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_radial_profile.png",
+        "fft_peakmap_image": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_peakmap.png",
+        "fft_grid_overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_grid_overlay.png",
+        "fft_grid_response_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_grid_response.png",
+        "fft_multi_grid_response_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_multi_grid_response.png",
+        "fft_multi_grid_overlay_path": "analyzed\\phase3_validation\\instagram\\Curvy Leggings Outfit_global_fft_multi_grid_overlay.png"
+      },
+      "details": {
+        "fft_anomaly_score": 0.6723,
+        "radial_profile_score": 0.0715,
+        "midband_excess_score": 0.0,
+        "ring_irregularity_score": 0.13,
+        "peak_periodicity_score": 0.9932,
+        "peak_symmetry_score": 0.985,
+        "peak_count": 200,
+        "anisotropy_score": 1.0,
+        "axis_bias_score": 1.0,
+        "diagonal_bias_score": 0.0,
+        "grid_hypothesis_present": true,
+        "dominant_wavelength_x": 288.0,
+        "dominant_wavelength_y": 19.692307692307693,
+        "grid_hypothesis_strength": 5.4385199546813965,
+        "grid_response_score": 0.37216607481241226,
+        "paired_peak_count": 97
+      }
+    }
+  },
+  "derived_signals": {
+    "camera_like_support": true,
+    "sensor_trace_inconsistency": false,
+    "cfa_camera_like_support": false,
+    "cfa_inconsistency": false,
+    "compression_consistent": false,
+    "compression_inconsistency": true,
+    "double_jpeg_suspect": false,
+    "block_history_anomaly": false,
+    "subject_boundary_strong": true,
+    "subject_boundary_medium": false,
+    "subject_texture_strong": true,
+    "subject_texture_moderate": false,
+    "subject_process_asymmetry_moderate": true,
+    "subject_process_asymmetry_strong": false,
+    "material_realism_strong": false,
+    "material_realism_medium": true,
+    "material_realism_weak": false,
+    "material_realism_low": false,
+    "metadata_synthetic": false,
+    "metadata_enhancement": false,
+    "metadata_missing": true,
+    "provenance_state": "no_substantive_provenance_evidence",
+    "metadata_clean": true,
+    "metadata_camera_like": false,
+    "osint_ai_context": false,
+    "osint_clean": true,
+    "provenance_clean": true,
+    "strong_local_edit": true,
+    "fragmented_local_edit": false,
+    "strong_cross": false,
+    "local_signals_weak": false,
+    "fft_structured": true,
+    "patch_structured": true,
+    "segmentation_fragmented": false,
+    "segmentation_clean": false,
+    "segmentation_natural": false,
+    "segmentation_boundary_strong": false,
+    "segmentation_boundary_medium": false,
+    "segmentation_boundary_score": 0.2013549571853685,
+    "fft_score": 0.6723,
+    "peak_periodicity": 0.9932,
+    "peak_symmetry": 0.985,
+    "peak_count": 200,
+    "axis_bias": 1.0,
+    "patch_score": 0.72,
+    "repetition_score": 0.8607,
+    "coverage_ratio": 0.2151,
+    "pair_count": 500,
+    "separated_pair_count": 0,
+    "mean_similarity": 0.0,
+    "max_similarity": 0.0,
+    "region_geometry_unreliable": false,
+    "person_mask_reliable": true,
+    "subject_area_ratio": 0.5961422390407987,
+    "boundary_support_ratio": 0.1004909939236111,
+    "boundary_support_low": false,
+    "boundary_reliability_score": 1.0
+  },
+  "scorecard": {
+    "camera_counter_support": 1.25,
+    "suspicious_score": 20.47705,
+    "benign_score": 2.25,
+    "local_edit_support_score": 4.85,
+    "clone_support_score": 0.0,
+    "synthetic_boost": 0.4,
+    "edit_boost": 1.823,
+    "provenance_boost": 0.0,
+    "sensor_boost": 0.0,
+    "compression_boost": 0.75,
+    "caution_penalty": 1.6,
+    "clone_candidate": false,
+    "clone_ambiguous": false,
+    "contextual_false_positive_risk": false,
+    "synthetic_supported_by_other_domains": false,
+    "suspicious_domains": [
+      "boundary",
+      "boundary_focus",
+      "boundary_semantic",
+      "compression",
+      "cross_signal",
+      "frequency",
+      "patch",
+      "patch_spatial",
+      "region_asymmetry",
+      "subject_material",
+      "subject_texture"
+    ],
+    "benign_domains": [
+      "sensor",
+      "sensor_cfa"
+    ],
+    "is_valid": true,
+    "validation_errors": []
+  },
+  "scorecard_calculation": {
+    "calculation_version": "2a",
+    "status": "valid",
+    "base_suspicious": 23.0,
+    "base_benign": 2.25,
+    "base_evidence": [
+      {
+        "section": "boundary",
+        "status": "strong",
+        "polarity": "suspicious",
+        "domain": "boundary",
+        "weight": 3.0
+      },
+      {
+        "section": "boundary_focus",
+        "status": "medium",
+        "polarity": "suspicious",
+        "domain": "boundary_focus",
+        "weight": 1.5
+      },
+      {
+        "section": "cfa_demosaic",
+        "status": "weak",
+        "polarity": "benign",
+        "domain": "sensor_cfa",
+        "weight": 0.5
+      },
+      {
+        "section": "compression_history",
+        "status": "strong",
+        "polarity": "suspicious",
+        "domain": "compression",
+        "weight": 3.0
+      },
+      {
+        "section": "cross_signal",
+        "status": "weak",
+        "polarity": "suspicious",
+        "domain": "cross_signal",
+        "weight": 0.5
+      },
+      {
+        "section": "fft",
+        "status": "strong",
+        "polarity": "suspicious",
+        "domain": "frequency",
+        "weight": 3.0
+      },
+      {
+        "section": "patch_similarity",
+        "status": "medium",
+        "polarity": "suspicious",
+        "domain": "patch",
+        "weight": 1.5
+      },
+      {
+        "section": "patch_spatial",
+        "status": "medium",
+        "polarity": "suspicious",
+        "domain": "patch_spatial",
+        "weight": 1.5
+      },
+      {
+        "section": "sensor_origin",
+        "status": "medium",
+        "polarity": "benign",
+        "domain": "sensor",
+        "weight": 1.5
+      },
+      {
+        "section": "subject_boundary",
+        "status": "strong",
+        "polarity": "suspicious",
+        "domain": "boundary_semantic",
+        "weight": 3.0
+      },
+      {
+        "section": "subject_material_realism",
+        "status": "medium",
+        "polarity": "suspicious",
+        "domain": "subject_material",
+        "weight": 1.5
+      },
+      {
+        "section": "subject_process_asymmetry",
+        "status": "weak",
+        "polarity": "suspicious",
+        "domain": "region_asymmetry",
+        "weight": 0.5
+      },
+      {
+        "section": "subject_texture_consistency",
+        "status": "medium",
+        "polarity": "suspicious",
+        "domain": "subject_texture",
+        "weight": 1.5
+      }
+    ],
+    "domain_bonus": 0.25,
+    "component_operations": [
+      {
+        "field": "camera_counter_support",
+        "operation": "add",
+        "operand": 1.25,
+        "reason": "ds.camera_like_support"
+      },
+      {
+        "field": "caution_penalty",
+        "operation": "add",
+        "operand": 0.35,
+        "reason": "ds.camera_like_support and ds.provenance_clean"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 2.0,
+        "reason": "ds.strong_local_edit"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 0.75,
+        "reason": "boundary_strong"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 0.4,
+        "reason": "ds.compression_inconsistency"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 0.75,
+        "reason": "ds.subject_texture_strong"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 0.4,
+        "reason": "otherwise / asym_medium"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": 0.75,
+        "reason": "otherwise / ds.material_realism_medium"
+      },
+      {
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "operand": -0.2,
+        "reason": "ds.camera_like_support"
+      },
+      {
+        "field": "edit_boost",
+        "operation": "add",
+        "operand": 0.4,
+        "reason": "ds.subject_texture_strong"
+      },
+      {
+        "field": "edit_boost",
+        "operation": "add",
+        "operand": 0.15,
+        "reason": "otherwise / asym_medium"
+      },
+      {
+        "field": "edit_boost",
+        "operation": "add",
+        "operand": 0.4,
+        "reason": "otherwise / ds.material_realism_medium"
+      },
+      {
+        "field": "edit_boost",
+        "operation": "add",
+        "operand": 0.8729999999999999,
+        "reason": "local_support_conversion"
+      },
+      {
+        "field": "clone_support_score",
+        "operation": "add",
+        "operand": -0.9,
+        "reason": "usable_observation(ev.patch_similarity) / camera_benign"
+      },
+      {
+        "field": "clone_support_score",
+        "operation": "maximum",
+        "operand": 0.0,
+        "reason": "clone_floor"
+      },
+      {
+        "field": "synthetic_boost",
+        "operation": "add",
+        "operand": 0.4,
+        "reason": "otherwise / ds.material_realism_medium"
+      },
+      {
+        "field": "compression_boost",
+        "operation": "add",
+        "operand": 0.75,
+        "reason": "ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong)"
+      },
+      {
+        "field": "caution_penalty",
+        "operation": "add",
+        "operand": 1.25,
+        "reason": "measured_camera_caution"
+      }
+    ],
+    "raw_operation_count": 18,
+    "raw_contributions": {
+      "camera_counter_support": 1.25,
+      "local_edit_support_score": 4.85,
+      "clone_support_score": 0.0,
+      "synthetic_boost": 0.4,
+      "edit_boost": 1.823,
+      "provenance_boost": 0.0,
+      "sensor_boost": 0.0,
+      "compression_boost": 0.75,
+      "caution_penalty": 1.6
+    },
+    "final_contributions": {
+      "camera_counter_support": 1.25,
+      "local_edit_support_score": 4.85,
+      "clone_support_score": 0.0,
+      "synthetic_boost": 0.4,
+      "edit_boost": 1.823,
+      "provenance_boost": 0.0,
+      "sensor_boost": 0.0,
+      "compression_boost": 0.75,
+      "caution_penalty": 1.6
+    },
+    "reliability_adjustments": {
+      "boundary_reliability": 1.0,
+      "boundary_adjustment_applicable": true,
+      "region_geometry_unreliable": false,
+      "geometry_mechanism_multiplier": 1.0
+    },
+    "penalties": [
+      {
+        "field": "caution_penalty",
+        "operation": "add",
+        "operand": 0.35,
+        "reason": "ds.camera_like_support and ds.provenance_clean"
+      },
+      {
+        "field": "caution_penalty",
+        "operation": "add",
+        "operand": 1.25,
+        "reason": "measured_camera_caution"
+      }
+    ],
+    "aggregate_transforms": {
+      "measured_camera_support": 1.25,
+      "camera_multiplier": 0.85,
+      "geometry_multiplier": 1.0,
+      "photo_context_multiplier": 1.0,
+      "photo_context_prior": false,
+      "suspicious_floor": 0.0
+    },
+    "aggregate_scores": {
+      "suspicious_score": 20.47705,
+      "benign_score": 2.25
+    }
+  },
+  "confidence_policy": {
+    "version": "3",
+    "primary_hypothesis": "localized_editing",
+    "assessments": [
+      {
+        "hypothesis": "synthetic_origin",
+        "tier": "Inconclusive",
+        "policy_rule": "synthetic.not_established",
+        "supporting_evidence": [],
+        "contradicting_evidence": [],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contextual_evidence": [
+          "fft:possible_decoder_grid_signature",
+          "metadata:sparse_or_stripped",
+          "patch_similarity:structured_patch_recurrence",
+          "patch_spatial:subject_internal_synthetic_recurrence",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_background_texture_asymmetry",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "reliability_limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Missing provenance coverage is a limitation, not positive generation evidence.",
+          "No substantive generation declaration or specific visual generation finding is established."
+        ],
+        "rationale": [
+          "Confidence policy synthetic.not_established: No specific generation interpretation is established; localized anomalies do not supply missing generation support.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ]
+      },
+      {
+        "hypothesis": "localized_editing",
+        "tier": "High",
+        "policy_rule": "localized.reliable_boundary_compound",
+        "supporting_evidence": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "boundary_focus:boundary_focused_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:partial_hotspot_convergence",
+          "subject_boundary:possible_subject_background_segmentation_artifact"
+        ],
+        "contradicting_evidence": [],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contextual_evidence": [
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_background_texture_asymmetry",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "reliability_limitations": [
+          "Localized editing evidence does not by itself establish AI generation."
+        ],
+        "rationale": [
+          "Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.",
+          "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ]
+      },
+      {
+        "hypothesis": "camera_acquisition",
+        "tier": "Medium",
+        "policy_rule": "camera.acquisition_compatibility",
+        "supporting_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contradicting_evidence": [],
+        "moderating_evidence": [],
+        "contextual_evidence": [
+          "metadata:sparse_or_stripped"
+        ],
+        "reliability_limitations": [
+          "Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing."
+        ],
+        "rationale": [
+          "Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity.",
+          "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+        ]
+      }
+    ]
+  },
+  "corroboration_audit": {
+    "version": "2b3",
+    "evaluated_gates": [
+      {
+        "gate_id": "boundary.compound_support",
+        "hypothesis": "localized_editing",
+        "requirement_kind": "compound_interpretations",
+        "minimum_indicators": 2,
+        "minimum_sources": null,
+        "distinct_families_required": false,
+        "considered_evidence": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:subject_boundary"
+        ],
+        "eligible_evidence": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:subject_boundary"
+        ],
+        "excluded_evidence": {},
+        "evidence_roles": {
+          "evidence:boundary": "supporting_evidence",
+          "evidence:boundary_focus": "supporting_evidence",
+          "evidence:subject_boundary": "supporting_evidence"
+        },
+        "distinct_ancestry_groups": [
+          {
+            "witness": "evidence:boundary",
+            "measurements": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "family": "processing_residual"
+          },
+          {
+            "witness": "evidence:subject_boundary",
+            "measurements": [
+              "measurement:intrinsic_edge_ring_features"
+            ],
+            "family": "intrinsic_edge_transition"
+          }
+        ],
+        "corroborating_source_count": 2,
+        "shared_ancestry": {
+          "measurement:ela_recompression_difference": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ],
+          "measurement:luminance_residual": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ]
+        },
+        "overlapping_feature_groups": {
+          "processing_anomalies": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ]
+        },
+        "incremental_support_findings": [
+          {
+            "evidence_id": "evidence:boundary",
+            "addition": "interpretation",
+            "new_measurement_claim": false,
+            "numeric_weight_changed": false
+          },
+          {
+            "evidence_id": "evidence:boundary_focus",
+            "addition": "localization",
+            "new_measurement_claim": false,
+            "numeric_weight_changed": false
+          }
+        ],
+        "provisional_lineage": {},
+        "requirement_satisfied": true,
+        "explanation": "3 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.",
+        "limitations": [
+          "Feature-definition/content overlap remains; disjoint extraction IDs do not demonstrate statistical independence.",
+          "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+        ],
+        "strength_requirement_satisfied": true,
+        "gate_passed": true,
+        "production_condition_changed": false,
+        "interpretation": "Related boundary checks establish compound spatial/processing agreement; they are not counted as separate independent measurement sources."
+      },
+      {
+        "gate_id": "confidence.strong_source_diversity",
+        "hypothesis": "unresolved_anomaly",
+        "requirement_kind": "distinct_measurement_sources",
+        "minimum_indicators": 2,
+        "minimum_sources": 2,
+        "distinct_families_required": false,
+        "considered_evidence": [
+          "evidence:boundary"
+        ],
+        "eligible_evidence": [
+          "evidence:boundary"
+        ],
+        "excluded_evidence": {},
+        "evidence_roles": {
+          "evidence:boundary": "supporting_evidence"
+        },
+        "distinct_ancestry_groups": [
+          {
+            "witness": "evidence:boundary",
+            "measurements": [
+              "measurement:ela_recompression_difference",
+              "measurement:luminance_residual"
+            ],
+            "family": "processing_residual"
+          }
+        ],
+        "corroborating_source_count": 1,
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "incremental_support_findings": [
+          {
+            "evidence_id": "evidence:boundary",
+            "addition": "interpretation",
+            "new_measurement_claim": false,
+            "numeric_weight_changed": false
+          }
+        ],
+        "provisional_lineage": {},
+        "requirement_satisfied": false,
+        "explanation": "1 measurement-disjoint supporting indicator(s) do not satisfy the existing 2-source diversity requirement.",
+        "limitations": [
+          "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+        ],
+        "observed_strong_indicator_count": 1,
+        "score_requirement_satisfied": true,
+        "gate_passed": false,
+        "production_correction": "Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged."
+      },
+      {
+        "gate_id": "synthetic.additional_support_flag",
+        "hypothesis": "synthetic_origin",
+        "requirement_kind": "general_accumulation",
+        "minimum_indicators": 1,
+        "minimum_sources": null,
+        "distinct_families_required": false,
+        "considered_evidence": [],
+        "eligible_evidence": [],
+        "excluded_evidence": {},
+        "evidence_roles": {},
+        "distinct_ancestry_groups": [],
+        "corroborating_source_count": 0,
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "incremental_support_findings": [],
+        "provisional_lineage": {},
+        "requirement_satisfied": false,
+        "explanation": "0 observed supporting indicator(s) do not satisfy the 1-indicator general_accumulation condition; shared ancestry is allowed and is not independent confirmation.",
+        "limitations": [
+          "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+        ],
+        "gate_passed": false,
+        "production_condition_changed": false,
+        "interpretation": "Existing compound/accumulation predicate retained; no claim of independent corroboration."
+      },
+      {
+        "gate_id": "synthetic.fft_patch_compound",
+        "hypothesis": "synthetic_origin",
+        "requirement_kind": "compound_interpretations",
+        "minimum_indicators": 2,
+        "minimum_sources": null,
+        "distinct_families_required": false,
+        "considered_evidence": [
+          "evidence:fft",
+          "evidence:patch_similarity"
+        ],
+        "eligible_evidence": [
+          "evidence:fft",
+          "evidence:patch_similarity"
+        ],
+        "excluded_evidence": {},
+        "evidence_roles": {
+          "evidence:fft": "supporting_evidence",
+          "evidence:patch_similarity": "supporting_evidence"
+        },
+        "distinct_ancestry_groups": [
+          {
+            "witness": "evidence:fft",
+            "measurements": [
+              "measurement:global_spectral_features"
+            ],
+            "family": "spectral"
+          },
+          {
+            "witness": "evidence:patch_similarity",
+            "measurements": [
+              "measurement:retained_patch_matches"
+            ],
+            "family": "patch_recurrence"
+          }
+        ],
+        "corroborating_source_count": 2,
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "incremental_support_findings": [],
+        "provisional_lineage": {},
+        "requirement_satisfied": true,
+        "explanation": "2 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.",
+        "limitations": [
+          "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+        ],
+        "gate_passed": true,
+        "production_condition_changed": false,
+        "interpretation": "Existing compound/accumulation predicate retained; no claim of independent corroboration."
+      },
+      {
+        "gate_id": "synthetic.material_asymmetry_compound",
+        "hypothesis": "synthetic_origin",
+        "requirement_kind": "compound_interpretations",
+        "minimum_indicators": 2,
+        "minimum_sources": null,
+        "distinct_families_required": false,
+        "considered_evidence": [],
+        "eligible_evidence": [],
+        "excluded_evidence": {},
+        "evidence_roles": {},
+        "distinct_ancestry_groups": [],
+        "corroborating_source_count": 0,
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "incremental_support_findings": [],
+        "provisional_lineage": {},
+        "requirement_satisfied": false,
+        "explanation": "0 observed supporting indicator(s) do not satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.",
+        "limitations": [
+          "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+        ],
+        "gate_passed": false,
+        "production_condition_changed": false,
+        "interpretation": "Existing compound/accumulation predicate retained; no claim of independent corroboration."
+      }
+    ],
+    "limitations": [
+      "Measurement-disjoint ancestry is a structural diversity check, not statistical independence.",
+      "Compound conditions allow related interpretations; numerical scores and shadow policy are unchanged."
+    ]
+  },
+  "decision_route_trace": [
+    {
+      "route": "route_real_photo_context_prior",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_boundary_support_limited",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_region_geometry_unreliable",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_unreliable_boundary_context",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_localized_multi_mechanism",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_strong_local_edit",
+      "matched": true,
+      "reason": "DECISION: possible_foreground_background_processing_mismatch",
+      "pattern": "possible_foreground_background_processing_mismatch",
+      "confidence": "High",
+      "polarity": "suspicious",
+      "hypothesis_id": "localized_editing",
+      "selected": true,
+      "disposition": "selected_overall",
+      "legacy_confidence": "High",
+      "confidence_source": "localized.reliable_boundary_compound"
+    },
+    {
+      "route": "route_clone_reuse",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_moderated_local_edit",
+      "matched": true,
+      "reason": "DECISION: possible_foreground_background_processing_mismatch (moderated)",
+      "pattern": "possible_foreground_background_processing_mismatch",
+      "confidence": "High",
+      "polarity": "suspicious",
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": "alternative_candidate; scoped safeguards and specificity rules apply",
+      "legacy_confidence": "Medium",
+      "confidence_source": "localized.reliable_boundary_compound"
+    },
+    {
+      "route": "route_clone_ambiguous",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_localized_processing",
+      "matched": true,
+      "reason": "DECISION: localized_processing_inconclusive",
+      "pattern": "localized_processing_inconclusive",
+      "confidence": "High",
+      "polarity": "neutral",
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": "alternative_candidate; scoped safeguards and specificity rules apply",
+      "legacy_confidence": "Medium",
+      "confidence_source": "localized.reliable_boundary_compound"
+    },
+    {
+      "route": "route_subject_boundary",
+      "matched": true,
+      "reason": "DECISION: possible_subject_background_segmentation_artifact",
+      "pattern": "possible_subject_background_segmentation_artifact",
+      "confidence": "High",
+      "polarity": "suspicious",
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": "alternative_candidate; scoped safeguards and specificity rules apply",
+      "legacy_confidence": "Medium",
+      "confidence_source": "localized.reliable_boundary_compound"
+    },
+    {
+      "route": "route_boundary_transition",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "localized_editing",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_structured_recurrence_inconclusive",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "synthetic_origin",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_synthetic_multi_signal",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "synthetic_origin",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_provenance",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "synthetic_origin",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_camera_like",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "camera_acquisition",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_photo_like_consistency",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "camera_acquisition",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_multi_signal_suspicious",
+      "matched": false,
+      "reason": "condition_not_met",
+      "pattern": null,
+      "confidence": null,
+      "polarity": null,
+      "hypothesis_id": "unresolved_anomaly",
+      "selected": false,
+      "disposition": null,
+      "legacy_confidence": null,
+      "confidence_source": null
+    },
+    {
+      "route": "route_moderate_suspicious",
+      "matched": true,
+      "reason": "Multiple suspicious indicators are present across the current forensic reading, but the evidence does not converge strongly enough for a narrower high-confidence interpretation. A specific generation or localized editing mechanism is not established.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.",
+      "pattern": "moderate_suspicious_convergence",
+      "confidence": null,
+      "polarity": "suspicious",
+      "hypothesis_id": "unresolved_anomaly",
+      "selected": false,
+      "disposition": "alternative_candidate; scoped safeguards and specificity rules apply",
+      "legacy_confidence": "Medium",
+      "confidence_source": "legacy_alternative_not_assessed"
+    },
+    {
+      "route": "route_fallback",
+      "matched": true,
+      "reason": "DECISION: helper_driven_fallback",
+      "pattern": "possible_subject_background_segmentation_artifact",
+      "confidence": null,
+      "polarity": "suspicious",
+      "hypothesis_id": "unresolved_anomaly",
+      "selected": false,
+      "disposition": "alternative_candidate; scoped safeguards and specificity rules apply",
+      "legacy_confidence": "Medium",
+      "confidence_source": "legacy_alternative_not_assessed"
+    }
+  ],
+  "hypothesis_assessments": [
+    {
+      "hypothesis_id": "synthetic_origin",
+      "polarity": "neutral",
+      "confidence_tier": "Inconclusive",
+      "supporting_evidence": [],
+      "moderating_evidence": [
+        "cfa_demosaic:weak_camera_cfa_supported",
+        "sensor_origin:camera_like_acquisition_supported"
+      ],
+      "limitations": [
+        "Heuristic support levels are not probabilities.",
+        "Missing provenance coverage is a limitation, not positive generation evidence.",
+        "No substantive generation declaration or specific visual generation finding is established."
+      ],
+      "decision_branch": null,
+      "explanation": "Synthetic origin is not established by the available evidence.",
+      "contradicting_evidence": [],
+      "contextual_evidence": [
+        "fft:possible_decoder_grid_signature",
+        "metadata:sparse_or_stripped",
+        "patch_similarity:structured_patch_recurrence",
+        "patch_spatial:subject_internal_synthetic_recurrence",
+        "subject_material_realism:subject_material_regularization_dominant",
+        "subject_process_asymmetry:subject_background_texture_asymmetry",
+        "subject_texture_consistency:subject_internal_stochastic_repetition"
+      ],
+      "evidence_details": {
+        "cfa_demosaic:weak_camera_cfa_supported": {
+          "section": "cfa_demosaic",
+          "pattern": "weak_camera_cfa_supported",
+          "role": "moderating_evidence",
+          "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+          "observations": [],
+          "label": "weak camera cfa supported",
+          "observed_status": "weak",
+          "observed_score": 0.08142067492008209
+        },
+        "fft:possible_decoder_grid_signature": {
+          "section": "fft",
+          "pattern": "possible_decoder_grid_signature",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "frequency structure suggests a grid-like or decoder-driven generation process",
+          "observed_status": "strong",
+          "observed_score": 0.6723
+        },
+        "patch_similarity:structured_patch_recurrence": {
+          "section": "patch_similarity",
+          "pattern": "structured_patch_recurrence",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "repeated structured patch motifs are present",
+          "observed_status": "medium",
+          "observed_score": 0.72
+        },
+        "patch_spatial:subject_internal_synthetic_recurrence": {
+          "section": "patch_spatial",
+          "pattern": "subject_internal_synthetic_recurrence",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "repeated patch structures are concentrated within the subject",
+          "observed_status": "medium",
+          "observed_score": 0.8052254921045455
+        },
+        "sensor_origin:camera_like_acquisition_supported": {
+          "section": "sensor_origin",
+          "pattern": "camera_like_acquisition_supported",
+          "role": "moderating_evidence",
+          "interpretation": "Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.",
+          "observations": [],
+          "label": "low-level signals are consistent with a camera acquisition pipeline",
+          "observed_status": "medium",
+          "observed_score": 0.05393149331212044
+        },
+        "subject_material_realism:subject_material_regularization_dominant": {
+          "section": "subject_material_realism",
+          "pattern": "subject_material_regularization_dominant",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "subject material appears overly regularized and lacks natural variability",
+          "observed_status": "medium",
+          "observed_score": 0.5533233826460278
+        },
+        "subject_process_asymmetry:subject_background_texture_asymmetry": {
+          "section": "subject_process_asymmetry",
+          "pattern": "subject_background_texture_asymmetry",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "texture characteristics differ between subject and background",
+          "observed_status": "weak",
+          "observed_score": 0.589284147850057
+        },
+        "subject_texture_consistency:subject_internal_stochastic_repetition": {
+          "section": "subject_texture_consistency",
+          "pattern": "subject_internal_stochastic_repetition",
+          "role": "contextual_evidence",
+          "interpretation": "Structural regularity is present but nonspecific; it does not independently establish synthetic origin.",
+          "observations": [],
+          "label": "subject texture shows repeated stochastic patterns",
+          "observed_status": "medium",
+          "observed_score": 1.0
+        },
+        "metadata:sparse_or_stripped": {
+          "section": "metadata",
+          "pattern": "sparse_or_stripped",
+          "role": "contextual_evidence",
+          "interpretation": "Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.",
+          "observations": [
+            {
+              "provenance_keys_detected": [],
+              "technical_keys_detected_count": 43
+            }
+          ],
+          "label": "metadata is sparse or stripped and provides no provenance clues",
+          "observed_status": "weak",
+          "observed_score": 0.0
+        }
+      },
+      "confidence_policy_rule": "synthetic.not_established",
+      "confidence_rationale": [
+        "Confidence policy synthetic.not_established: No specific generation interpretation is established; localized anomalies do not supply missing generation support.",
+        "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+        "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+      ]
+    },
+    {
+      "hypothesis_id": "localized_editing",
+      "polarity": "suspicious",
+      "confidence_tier": "High",
+      "supporting_evidence": [
+        "boundary:possible_foreground_background_processing_mismatch",
+        "boundary_focus:boundary_focused_processing_mismatch",
+        "compression_history:localized_compression_inconsistency",
+        "cross_signal:partial_hotspot_convergence",
+        "subject_boundary:possible_subject_background_segmentation_artifact"
+      ],
+      "moderating_evidence": [
+        "cfa_demosaic:weak_camera_cfa_supported",
+        "sensor_origin:camera_like_acquisition_supported"
+      ],
+      "limitations": [
+        "Localized editing evidence does not by itself establish AI generation."
+      ],
+      "decision_branch": "possible_foreground_background_processing_mismatch",
+      "explanation": "Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.",
+      "contradicting_evidence": [],
+      "contextual_evidence": [
+        "subject_material_realism:subject_material_regularization_dominant",
+        "subject_process_asymmetry:subject_background_texture_asymmetry",
+        "subject_texture_consistency:subject_internal_stochastic_repetition"
+      ],
+      "evidence_details": {
+        "boundary:possible_foreground_background_processing_mismatch": {
+          "section": "boundary",
+          "pattern": "possible_foreground_background_processing_mismatch",
+          "role": "supporting_evidence",
+          "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+          "observations": [],
+          "label": "foreground and background appear to have been processed differently",
+          "observed_status": "strong",
+          "observed_score": null
+        },
+        "boundary_focus:boundary_focused_processing_mismatch": {
+          "section": "boundary_focus",
+          "pattern": "boundary_focused_processing_mismatch",
+          "role": "supporting_evidence",
+          "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+          "observations": [],
+          "label": "boundary region shows elevated processing relative to subject and background",
+          "observed_status": "medium",
+          "observed_score": 6.711709976196289
+        },
+        "cfa_demosaic:weak_camera_cfa_supported": {
+          "section": "cfa_demosaic",
+          "pattern": "weak_camera_cfa_supported",
+          "role": "moderating_evidence",
+          "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+          "observations": [],
+          "label": "weak camera cfa supported",
+          "observed_status": "weak",
+          "observed_score": 0.08142067492008209
+        },
+        "compression_history:localized_compression_inconsistency": {
+          "section": "compression_history",
+          "pattern": "localized_compression_inconsistency",
+          "role": "supporting_evidence",
+          "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+          "observations": [],
+          "label": "compression artifacts vary across regions",
+          "observed_status": "strong",
+          "observed_score": 0.00486650038510561
+        },
+        "cross_signal:partial_hotspot_convergence": {
+          "section": "cross_signal",
+          "pattern": "partial_hotspot_convergence",
+          "role": "supporting_evidence",
+          "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+          "observations": [],
+          "label": "some forensic signals converge on localized regions",
+          "observed_status": "weak",
+          "observed_score": null
+        },
+        "sensor_origin:camera_like_acquisition_supported": {
+          "section": "sensor_origin",
+          "pattern": "camera_like_acquisition_supported",
+          "role": "moderating_evidence",
+          "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+          "observations": [],
+          "label": "low-level signals are consistent with a camera acquisition pipeline",
+          "observed_status": "medium",
+          "observed_score": 0.05393149331212044
+        },
+        "subject_boundary:possible_subject_background_segmentation_artifact": {
+          "section": "subject_boundary",
+          "pattern": "possible_subject_background_segmentation_artifact",
+          "role": "supporting_evidence",
+          "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+          "observations": [],
+          "label": "subject boundary suggests a segmentation or cutout artifact",
+          "observed_status": "strong",
+          "observed_score": 0.6771309242149195
+        },
+        "subject_material_realism:subject_material_regularization_dominant": {
+          "section": "subject_material_realism",
+          "pattern": "subject_material_regularization_dominant",
+          "role": "contextual_evidence",
+          "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+          "observations": [],
+          "label": "subject material appears overly regularized and lacks natural variability",
+          "observed_status": "medium",
+          "observed_score": 0.5533233826460278
+        },
+        "subject_process_asymmetry:subject_background_texture_asymmetry": {
+          "section": "subject_process_asymmetry",
+          "pattern": "subject_background_texture_asymmetry",
+          "role": "contextual_evidence",
+          "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+          "observations": [],
+          "label": "texture characteristics differ between subject and background",
+          "observed_status": "weak",
+          "observed_score": 0.589284147850057
+        },
+        "subject_texture_consistency:subject_internal_stochastic_repetition": {
+          "section": "subject_texture_consistency",
+          "pattern": "subject_internal_stochastic_repetition",
+          "role": "contextual_evidence",
+          "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+          "observations": [],
+          "label": "subject texture shows repeated stochastic patterns",
+          "observed_status": "medium",
+          "observed_score": 1.0
+        }
+      },
+      "confidence_policy_rule": "localized.reliable_boundary_compound",
+      "confidence_rationale": [
+        "Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.",
+        "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+        "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+      ]
+    },
+    {
+      "hypothesis_id": "camera_acquisition",
+      "polarity": "benign",
+      "confidence_tier": "Medium",
+      "supporting_evidence": [
+        "cfa_demosaic:weak_camera_cfa_supported",
+        "sensor_origin:camera_like_acquisition_supported"
+      ],
+      "moderating_evidence": [],
+      "limitations": [
+        "Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing."
+      ],
+      "decision_branch": "camera_acquisition_compatibility",
+      "explanation": "Camera-like acquisition evidence is present.",
+      "contradicting_evidence": [],
+      "contextual_evidence": [
+        "metadata:sparse_or_stripped"
+      ],
+      "evidence_details": {
+        "cfa_demosaic:weak_camera_cfa_supported": {
+          "section": "cfa_demosaic",
+          "pattern": "weak_camera_cfa_supported",
+          "role": "supporting_evidence",
+          "interpretation": "Measured structure is compatible with camera acquisition; it does not authenticate the image.",
+          "observations": [],
+          "label": "weak camera cfa supported",
+          "observed_status": "weak",
+          "observed_score": 0.08142067492008209
+        },
+        "sensor_origin:camera_like_acquisition_supported": {
+          "section": "sensor_origin",
+          "pattern": "camera_like_acquisition_supported",
+          "role": "supporting_evidence",
+          "interpretation": "Measured structure is compatible with camera acquisition; it does not authenticate the image.",
+          "observations": [],
+          "label": "low-level signals are consistent with a camera acquisition pipeline",
+          "observed_status": "medium",
+          "observed_score": 0.05393149331212044
+        },
+        "metadata:sparse_or_stripped": {
+          "section": "metadata",
+          "pattern": "sparse_or_stripped",
+          "role": "contextual_evidence",
+          "interpretation": "Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.",
+          "observations": [
+            {
+              "provenance_keys_detected": [],
+              "technical_keys_detected_count": 43
+            }
+          ],
+          "label": "metadata is sparse or stripped and provides no provenance clues",
+          "observed_status": "weak",
+          "observed_score": 0.0
+        }
+      },
+      "confidence_policy_rule": "camera.acquisition_compatibility",
+      "confidence_rationale": [
+        "Confidence policy camera.acquisition_compatibility: Camera-like structure or coherent photo-like processing supports compatibility, not photographic authenticity.",
+        "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+      ]
+    }
+  ],
+  "provenance_evidence": {
+    "state": "no_substantive_provenance_evidence",
+    "metadata_authenticity_verified": false
+  },
+  "decision": {
+    "primary_hypothesis": "localized_editing",
+    "selection_reason": "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.",
+    "decision_branch": "possible_foreground_background_processing_mismatch",
+    "dominant_pattern": "possible_foreground_background_processing_mismatch",
+    "confidence_tier": "High",
+    "polarity": "suspicious",
+    "supporting_evidence": [
+      "boundary:possible_foreground_background_processing_mismatch",
+      "boundary_focus:boundary_focused_processing_mismatch",
+      "compression_history:localized_compression_inconsistency",
+      "cross_signal:partial_hotspot_convergence",
+      "subject_boundary:possible_subject_background_segmentation_artifact"
+    ],
+    "supporting_signals": [
+      "possible_foreground_background_processing_mismatch",
+      "boundary_focused_processing_mismatch",
+      "localized_compression_inconsistency",
+      "partial_hotspot_convergence",
+      "possible_subject_background_segmentation_artifact"
+    ],
+    "supporting_explanations": [
+      "foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use."
+    ],
+    "contradicting_evidence": [],
+    "contradicting_signals": [],
+    "contradicting_explanations": [],
+    "moderating_evidence": [
+      "cfa_demosaic:weak_camera_cfa_supported",
+      "sensor_origin:camera_like_acquisition_supported"
+    ],
+    "moderating_signals": [
+      "weak_camera_cfa_supported",
+      "camera_like_acquisition_supported"
+    ],
+    "moderating_explanations": [
+      "weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+      "low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing."
+    ],
+    "contextual_evidence": [
+      "subject_material_realism:subject_material_regularization_dominant",
+      "subject_process_asymmetry:subject_background_texture_asymmetry",
+      "subject_texture_consistency:subject_internal_stochastic_repetition"
+    ],
+    "contextual_signals": [
+      "subject_material_regularization_dominant",
+      "subject_background_texture_asymmetry",
+      "subject_internal_stochastic_repetition"
+    ],
+    "contextual_explanations": [
+      "subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+      "texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+      "subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism."
+    ],
+    "limitations": [
+      "Localized editing evidence does not by itself establish AI generation."
+    ],
+    "evidence_details": {
+      "boundary:possible_foreground_background_processing_mismatch": {
+        "section": "boundary",
+        "pattern": "possible_foreground_background_processing_mismatch",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "foreground and background appear to have been processed differently",
+        "observed_status": "strong",
+        "observed_score": null
+      },
+      "boundary_focus:boundary_focused_processing_mismatch": {
+        "section": "boundary_focus",
+        "pattern": "boundary_focused_processing_mismatch",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "boundary region shows elevated processing relative to subject and background",
+        "observed_status": "medium",
+        "observed_score": 6.711709976196289
+      },
+      "cfa_demosaic:weak_camera_cfa_supported": {
+        "section": "cfa_demosaic",
+        "pattern": "weak_camera_cfa_supported",
+        "role": "moderating_evidence",
+        "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+        "observations": [],
+        "label": "weak camera cfa supported",
+        "observed_status": "weak",
+        "observed_score": 0.08142067492008209
+      },
+      "compression_history:localized_compression_inconsistency": {
+        "section": "compression_history",
+        "pattern": "localized_compression_inconsistency",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "compression artifacts vary across regions",
+        "observed_status": "strong",
+        "observed_score": 0.00486650038510561
+      },
+      "cross_signal:partial_hotspot_convergence": {
+        "section": "cross_signal",
+        "pattern": "partial_hotspot_convergence",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "some forensic signals converge on localized regions",
+        "observed_status": "weak",
+        "observed_score": null
+      },
+      "sensor_origin:camera_like_acquisition_supported": {
+        "section": "sensor_origin",
+        "pattern": "camera_like_acquisition_supported",
+        "role": "moderating_evidence",
+        "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+        "observations": [],
+        "label": "low-level signals are consistent with a camera acquisition pipeline",
+        "observed_status": "medium",
+        "observed_score": 0.05393149331212044
+      },
+      "subject_boundary:possible_subject_background_segmentation_artifact": {
+        "section": "subject_boundary",
+        "pattern": "possible_subject_background_segmentation_artifact",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "subject boundary suggests a segmentation or cutout artifact",
+        "observed_status": "strong",
+        "observed_score": 0.6771309242149195
+      },
+      "subject_material_realism:subject_material_regularization_dominant": {
+        "section": "subject_material_realism",
+        "pattern": "subject_material_regularization_dominant",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "subject material appears overly regularized and lacks natural variability",
+        "observed_status": "medium",
+        "observed_score": 0.5533233826460278
+      },
+      "subject_process_asymmetry:subject_background_texture_asymmetry": {
+        "section": "subject_process_asymmetry",
+        "pattern": "subject_background_texture_asymmetry",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "texture characteristics differ between subject and background",
+        "observed_status": "weak",
+        "observed_score": 0.589284147850057
+      },
+      "subject_texture_consistency:subject_internal_stochastic_repetition": {
+        "section": "subject_texture_consistency",
+        "pattern": "subject_internal_stochastic_repetition",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "subject texture shows repeated stochastic patterns",
+        "observed_status": "medium",
+        "observed_score": 1.0
+      }
+    },
+    "confidence_rationale": [
+      "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.",
+      "Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.",
+      "Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.",
+      "Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent."
+    ],
+    "overall_text": "Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.\nSupporting Signals:\n- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.\nContextual Signals:\n- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\nEvidence Limitations:\n- Localized editing evidence does not by itself establish AI generation.\nConfidence Rationale:\n- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.\n- Confidence policy localized.reliable_boundary_compound: Strong local-processing support and the existing compound boundary requirement are satisfied.\n- Moderating observations qualify this interpretation; they do not automatically refute it or support a different hypothesis.\n- Confidence tiers are heuristic support levels, not calibrated probabilities; related module outputs are not assumed statistically independent.\n\nsynthetic_origin: Inconclusive (neutral). Synthetic origin is not established by the available evidence.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\nContextual Signals:\n- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.\n- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- repeated patch structures are concentrated within the subject: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- subject material appears overly regularized and lacks natural variability: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- texture characteristics differ between subject and background: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- subject texture shows repeated stochastic patterns: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\nLimitations: Heuristic support levels are not probabilities. Missing provenance coverage is a limitation, not positive generation evidence. No substantive generation declaration or specific visual generation finding is established.\nConfidence policy rule: synthetic.not_established\n\nlocalized_editing: High (suspicious). Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.\nSupporting Signals:\n- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.\nContextual Signals:\n- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\nLimitations: Localized editing evidence does not by itself establish AI generation.\nConfidence policy rule: localized.reliable_boundary_compound\n\ncamera_acquisition: Medium (benign). Camera-like acquisition evidence is present.\nSupporting Signals:\n- weak camera cfa supported: Measured structure is compatible with camera acquisition; it does not authenticate the image.\n- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.\nContextual Signals:\n- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.\nLimitations: Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.\nConfidence policy rule: camera.acquisition_compatibility\n"
+  },
+  "evidence_dependency_analysis": {
+    "mode": "shadow",
+    "lineage_version": "2b2",
+    "status": "complete",
+    "production_score_unchanged": true,
+    "policy": "structural_restatement_only",
+    "lineage": [
+      {
+        "evidence_id": "evidence:boundary",
+        "source_detector": "vf_cross_signal.classify_boundary_convergence",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "direct_dependencies": [
+          "evidence:ela",
+          "evidence:noise"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "strong",
+        "available": true,
+        "scoring_available": true,
+        "kind": "composite",
+        "addition": "interpretation",
+        "overlap_groups": [
+          "processing_anomalies",
+          "contour_interpretation"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:boundary_focus",
+        "source_detector": "vf_boundary_focus.run_boundary_focus_analysis",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:ela",
+          "evidence:noise",
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "composite",
+        "addition": "localization",
+        "overlap_groups": [
+          "processing_anomalies",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:cfa_demosaic",
+        "source_detector": "vf_cfa_demosaic.run_cfa_demosaic_analysis",
+        "family": "camera_pipeline",
+        "measurement_ancestry": [
+          "measurement:chroma_phase_directionality"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "camera_acquisition",
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "highpass_features",
+          "acquisition_phase_features"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:compression_history",
+        "source_detector": "vf_compression_history.run_compression_history_analysis",
+        "family": "compression_history",
+        "measurement_ancestry": [
+          "measurement:aligned_offgrid_boundary_energy"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing",
+          "camera_acquisition"
+        ],
+        "status": "strong",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "processing_anomalies"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:cross_signal",
+        "source_detector": "vf_cross_signal.compute_cross_signal_payload",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "direct_dependencies": [
+          "evidence:ela",
+          "evidence:noise"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "composite",
+        "addition": "cross_measurement_relationship",
+        "overlap_groups": [
+          "processing_anomalies"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:ela",
+        "source_detector": "vf_ela.run_ela",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "processing_anomalies"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:fft",
+        "source_detector": "vf_fft.run_fft_analysis",
+        "family": "spectral",
+        "measurement_ancestry": [
+          "measurement:global_spectral_features"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "strong",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "spectral_feature_code"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:metadata",
+        "source_detector": "exiftool_backend.analyze_file_with_exiftool",
+        "family": "provenance",
+        "measurement_ancestry": [
+          "measurement:embedded_assertions"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "camera_acquisition"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "provenance_assertion"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:noise",
+        "source_detector": "vf_noise.run_noise_analysis",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:luminance_residual"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "processing_anomalies",
+          "highpass_features"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:osint",
+        "source_detector": "summary_sections.build_osint_section",
+        "family": "provenance",
+        "measurement_ancestry": [],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin"
+        ],
+        "status": "not_run",
+        "available": false,
+        "scoring_available": false,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "provenance_assertion"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:patch_similarity",
+        "source_detector": "vf_patch_similarity.run_patch_similarity_analysis",
+        "family": "patch_recurrence",
+        "measurement_ancestry": [
+          "measurement:retained_patch_matches"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "texture_recurrence"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:patch_spatial",
+        "source_detector": "vf_patch_spatial.run_patch_spatial_analysis",
+        "family": "patch_recurrence",
+        "measurement_ancestry": [
+          "measurement:retained_patch_matches",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:patch_similarity",
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "derived",
+        "addition": "localization",
+        "overlap_groups": [
+          "texture_recurrence",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:region_fft",
+        "source_detector": "vf_region_fft.run_region_fft_analysis",
+        "family": "spectral",
+        "measurement_ancestry": [
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "inconclusive",
+        "available": true,
+        "scoring_available": false,
+        "kind": "derived",
+        "addition": "localization",
+        "overlap_groups": [
+          "spectral_feature_code",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:region_masks",
+        "source_detector": "vf_person_subject_mask.derive_region_masks_from_person_mask",
+        "family": "geometry",
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "derived",
+        "addition": "reliability_or_context",
+        "overlap_groups": [
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:scene_context",
+        "source_detector": "hypothesis_engine.build_context",
+        "family": "analyst_context",
+        "measurement_ancestry": [],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [],
+        "status": "available",
+        "available": true,
+        "scoring_available": false,
+        "kind": "primary",
+        "addition": "reliability_or_context",
+        "overlap_groups": [],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:segmentation_alignment",
+        "source_detector": "vf_segmentation_alignment.compute_segmentation_boundary_alignment",
+        "family": "processing_residual",
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:cross_signal",
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "composite",
+        "addition": "localization",
+        "overlap_groups": [
+          "processing_anomalies",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:sensor_origin",
+        "source_detector": "vf_sensor_origin.run_sensor_origin_analysis",
+        "family": "camera_pipeline",
+        "measurement_ancestry": [
+          "measurement:luminance_phase_residual"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "camera_acquisition",
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "highpass_features",
+          "acquisition_phase_features"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:subject_boundary",
+        "source_detector": "vf_subject_boundary.run_subject_boundary_analysis",
+        "family": "intrinsic_edge_transition",
+        "measurement_ancestry": [
+          "measurement:intrinsic_edge_ring_features"
+        ],
+        "direct_dependencies": [],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "status": "strong",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "highpass_features",
+          "image_gradients"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:subject_material_realism",
+        "source_detector": "vf_subject_material_realism.run_subject_material_realism_analysis",
+        "family": "subject_surface",
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "direct_dependencies": [
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "derived",
+        "addition": "interpretation",
+        "overlap_groups": [
+          "surface_feature_definitions",
+          "highpass_features",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:subject_process_asymmetry",
+        "source_detector": "vf_subject_process_asymmetry.run_subject_process_asymmetry_analysis",
+        "family": "subject_surface",
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [
+          "evidence:subject_texture_consistency",
+          "evidence:region_fft"
+        ],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "weak",
+        "available": true,
+        "scoring_available": true,
+        "kind": "composite",
+        "addition": "interpretation",
+        "overlap_groups": [
+          "surface_feature_definitions",
+          "highpass_features",
+          "selected_geometry"
+        ],
+        "known": true
+      },
+      {
+        "evidence_id": "evidence:subject_texture_consistency",
+        "source_detector": "vf_subject_texture_consistency.run_subject_texture_consistency_analysis",
+        "family": "subject_surface",
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:selected_mask_geometry"
+        ],
+        "direct_dependencies": [
+          "evidence:region_masks"
+        ],
+        "optional_dependencies": [],
+        "missing_dependencies": [],
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "status": "medium",
+        "available": true,
+        "scoring_available": true,
+        "kind": "primary",
+        "addition": "new_measurement",
+        "overlap_groups": [
+          "texture_recurrence",
+          "surface_feature_definitions",
+          "selected_geometry"
+        ],
+        "known": true
+      }
+    ],
+    "families": {
+      "processing_residual": {
+        "evidence_ids": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:cross_signal"
+        ],
+        "existing_suspicious_base": 5.0,
+        "shadow_suspicious_base": 5.0,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [
+          "base:boundary",
+          "base:boundary_focus",
+          "base:cross_signal"
+        ],
+        "component_operation_ids": [
+          "component:local_edit_support_score:add:b8de1b4b184d",
+          "component:edit_boost:add:aa546f95922d",
+          "component:compression_boost:add:e448c9fdd8ab"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "spectral": {
+        "evidence_ids": [
+          "evidence:fft"
+        ],
+        "existing_suspicious_base": 3.0,
+        "shadow_suspicious_base": 3.0,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [],
+        "component_operation_ids": [],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "patch_recurrence": {
+        "evidence_ids": [
+          "evidence:patch_similarity",
+          "evidence:patch_spatial"
+        ],
+        "existing_suspicious_base": 3.0,
+        "shadow_suspicious_base": 3.0,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [
+          "base:patch_spatial"
+        ],
+        "component_operation_ids": [
+          "component:clone_support_score:add:8f8d629e66a2",
+          "component:clone_support_score:maximum:e178608a7259"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "subject_surface": {
+        "evidence_ids": [
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "existing_suspicious_base": 3.5,
+        "shadow_suspicious_base": 3.5,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [
+          "base:subject_material_realism",
+          "base:subject_process_asymmetry"
+        ],
+        "component_operation_ids": [
+          "component:local_edit_support_score:add:5be21e7bc2e2",
+          "component:local_edit_support_score:add:90eb71610350",
+          "component:local_edit_support_score:add:edecc123b6f0",
+          "component:edit_boost:add:5be21e7bc2e2",
+          "component:edit_boost:add:90eb71610350",
+          "component:edit_boost:add:edecc123b6f0",
+          "component:edit_boost:add:aa546f95922d",
+          "component:synthetic_boost:add:edecc123b6f0"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "camera_pipeline": {
+        "evidence_ids": [
+          "evidence:cfa_demosaic",
+          "evidence:sensor_origin"
+        ],
+        "existing_suspicious_base": 0.0,
+        "shadow_suspicious_base": 0.0,
+        "existing_benign_base": 2.0,
+        "shadow_benign_base": 2.0,
+        "pending_incremental_credit_ids": [],
+        "component_operation_ids": [
+          "component:camera_counter_support:add:a76e4bd840d9",
+          "component:caution_penalty:add:feb000b080cd",
+          "component:local_edit_support_score:add:a76e4bd840d9",
+          "component:edit_boost:add:aa546f95922d",
+          "component:clone_support_score:add:8f8d629e66a2",
+          "component:clone_support_score:maximum:e178608a7259",
+          "component:caution_penalty:add:fe153252e2fe"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "compression_history": {
+        "evidence_ids": [
+          "evidence:compression_history"
+        ],
+        "existing_suspicious_base": 3.0,
+        "shadow_suspicious_base": 3.0,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [],
+        "component_operation_ids": [
+          "component:local_edit_support_score:add:0a03cef2e0de",
+          "component:edit_boost:add:aa546f95922d",
+          "component:compression_boost:add:e448c9fdd8ab"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      },
+      "intrinsic_edge_transition": {
+        "evidence_ids": [
+          "evidence:subject_boundary"
+        ],
+        "existing_suspicious_base": 3.0,
+        "shadow_suspicious_base": 3.0,
+        "existing_benign_base": 0.0,
+        "shadow_benign_base": 0.0,
+        "pending_incremental_credit_ids": [],
+        "component_operation_ids": [
+          "component:local_edit_support_score:add:74b3b317ebb0",
+          "component:edit_boost:add:aa546f95922d",
+          "component:compression_boost:add:e448c9fdd8ab"
+        ],
+        "component_attribution_note": "Operation references can span families; do not sum mixed-family references as disjoint credits."
+      }
+    },
+    "contributions": [
+      {
+        "contribution_id": "base:boundary",
+        "evidence_ids": [
+          "evidence:boundary"
+        ],
+        "target": "base_suspicious",
+        "value": 3.0,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "domain": "boundary",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 3.0,
+        "diagnostic_contribution": 3.0,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "reason": "Added interpretation is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:boundary_focus",
+        "evidence_ids": [
+          "evidence:boundary_focus"
+        ],
+        "target": "base_suspicious",
+        "value": 1.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "domain": "boundary_focus",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual",
+          "measurement:selected_mask_geometry"
+        ],
+        "reason": "Added localization is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:cfa_demosaic",
+        "evidence_ids": [
+          "evidence:cfa_demosaic"
+        ],
+        "target": "base_benign",
+        "value": 0.5,
+        "polarity": "benign",
+        "hypotheses": [
+          "camera_acquisition",
+          "localized_editing"
+        ],
+        "domain": "sensor_cfa",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 0.5,
+        "diagnostic_contribution": 0.5,
+        "difference": 0.0,
+        "marginal_contribution": 0.5,
+        "measurement_ancestry": [
+          "measurement:chroma_phase_directionality"
+        ],
+        "reason": "Counter-evidence/signed contribution retained in its hypothesis scope.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:compression_history",
+        "evidence_ids": [
+          "evidence:compression_history"
+        ],
+        "target": "base_suspicious",
+        "value": 3.0,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "localized_editing",
+          "camera_acquisition"
+        ],
+        "domain": "compression",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 3.0,
+        "diagnostic_contribution": 3.0,
+        "difference": 0.0,
+        "marginal_contribution": 3.0,
+        "measurement_ancestry": [
+          "measurement:aligned_offgrid_boundary_energy"
+        ],
+        "reason": "Primary measurement credit retained; no independence assertion.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:cross_signal",
+        "evidence_ids": [
+          "evidence:cross_signal"
+        ],
+        "target": "base_suspicious",
+        "value": 0.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "domain": "cross_signal",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 0.5,
+        "diagnostic_contribution": 0.5,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "reason": "Added cross_measurement_relationship is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:fft",
+        "evidence_ids": [
+          "evidence:fft"
+        ],
+        "target": "base_suspicious",
+        "value": 3.0,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "frequency",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 3.0,
+        "diagnostic_contribution": 3.0,
+        "difference": 0.0,
+        "marginal_contribution": 3.0,
+        "measurement_ancestry": [
+          "measurement:global_spectral_features"
+        ],
+        "reason": "Primary measurement credit retained; no independence assertion.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:patch_similarity",
+        "evidence_ids": [
+          "evidence:patch_similarity"
+        ],
+        "target": "base_suspicious",
+        "value": 1.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "patch",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": 1.5,
+        "measurement_ancestry": [
+          "measurement:retained_patch_matches"
+        ],
+        "reason": "Primary measurement credit retained; no independence assertion.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:patch_spatial",
+        "evidence_ids": [
+          "evidence:patch_spatial"
+        ],
+        "target": "base_suspicious",
+        "value": 1.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "patch_spatial",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:retained_patch_matches",
+          "measurement:selected_mask_geometry"
+        ],
+        "reason": "Added localization is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:sensor_origin",
+        "evidence_ids": [
+          "evidence:sensor_origin"
+        ],
+        "target": "base_benign",
+        "value": 1.5,
+        "polarity": "benign",
+        "hypotheses": [
+          "camera_acquisition",
+          "localized_editing"
+        ],
+        "domain": "sensor",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": 1.5,
+        "measurement_ancestry": [
+          "measurement:luminance_phase_residual"
+        ],
+        "reason": "Counter-evidence/signed contribution retained in its hypothesis scope.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:subject_boundary",
+        "evidence_ids": [
+          "evidence:subject_boundary"
+        ],
+        "target": "base_suspicious",
+        "value": 3.0,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "localized_editing"
+        ],
+        "domain": "boundary_semantic",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 3.0,
+        "diagnostic_contribution": 3.0,
+        "difference": 0.0,
+        "marginal_contribution": 3.0,
+        "measurement_ancestry": [
+          "measurement:intrinsic_edge_ring_features"
+        ],
+        "reason": "Primary measurement credit retained; no independence assertion.",
+        "requires_empirical_validation": false
+      },
+      {
+        "contribution_id": "base:subject_material_realism",
+        "evidence_ids": [
+          "evidence:subject_material_realism"
+        ],
+        "target": "base_suspicious",
+        "value": 1.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "subject_material",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "reason": "Added interpretation is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:subject_process_asymmetry",
+        "evidence_ids": [
+          "evidence:subject_process_asymmetry"
+        ],
+        "target": "base_suspicious",
+        "value": 0.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "region_asymmetry",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 0.5,
+        "diagnostic_contribution": 0.5,
+        "difference": 0.0,
+        "marginal_contribution": null,
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry"
+        ],
+        "reason": "Added interpretation is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.",
+        "requires_empirical_validation": true
+      },
+      {
+        "contribution_id": "base:subject_texture_consistency",
+        "evidence_ids": [
+          "evidence:subject_texture_consistency"
+        ],
+        "target": "base_suspicious",
+        "value": 1.5,
+        "polarity": "suspicious",
+        "hypotheses": [
+          "synthetic_origin",
+          "localized_editing"
+        ],
+        "domain": "subject_texture",
+        "credit_role": "observation_credit",
+        "evidence_role": "supporting_evidence",
+        "existing_contribution": 1.5,
+        "diagnostic_contribution": 1.5,
+        "difference": 0.0,
+        "marginal_contribution": 1.5,
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:selected_mask_geometry"
+        ],
+        "reason": "Primary measurement credit retained; no independence assertion.",
+        "requires_empirical_validation": false
+      }
+    ],
+    "component_lineage": [
+      {
+        "contribution_id": "component:camera_counter_support:add:a76e4bd840d9",
+        "ledger_index": 0,
+        "field": "camera_counter_support",
+        "operation": "add",
+        "raw_contribution": 1.25,
+        "reliability_adjusted_contribution": 1.25,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:luminance_phase_residual"
+        ],
+        "condition": "ds.camera_like_support",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 1.25,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:caution_penalty:add:feb000b080cd",
+        "ledger_index": 1,
+        "field": "caution_penalty",
+        "operation": "add",
+        "raw_contribution": 0.35,
+        "reliability_adjusted_contribution": 0.35,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:metadata",
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:embedded_assertions",
+          "measurement:luminance_phase_residual"
+        ],
+        "condition": "ds.camera_like_support and ds.provenance_clean",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.35,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:b8de1b4b184d",
+        "ledger_index": 2,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 2.0,
+        "reliability_adjusted_contribution": 2.0,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:boundary"
+        ],
+        "measurement_ancestry": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "condition": "ds.strong_local_edit",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 2.0,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:74b3b317ebb0",
+        "ledger_index": 3,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 0.75,
+        "reliability_adjusted_contribution": 0.75,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_boundary"
+        ],
+        "measurement_ancestry": [
+          "measurement:intrinsic_edge_ring_features"
+        ],
+        "condition": "boundary_strong",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.75,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:0a03cef2e0de",
+        "ledger_index": 4,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 0.4,
+        "reliability_adjusted_contribution": 0.4,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:compression_history"
+        ],
+        "measurement_ancestry": [
+          "measurement:aligned_offgrid_boundary_energy"
+        ],
+        "condition": "ds.compression_inconsistency",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.4,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:5be21e7bc2e2",
+        "ledger_index": 5,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 0.75,
+        "reliability_adjusted_contribution": 0.75,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_texture_consistency"
+        ],
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:selected_mask_geometry"
+        ],
+        "condition": "ds.subject_texture_strong",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.75,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:90eb71610350",
+        "ledger_index": 6,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 0.4,
+        "reliability_adjusted_contribution": 0.4,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_process_asymmetry"
+        ],
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry"
+        ],
+        "condition": "otherwise / asym_medium",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.4,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:edecc123b6f0",
+        "ledger_index": 7,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": 0.75,
+        "reliability_adjusted_contribution": 0.75,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_material_realism"
+        ],
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "condition": "otherwise / ds.material_realism_medium",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.75,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:local_edit_support_score:add:a76e4bd840d9",
+        "ledger_index": 8,
+        "field": "local_edit_support_score",
+        "operation": "add",
+        "raw_contribution": -0.2,
+        "reliability_adjusted_contribution": -0.2,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:luminance_phase_residual"
+        ],
+        "condition": "ds.camera_like_support",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": -0.2,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:edit_boost:add:5be21e7bc2e2",
+        "ledger_index": 9,
+        "field": "edit_boost",
+        "operation": "add",
+        "raw_contribution": 0.4,
+        "reliability_adjusted_contribution": 0.4,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_texture_consistency"
+        ],
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:selected_mask_geometry"
+        ],
+        "condition": "ds.subject_texture_strong",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.4,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:edit_boost:add:90eb71610350",
+        "ledger_index": 10,
+        "field": "edit_boost",
+        "operation": "add",
+        "raw_contribution": 0.15,
+        "reliability_adjusted_contribution": 0.15,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_process_asymmetry"
+        ],
+        "measurement_ancestry": [
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry"
+        ],
+        "condition": "otherwise / asym_medium",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.15,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:edit_boost:add:edecc123b6f0",
+        "ledger_index": 11,
+        "field": "edit_boost",
+        "operation": "add",
+        "raw_contribution": 0.4,
+        "reliability_adjusted_contribution": 0.4,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_material_realism"
+        ],
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "condition": "otherwise / ds.material_realism_medium",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.4,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:edit_boost:add:aa546f95922d",
+        "ledger_index": 12,
+        "field": "edit_boost",
+        "operation": "add",
+        "raw_contribution": 0.8729999999999999,
+        "reliability_adjusted_contribution": 0.8729999999999999,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:boundary",
+          "evidence:compression_history",
+          "evidence:sensor_origin",
+          "evidence:subject_boundary",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "measurement_ancestry": [
+          "measurement:aligned_offgrid_boundary_energy",
+          "measurement:ela_recompression_difference",
+          "measurement:intrinsic_edge_ring_features",
+          "measurement:luminance_phase_residual",
+          "measurement:luminance_residual",
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "condition": "local_support_conversion",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.8729999999999999,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:clone_support_score:add:8f8d629e66a2",
+        "ledger_index": 13,
+        "field": "clone_support_score",
+        "operation": "add",
+        "raw_contribution": -0.9,
+        "reliability_adjusted_contribution": null,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": true,
+        "evidence_ids": [
+          "evidence:metadata",
+          "evidence:patch_similarity",
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:embedded_assertions",
+          "measurement:luminance_phase_residual",
+          "measurement:retained_patch_matches"
+        ],
+        "condition": "usable_observation(ev.patch_similarity) / camera_benign",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": -0.9,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:clone_support_score:maximum:e178608a7259",
+        "ledger_index": 14,
+        "field": "clone_support_score",
+        "operation": "maximum",
+        "raw_contribution": 0.0,
+        "reliability_adjusted_contribution": null,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:metadata",
+          "evidence:patch_similarity",
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:embedded_assertions",
+          "measurement:luminance_phase_residual",
+          "measurement:retained_patch_matches"
+        ],
+        "condition": "clone_floor",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.0,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:synthetic_boost:add:edecc123b6f0",
+        "ledger_index": 15,
+        "field": "synthetic_boost",
+        "operation": "add",
+        "raw_contribution": 0.4,
+        "reliability_adjusted_contribution": 0.4,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:subject_material_realism"
+        ],
+        "measurement_ancestry": [
+          "measurement:selected_mask_geometry",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "condition": "otherwise / ds.material_realism_medium",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.4,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:compression_boost:add:e448c9fdd8ab",
+        "ledger_index": 16,
+        "field": "compression_boost",
+        "operation": "add",
+        "raw_contribution": 0.75,
+        "reliability_adjusted_contribution": 0.75,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:boundary",
+          "evidence:compression_history",
+          "evidence:cross_signal",
+          "evidence:subject_boundary"
+        ],
+        "measurement_ancestry": [
+          "measurement:aligned_offgrid_boundary_energy",
+          "measurement:ela_recompression_difference",
+          "measurement:intrinsic_edge_ring_features",
+          "measurement:luminance_residual"
+        ],
+        "condition": "ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong)",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 0.75,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      },
+      {
+        "contribution_id": "component:caution_penalty:add:fe153252e2fe",
+        "ledger_index": 17,
+        "field": "caution_penalty",
+        "operation": "add",
+        "raw_contribution": 1.25,
+        "reliability_adjusted_contribution": 1.25,
+        "later_component_multiplier": 1.0,
+        "nonlinear_floor_follows": false,
+        "evidence_ids": [
+          "evidence:sensor_origin"
+        ],
+        "measurement_ancestry": [
+          "measurement:luminance_phase_residual"
+        ],
+        "condition": "measured_camera_caution",
+        "unknown_signal_aliases": [],
+        "control_dependencies": [],
+        "diagnostic_contribution": 1.25,
+        "difference": 0.0,
+        "reason": "Existing explicit arithmetic/control policy retained; not another independent evidence credit."
+      }
+    ],
+    "production_calculation_version": "2a",
+    "lineage_coverage": {
+      "scoring_indicator_count": 13,
+      "known_scoring_indicator_count": 13,
+      "unknown_base_credit_ids": [],
+      "unknown_component_rule_ids": []
+    },
+    "domain_accounting": {
+      "production_suspicious_bonus": 2.5,
+      "shadow_suspicious_bonus": 2.5,
+      "policy": "Existing 0.25 per additional credited domain retained; families are not substituted for domains."
+    },
+    "shared_ancestry": {
+      "supporting_indicator_count": 13,
+      "distinct_measurement_ancestries": [
+        "measurement:aligned_offgrid_boundary_energy",
+        "measurement:chroma_phase_directionality",
+        "measurement:ela_recompression_difference",
+        "measurement:global_spectral_features",
+        "measurement:intrinsic_edge_ring_features",
+        "measurement:luminance_phase_residual",
+        "measurement:luminance_residual",
+        "measurement:masked_hybrid_texture_descriptors",
+        "measurement:regional_patch_statistics",
+        "measurement:regional_spectral_features",
+        "measurement:retained_patch_matches",
+        "measurement:subject_material_patch_statistics"
+      ],
+      "measurement_ancestry_count": 12,
+      "distinct_measurement_families": [
+        "camera_pipeline",
+        "compression_history",
+        "intrinsic_edge_transition",
+        "patch_recurrence",
+        "processing_residual",
+        "spectral",
+        "subject_surface"
+      ],
+      "shared_ancestry": {
+        "measurement:ela_recompression_difference": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:cross_signal"
+        ],
+        "measurement:luminance_residual": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:cross_signal"
+        ],
+        "measurement:masked_hybrid_texture_descriptors": [
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "measurement:retained_patch_matches": [
+          "evidence:patch_similarity",
+          "evidence:patch_spatial"
+        ]
+      },
+      "overlapping_feature_groups": {
+        "acquisition_phase_features": [
+          "evidence:cfa_demosaic",
+          "evidence:sensor_origin"
+        ],
+        "highpass_features": [
+          "evidence:cfa_demosaic",
+          "evidence:sensor_origin",
+          "evidence:subject_boundary",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry"
+        ],
+        "processing_anomalies": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:compression_history",
+          "evidence:cross_signal"
+        ],
+        "selected_geometry": [
+          "evidence:boundary_focus",
+          "evidence:patch_spatial",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "surface_feature_definitions": [
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "texture_recurrence": [
+          "evidence:patch_similarity",
+          "evidence:patch_spatial",
+          "evidence:subject_texture_consistency"
+        ]
+      },
+      "derived_or_composite_indicators": [
+        "evidence:boundary",
+        "evidence:boundary_focus",
+        "evidence:cross_signal",
+        "evidence:patch_spatial",
+        "evidence:subject_material_realism",
+        "evidence:subject_process_asymmetry"
+      ],
+      "missing_required_ancestry": {},
+      "only_one_measurement_family": false,
+      "independent_observation_count": null,
+      "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count."
+    },
+    "corroboration_gates": {
+      "_boundary_corroborated": {
+        "supporting_indicator_count": 3,
+        "distinct_measurement_ancestries": [
+          "measurement:ela_recompression_difference",
+          "measurement:intrinsic_edge_ring_features",
+          "measurement:luminance_residual"
+        ],
+        "measurement_ancestry_count": 3,
+        "distinct_measurement_families": [
+          "intrinsic_edge_transition",
+          "processing_residual"
+        ],
+        "shared_ancestry": {
+          "measurement:ela_recompression_difference": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ],
+          "measurement:luminance_residual": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ]
+        },
+        "overlapping_feature_groups": {
+          "processing_anomalies": [
+            "evidence:boundary",
+            "evidence:boundary_focus"
+          ]
+        },
+        "derived_or_composite_indicators": [
+          "evidence:boundary",
+          "evidence:boundary_focus"
+        ],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": false,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:subject_boundary"
+        ],
+        "production_indicator_count": 3,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": true,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "camera_convergence_bonus": {
+        "supporting_indicator_count": 1,
+        "distinct_measurement_ancestries": [
+          "measurement:luminance_phase_residual"
+        ],
+        "measurement_ancestry_count": 1,
+        "distinct_measurement_families": [
+          "camera_pipeline"
+        ],
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "derived_or_composite_indicators": [],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": true,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [
+          "evidence:sensor_origin"
+        ],
+        "production_indicator_count": 1,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": false,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "determine_confidence.strong_signals": {
+        "supporting_indicator_count": 1,
+        "distinct_measurement_ancestries": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "measurement_ancestry_count": 2,
+        "distinct_measurement_families": [
+          "processing_residual"
+        ],
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "derived_or_composite_indicators": [
+          "evidence:boundary"
+        ],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": true,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [
+          "evidence:boundary"
+        ],
+        "production_indicator_count": 1,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": false,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "suspicious_domain_bonus": {
+        "supporting_indicator_count": 11,
+        "distinct_measurement_ancestries": [
+          "measurement:aligned_offgrid_boundary_energy",
+          "measurement:ela_recompression_difference",
+          "measurement:global_spectral_features",
+          "measurement:intrinsic_edge_ring_features",
+          "measurement:luminance_residual",
+          "measurement:masked_hybrid_texture_descriptors",
+          "measurement:regional_patch_statistics",
+          "measurement:regional_spectral_features",
+          "measurement:retained_patch_matches",
+          "measurement:subject_material_patch_statistics"
+        ],
+        "measurement_ancestry_count": 10,
+        "distinct_measurement_families": [
+          "compression_history",
+          "intrinsic_edge_transition",
+          "patch_recurrence",
+          "processing_residual",
+          "spectral",
+          "subject_surface"
+        ],
+        "shared_ancestry": {
+          "measurement:ela_recompression_difference": [
+            "evidence:boundary",
+            "evidence:boundary_focus",
+            "evidence:cross_signal"
+          ],
+          "measurement:luminance_residual": [
+            "evidence:boundary",
+            "evidence:boundary_focus",
+            "evidence:cross_signal"
+          ],
+          "measurement:masked_hybrid_texture_descriptors": [
+            "evidence:subject_process_asymmetry",
+            "evidence:subject_texture_consistency"
+          ],
+          "measurement:retained_patch_matches": [
+            "evidence:patch_similarity",
+            "evidence:patch_spatial"
+          ]
+        },
+        "overlapping_feature_groups": {
+          "highpass_features": [
+            "evidence:subject_boundary",
+            "evidence:subject_material_realism",
+            "evidence:subject_process_asymmetry"
+          ],
+          "processing_anomalies": [
+            "evidence:boundary",
+            "evidence:boundary_focus",
+            "evidence:compression_history",
+            "evidence:cross_signal"
+          ],
+          "selected_geometry": [
+            "evidence:boundary_focus",
+            "evidence:patch_spatial",
+            "evidence:subject_material_realism",
+            "evidence:subject_process_asymmetry",
+            "evidence:subject_texture_consistency"
+          ],
+          "surface_feature_definitions": [
+            "evidence:subject_material_realism",
+            "evidence:subject_process_asymmetry",
+            "evidence:subject_texture_consistency"
+          ],
+          "texture_recurrence": [
+            "evidence:patch_similarity",
+            "evidence:patch_spatial",
+            "evidence:subject_texture_consistency"
+          ]
+        },
+        "derived_or_composite_indicators": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:cross_signal",
+          "evidence:patch_spatial",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry"
+        ],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": false,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [
+          "evidence:boundary",
+          "evidence:boundary_focus",
+          "evidence:compression_history",
+          "evidence:cross_signal",
+          "evidence:fft",
+          "evidence:patch_similarity",
+          "evidence:patch_spatial",
+          "evidence:subject_boundary",
+          "evidence:subject_material_realism",
+          "evidence:subject_process_asymmetry",
+          "evidence:subject_texture_consistency"
+        ],
+        "production_indicator_count": 11,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": true,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "synthetic_fft_patch_conjunction": {
+        "supporting_indicator_count": 2,
+        "distinct_measurement_ancestries": [
+          "measurement:global_spectral_features",
+          "measurement:retained_patch_matches"
+        ],
+        "measurement_ancestry_count": 2,
+        "distinct_measurement_families": [
+          "patch_recurrence",
+          "spectral"
+        ],
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "derived_or_composite_indicators": [],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": false,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [
+          "evidence:fft",
+          "evidence:patch_similarity"
+        ],
+        "production_indicator_count": 2,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": false,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "synthetic_material_asymmetry_conjunction": {
+        "supporting_indicator_count": 0,
+        "distinct_measurement_ancestries": [],
+        "measurement_ancestry_count": 0,
+        "distinct_measurement_families": [],
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "derived_or_composite_indicators": [],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": false,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [],
+        "production_indicator_count": 0,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": false,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      },
+      "synthetic_supported_by_other_domains": {
+        "supporting_indicator_count": 0,
+        "distinct_measurement_ancestries": [],
+        "measurement_ancestry_count": 0,
+        "distinct_measurement_families": [],
+        "shared_ancestry": {},
+        "overlapping_feature_groups": {},
+        "derived_or_composite_indicators": [],
+        "missing_required_ancestry": {},
+        "only_one_measurement_family": false,
+        "independent_observation_count": null,
+        "interpretation": "Distinct extractions/families are descriptive, not a statistical independence count.",
+        "production_indicator_ids": [],
+        "production_indicator_count": 0,
+        "production_gate_changed": false,
+        "ancestry_review_recommended": false,
+        "counterfactual_gate_result": null,
+        "limitation": "Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined."
+      }
+    },
+    "hypothesis_evidence_roles": {
+      "synthetic_origin": {
+        "supporting_evidence": [],
+        "contradicting_evidence": [],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contextual_evidence": [
+          "fft:possible_decoder_grid_signature",
+          "metadata:sparse_or_stripped",
+          "patch_similarity:structured_patch_recurrence",
+          "patch_spatial:subject_internal_synthetic_recurrence",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_background_texture_asymmetry",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ]
+      },
+      "localized_editing": {
+        "supporting_evidence": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "boundary_focus:boundary_focused_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:partial_hotspot_convergence",
+          "subject_boundary:possible_subject_background_segmentation_artifact"
+        ],
+        "contradicting_evidence": [],
+        "moderating_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contextual_evidence": [
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_background_texture_asymmetry",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ]
+      },
+      "camera_acquisition": {
+        "supporting_evidence": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "contradicting_evidence": [],
+        "moderating_evidence": [],
+        "contextual_evidence": [
+          "metadata:sparse_or_stripped"
+        ]
+      }
+    },
+    "shadow_aggregates": {
+      "suspicious_score": 20.47705,
+      "benign_score": 2.25,
+      "base_suspicious": 23.0,
+      "base_benign": 2.25
+    },
+    "comparison": {
+      "suspicious_score": {
+        "production": 20.47705,
+        "shadow": 20.47705,
+        "difference": 0.0
+      },
+      "benign_score": {
+        "production": 2.25,
+        "shadow": 2.25,
+        "difference": 0.0
+      }
+    },
+    "limitations": [
+      "Shadow totals have no confidence tier, hypothesis selection or probability interpretation.",
+      "Measurement ancestry does not establish statistical independence or forensic redundancy.",
+      "Added localization/interpretation has no calibrated marginal weight; existing credit is provisional.",
+      "Existing component synergies, camera moderation, penalties and domain bonus policy remain fixed. This is not a full causal ablation.",
+      "Measurement IDs describe feature extractions; overlapping helper code and masks are recorded separately.",
+      "The morphology segmentation stage is not scored in normal summary synthesis; its snapshot alias is region_masks."
+    ]
+  },
+  "pipeline_status": {
+    "coverage": {
+      "status": "complete",
+      "stage_counts": {
+        "success": 23,
+        "skipped": 0,
+        "unavailable": 0,
+        "failed": 0
+      },
+      "elapsed_seconds": 6.7375,
+      "unavailable_stages": []
+    },
+    "mask_diagnostics": {
+      "mask_status": "reliable",
+      "mask_source": "mediapipe_tasks_image_segmenter",
+      "mask_reliability": "high",
+      "person_specific": true,
+      "person_mask_reliability": "high",
+      "person_mask_reliable": true,
+      "fallback_used": false,
+      "fallback_reason": null,
+      "rejection_reasons": [],
+      "backend": "mediapipe_tasks_image_segmenter",
+      "backend_version": "1.2.0",
+      "model_name": "selfie_segmenter.tflite",
+      "model_version": null,
+      "confidence_kind": "mean foreground confidence, not a person-detection probability",
+      "detection_confidence": 0.6004539132118225,
+      "foreground_area_ratio": 0.5961422390407987,
+      "mask_coverage": 0.5961422390407987,
+      "quality": {
+        "pattern": "person_subject_mask_generated",
+        "person_detected": true,
+        "detector_confidence": 0.6004539132118225,
+        "subject_area_ratio": 0.5961422390407987,
+        "largest_component_ratio": 1.0,
+        "component_count": 1,
+        "mask_reliability": "high",
+        "quality_reasons": [],
+        "person_instance_count": 1,
+        "backend_error": null
+      },
+      "mask_dimensions": {
+        "width": 576,
+        "height": 1024
+      },
+      "backend_errors": [],
+      "disabled_stages": [],
+      "segmentation_outcome": {
+        "mask_status": "reliable",
+        "mask_source": "mediapipe_tasks_image_segmenter",
+        "mask_reliability": "high",
+        "person_specific": true,
+        "person_mask_reliability": "high",
+        "person_mask_reliable": true,
+        "fallback_used": false,
+        "fallback_reason": null,
+        "rejection_reasons": [],
+        "backend": "mediapipe_tasks_image_segmenter",
+        "backend_version": "1.2.0",
+        "model_name": "selfie_segmenter.tflite",
+        "model_version": null,
+        "confidence_kind": "mean foreground confidence, not a person-detection probability",
+        "detection_confidence": 0.6004539132118225,
+        "foreground_area_ratio": 0.5961422390407987,
+        "mask_coverage": 0.5961422390407987,
+        "quality": {
+          "pattern": "person_subject_mask_generated",
+          "person_detected": true,
+          "detector_confidence": 0.6004539132118225,
+          "subject_area_ratio": 0.5961422390407987,
+          "largest_component_ratio": 1.0,
+          "component_count": 1,
+          "mask_reliability": "high",
+          "quality_reasons": [],
+          "person_instance_count": 1,
+          "backend_error": null
+        },
+        "mask_dimensions": {
+          "width": 576,
+          "height": 1024
+        },
+        "backend_errors": [],
+        "disabled_stages": []
+      }
+    },
+    "stages": {
+      "Prepared image gatekeeper": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "prepared_images_payload",
+        "elapsed_seconds": 0.2136
+      },
+      "EXIF analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "exif_payload",
+        "elapsed_seconds": 0.3248
+      },
+      "ELA analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "ela_payload",
+        "elapsed_seconds": 0.2737
+      },
+      "Noise analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "noise_payload",
+        "elapsed_seconds": 0.1861
+      },
+      "Sensor-origin analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "sensor_origin_payload",
+        "elapsed_seconds": 0.0459
+      },
+      "CFA / demosaicing analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "cfa_demosaic_payload",
+        "elapsed_seconds": 0.1161
+      },
+      "Person-aware subject mask": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "person_subject_mask_payload",
+        "elapsed_seconds": 0.3878
+      },
+      "Person-derived region masks": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "region_masks_payload",
+        "elapsed_seconds": 0.0366
+      },
+      "Person mask reliability": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "person_mask_meta",
+        "elapsed_seconds": 0.0002
+      },
+      "Subject-boundary analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "subject_boundary_payload",
+        "elapsed_seconds": 0.0867
+      },
+      "Region segmentation analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "region_segmentation_payload",
+        "elapsed_seconds": 0.0054
+      },
+      "FFT analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "fft_payload",
+        "elapsed_seconds": 0.6243
+      },
+      "Patch similarity analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "patch_similarity_payload",
+        "elapsed_seconds": 0.7463
+      },
+      "Cross-signal analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "cross_signal_payload",
+        "elapsed_seconds": 0.0025
+      },
+      "Boundary-focused analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "boundary_focus_payload",
+        "elapsed_seconds": 0.0564
+      },
+      "Region-aware FFT analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "region_fft_payload",
+        "elapsed_seconds": 1.5791
+      },
+      "Segmentation alignment analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "segmentation_alignment_payload",
+        "elapsed_seconds": 0.0031
+      },
+      "Subject texture consistency analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "subject_texture_consistency_payload",
+        "elapsed_seconds": 1.2557
+      },
+      "Subject process asymmetry analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "subject_process_asymmetry_payload",
+        "elapsed_seconds": 0.1569
+      },
+      "Subject material realism analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "subject_material_realism_payload",
+        "elapsed_seconds": 0.3821
+      },
+      "Patch spatial analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "patch_spatial_payload",
+        "elapsed_seconds": 0.0036
+      },
+      "Compression-history analysis": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": "compression_history_payload",
+        "elapsed_seconds": 0.0659
+      },
+      "Shared boundary overlays": {
+        "status": "success",
+        "reason": null,
+        "assign_attr": null,
+        "elapsed_seconds": 0.1719
+      }
+    }
+  }
+}

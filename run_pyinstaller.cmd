@@ -2,6 +2,7 @@ py -3.13 -m PyInstaller --noconfirm --clean --onedir --windowed --name SignalLen
  --hidden-import mediapipe.tasks.c ^
  --hidden-import mediapipe.tasks.python ^
  --hidden-import mediapipe.tasks.python.vision ^
+ --collect-submodules scipy._external.array_api_compat.numpy ^
  --add-binary "C:\Users\hans\AppData\Local\Programs\Python\Python313\Lib\site-packages\mediapipe\tasks\c\libmediapipe.dll;mediapipe\tasks\c" ^
  --add-data "selfie_segmenter.tflite;." ^
  --add-data "exif_rules.json;." ^
@@ -15,4 +16,4 @@ copy .\signallens.png .\dist\SignalLens\signallens.png
 copy .\signallens_settings.json .\dist\SignalLens\signallens_settings.json
 copy .\README_FIRST.txt .\dist\SignalLens\README_FIRST.txt
 copy /Y .\exiftool.exe .\dist\\SignalLens\exiftool.exe
-robocopy "D:\Coding\AI detectie\exiftool_files" "D:\Coding\AI detectie\dist\SignalLens\exiftool_files" /E
+robocopy ".\exiftool_files" ".\dist\SignalLens\exiftool_files" /E

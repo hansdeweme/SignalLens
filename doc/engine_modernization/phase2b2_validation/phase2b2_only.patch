@@ -1,0 +1,1711 @@
+--- a/decision_logic.py
++++ b/decision_logic.py
+@@ -1362,6 +1362,8 @@
+     scene_context: dict | None = None, 
+     debug: bool = False, 
+     analysis_mode: str | None = None,
++    *,
++    evidence_dependency_shadow: bool = False,
+     ) -> tuple[str | None, str, str, str, dict]:
+     """
+     Overall synthesis, returns: overall_pattern, overall_text, overall_confidence, overall_polarity, decision
+@@ -1408,4 +1410,10 @@
+     result = evaluate_hypotheses(env)
+     debug_lines.append(f"PRIMARY HYPOTHESIS: {env.primary_hypothesis}")
+     debug_lines.append(f"SELECTION: {env.selection_reason}")
+-    return finish_decision(env, result, debug_lines=debug_lines, debug=debug)
++    finished = finish_decision(env, result, debug_lines=debug_lines, debug=debug)
++    if evidence_dependency_shadow:
++        from evidence_dependency_analysis import safe_dependency_analysis
++        finished[4]['evidence_dependency_analysis'] = safe_dependency_analysis(
++            sections, env.card, env.ds, context=env.ctx, hypotheses=env.hypotheses,
++        )
++    return finished
+--- a/reasoning_persistence.py
++++ b/reasoning_persistence.py
+@@ -311,6 +311,15 @@
+     derived = reasoning_trace.get("derived_signals", {}) or {}
+     sections = reasoning_trace.get("section_snapshot", {}) or {}
+     pipeline = reasoning_trace.get("pipeline_status", {})
++    dependency = reasoning_trace.get('evidence_dependency_analysis')
++    if dependency:
++        _add_heading(lines, 'Evidence Dependency Analysis (Shadow Only)')
++        for key in ('lineage_version', 'status', 'policy', 'production_score_unchanged', 'comparison', 'families', 'shared_ancestry'):
++            _add_kv(lines, key, dependency.get(key))
++        _add_list(lines, 'Shadow Limitations', dependency.get('limitations'))
++        _add_list(lines, 'Shadow Errors', dependency.get('errors'))
++        lines.append('No shadow confidence tier or forensic decision is assigned.')
++        lines.append('')
+     calculation = reasoning_trace.get("scorecard_calculation")
+     if calculation:
+         _add_heading(lines, "Scorecard Calculation")
+--- a/summary_synthesizer.py
++++ b/summary_synthesizer.py
+@@ -70,7 +70,7 @@
+         f"{context_str}."
+     )
+ 
+-def build_summary_result(state, osint_result=None, scene_context: dict | None = None) -> SummaryResult:
++def build_summary_result(state, osint_result=None, scene_context: dict | None = None, *, evidence_dependency_shadow: bool = False) -> SummaryResult:
+     """
+     Main orchestration entrypoint for building a full SummaryResult.
+     Responsibilities:
+@@ -141,7 +141,7 @@
+     result.module_scores = extract_module_scores(result.sections)
+     # Overall decision
+     analysis_mode=getattr(state, "analysis_mode", None)
+-    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, )    # Rendered outputs
++    result.overall_pattern, result.overall_text, result.overall_confidence, result.overall_polarity, result.reasoning_trace = synthesize_overall(result.sections, scene_context=scene_context, analysis_mode=analysis_mode, evidence_dependency_shadow=evidence_dependency_shadow)    # Rendered outputs
+     coverage = getattr(state, "analysis_coverage", {})
+     if coverage:
+         result.reasoning_trace["pipeline_status"] = {
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/evidence_lineage_schema.md
+@@ -0,0 +1,162 @@
++# Evidence lineage schema — version 2b2
++
++## Scope and identity
++
++Lineage is a graph of detector summaries and distinguishable feature extractions.
++It is not a statistical independence graph. Family, original scorecard domain,
++and hypothesis evidence role are separate concepts. No pixel arrays, masks,
++metadata values, prompts, filenames or complete detector payloads are retained.
++
++`evidence_lineage.py` defines frozen `EvidenceSpec` and `LineageRecord` dataclasses,
++`Family`, `Kind`, `Addition` enums, and an immutable validated `REGISTRY`.
++Registration rejects duplicate IDs/parents, unknown parents, cycles, mutable
++collections and restatements that claim new measurements. Restoration from JSON
++also rejects extra payload fields, unknown enums, missing parents and cycles.
++
++| Identifier | Meaning / stability |
++| --- | --- |
++| `evidence:<section_key>` | Stable detector-summary identity across repeated calls and dictionary order |
++| `measurement:<feature_extraction>` | Distinguishable extraction, not an independent sample; e.g. luminance residual versus chroma phase features |
++| `base:<section_key>` | One weighted section base credit; status and polarity remain production inputs |
++| `component:<field>:<operation>:<reason_hash>` | Stable component rule identity; SHA-256 reason prefix, checked for duplicates; independent of conditional ledger position |
++| `ledger_index` | Position in the Phase 2A operation sequence; not an evidence identity |
++
++Hypothesis roles use the existing evidence identifiers from Phase 1.1; those may
++include patterns or metadata signal IDs. They are copied descriptively and are
++not multiplied into new scoring records.
++
++## Lineage record
++
++| Field | Contract |
++| --- | --- |
++| `evidence_id`, `source_detector` | Stable section identity and audited responsible function |
++| `family` | Registry family; never equated with statistical independence |
++| `measurement_ancestry` | Sorted tuple of available original extraction IDs, including available optional parents |
++| `direct_dependencies` | Required upstream detector-summary IDs, rather than copied payloads |
++| `optional_dependencies` | Real payload reuse that the detector can run without, e.g. texture/regional FFT carry-forward into asymmetry |
++| `missing_dependencies` | Required parents unavailable or themselves missing required ancestry |
++| `hypotheses` | Potential relevant hypotheses; actual support/contradiction remains the existing scoped assessment |
++| `status`, `available`, `scoring_available` | Observed status; feature availability versus active status-weight eligibility |
++| `kind` | `primary`, `derived` or `composite` |
++| `addition` | New measurement, localization, relationship, interpretation, restatement or control |
++| `overlap_groups` | Shared feature definitions/content/geometric controls; descriptive, not measured correlation |
++| `known` | False for a future unregistered section; it gets no invented ancestry |
++
++Missing/not_run/skipped/failed/error observations are unavailable. Inconclusive
++interpretation may still have measured features that feed another detector;
++for example ELA/residual maps can support cross-signal despite neutral global
++summaries. Such an inconclusive parent does not earn a base weight. All registry
++sections appear, including unavailable ones, making absence explicit. No image
++observation is inferred merely from a zero-valued default.
++
++The normal snapshot aliases `region_segmentation` to `region_masks`. That alias
++does not create a second observation. The separate executed mask-morphology
++stage remains unscored and is not silently wired into the registry as new
++generation evidence. Selected mask geometry is a reliability/control ancestor;
++it is excluded from counts of forensic measurement extractions.
++
++## Family assignments and rationale
++
++| Family | Members | Rationale and boundary |
++| --- | --- | --- |
++| `provenance` | metadata, recorded OSINT context | Assertion/source history; may concern the same claim, not authenticated origin |
++| `processing_residual` | ELA, noise, cross, boundary, focus, alignment | Cross/boundary share ELA/residual ancestry; focus/alignment add localization/interpretation |
++| `spectral` | global FFT, regional FFT | Same analyzer/features on different content/crops; regional FFT is not a child of cached global FFT |
++| `patch_recurrence` | patch similarity, patch spatial | Spatial analysis consumes the retained matches; location is explicit added information |
++| `subject_surface` | texture, process asymmetry, material realism | Overlapping residual/gradient/DCT/entropy families; separate extractions and real optional carry-forward are distinguished |
++| `camera_pipeline` | sensor origin, CFA/demosaicing | Luminance versus chroma residual/phase measurements; no independence or sensor attribution claim |
++| `compression_history` | compression history | Aligned/off-grid boundary-energy proxy; related to processing artifacts but not the same map |
++| `intrinsic_edge_transition` | subject boundary | Internally detected gradient rings, not the selected person contour |
++| `geometry` | selected region masks | Shared spatial support and quality control, not independent origin evidence |
++| `analyst_context` | scene context | Analyst-supplied moderation, not an observed forensic detector |
++| `unknown` | future unregistered sections | Explicitly unattributed; positive base shadow credit withheld until registered |
++
++These assignments cover all 20 current synthesized section keys. The registry
++adds a scene-context control node. It does not arbitrarily suppress two primary
++observations because they share a broad family name.
++
++## Contribution and allocation records
++
++Frozen `Contribution` references evidence IDs, target field, existing value,
++polarity, relevant hypotheses, domain, credit role and hypothesis evidence role.
++`allocate_marginal()` returns deterministic records containing:
++
++- `existing_contribution`, `diagnostic_contribution`, `difference`;
++- `marginal_contribution` (numeric for structurally established credit, null when
++  a numerical incremental value has not been established);
++- measurement ancestry, explicit reason and empirical-validation flag.
++
++Primary credits retain their existing value. Positive credits with unknown or
++missing required ancestry are withheld diagnostically. A declared pure
++restatement is suppressed only if a credited actual ancestor covers its
++measurements in the same target, polarity and hypothesis scope. Merely sharing
++a family or being a sibling is insufficient. Legitimate counter/moderating
++evidence remains visible in its own hypothesis role.
++
++Localization, relationships and interpretation are recorded separately. Their
++existing base value is retained **provisionally**, while `marginal_contribution`
++is null. Null is not a claim of zero usefulness, nor permission to count the
++child as an independent confirmation. The audit did not supply calibrated
++weights for these increments.
++
++Component records reference the unchanged Phase 2A ledger and show operand,
++operation, field, condition, evidence IDs, measurement ancestry and later
++component attenuation. For additive operations an adjusted value can be
++reported; a later nonlinear floor makes individual attribution null. Multipliers
++are operations, not additive evidence. Local-to-edit conversion, clone routing,
++camera moderation, cautions and domain bonuses must not be summed again as new
++independent observations. Missing-mask penalties reference a control dependency
++even when that control has no available forensic measurement ancestry.
++
++## JSON integration
++
++```json
++{
++  "evidence_dependency_analysis": {
++    "mode": "shadow",
++    "lineage_version": "2b2",
++    "status": "complete",
++    "production_score_unchanged": true,
++    "policy": "structural_restatement_only",
++    "lineage": [],
++    "families": {},
++    "contributions": [],
++    "component_lineage": [],
++    "lineage_coverage": {},
++    "domain_accounting": {},
++    "shared_ancestry": {},
++    "corroboration_gates": {},
++    "hypothesis_evidence_roles": {},
++    "shadow_aggregates": {},
++    "comparison": {},
++    "limitations": []
++  }
++}
++```
++
++The Phase 2A `scorecard_calculation` remains untouched. No shadow confidence,
++primary hypothesis, route selection or probability is emitted. Unknown base
++signals/rule aliases produce explicit partial coverage; invalid production
++cards withhold shadow aggregation. Optional diagnostic exceptions produce an
++error sidecar without affecting the production decision.
++
++`lineage_to_json()` / `lineage_from_json()` preserve immutable graph records
++through JSON. Enum values serialize as strings and tuples as lists. Output
++ordering is stable; processing times are measured externally rather than
++inserted into deterministic diagnostic output.
++
++## Explicit experimental allocations
++
++`ExperimentalCredits(name, overrides)` requires an immutable tuple of
++`(base_credit_id, credit_units)` pairs. IDs must exist, values must be finite,
++nonnegative and no greater than the existing supported suspicious base credit.
++Counter-evidence cannot be experimentally reduced through this interface.
++No default coefficient, family budget or automatic descendant-removal policy
++exists. The function-level API must be called explicitly; production synthesis
++does not accept an experimental policy.
++
++Experimental base changes recompute the existing domain bonus from remaining
++positive credits, retain all existing adjusted component terms and apply the
++existing camera/floor/geometry/photo operations in order. This is a conditional
++base-credit diagnostic, not a full causal rerun of guards or synergies. Its
++formula requires validation/recalibration before any decision use.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b2_activation_criteria.md
+@@ -0,0 +1,91 @@
++# Activation criteria — lineage-aware scoring
++
++## Current decision
++
++**Do not replace production scoring.** The registry and structural shadow rules
++are ready for diagnostic use, not a calibrated new forensic score model.
++Default reference totals remain unchanged; optional composite-removal totals
++are unvalidated experiments without confidence tiers.
++
++## Structural correctness versus empirical weighting
++
++| Work | Evidence required | Current status |
++| --- | --- | --- |
++| Stable IDs, acyclic required/optional ancestry, no duplicate payload serialization | Direct source/contract inspection and deterministic tests | Implemented; all 20 current summary sections covered |
++| Pure-restatement suppression | Actual counted ancestor, identical measurement ancestry and same hypothesis/target/polarity; explicitly no added observation | Implemented in shadow, tested with synthetic registries; no current audited detector falsely labeled equivalent |
++| Missing-parent / unknown credit handling | Explicit availability contract | Positive base marginal credit withheld; unknown operation coverage explicit; production untouched |
++| Counter-evidence preservation | Hypothesis-specific role and signed contribution tests | Implemented; existing supporting/contradicting/moderating/contextual lists copied without reinterpretation |
++| Fractional credit for localization/interpretation | Evidence of conditional information gain and chosen numerical allocation | Not established; numerical marginal value remains null |
++| Family caps / relative weights | Labeled cohort benchmark, sensitivity/false-positive tradeoff and calibration | Not implemented; no default coefficients or caps |
++| Confidence/gate replacement | Validated dependency-aware gate and calibrated thresholds | Not implemented; existing gates remain authoritative |
++| Source verification / image authenticity | Independent provenance/acquisition evidence | Not supplied by lineage; declarations remain unverified |
++
++## Required conditions before any numerical activation
++
++1. **Coverage and lineage review.** Confirm each new score-contributing pattern,
++   optional payload, control and component rule is registered. No unknown
++   positive credit may be silently presented as independent support. Document
++   shared helpers separately from actual payload consumption. Preserve the
++   snapshot alias/morphology integration distinction until explicitly resolved.
++2. **Reproducible arithmetic.** Reconstruct each candidate aggregate from frozen
++   base allocations, domain accounting, final component values and documented
++   transforms within the existing 1e-12 tolerance. Repeated calls, shared inputs,
++   insertion order and serialization must agree. No double addition of local,
++   clone, camera or multi-family operation references.
++3. **Preserve primary and counter-evidence.** Show that useful primary observations
++   remain available and that related contradictory evidence retains its own
++   hypothesis role. Demonstrate that descendants add no credit through missing
++   measurements and that legitimate localization remains identifiable.
++4. **Separate structural identity from statistical value.** Direct code reuse can
++   justify a graph edge, not a learned coefficient. A pure restatement needs an
++   explicit equivalence contract; family membership alone cannot justify zero
++   weight. Any numeric marginal allocation or budget remains experimental until
++   justified against data.
++5. **Benchmark beyond two examples.** Use labeled authentic camera, smartphone,
++   social-media recompression, conventional-edit, AI-enhanced, generated and local
++   insertion cohorts. Include multiple generators/cameras/resolutions and mask
++   quality regimes. Vary explicit/stripped/forged metadata independently of pixel
++   content. Split by root image/source session/generator/camera groups to prevent
++   variant and near-duplicate leakage. The detailed Phase 2B.1 proposal remains
++   the collection design; no adequate benchmark is currently available here.
++6. **Quantify error and incremental information.** Report per-hypothesis false
++   positives, false negatives, precision/recall, coverage/abstention and intervals
++   by cohort. Test conditional ablations and child information given parents,
++   rather than only pairwise correlation or lower aggregate scores. Evaluate
++   resizing/recompression and unseen generator/camera robustness. Report tier
++   reliability; scores are not probabilities. Probability calibration metrics
++   require an explicit probabilistic model first.
++7. **Revalidate selection and thresholds.** A new aggregate has no right to reuse
++   existing confidence thresholds. Evaluate pattern selection, provenance versus
++   local-mechanism scope and mixed-unit corroboration gates on held-out data.
++   Neither reference image is a mandatory target score/tier for a new formula.
++8. **Explicit approval and rollback.** Version a proposed policy separately from
++   lineage version `2b2`. Pre-register acceptance criteria and error budgets
++   before examining held-out results. Activate only through a separately reviewed
++   change; retain the old policy and reproducible traces. Do not rewrite saved
++   historical analyses or automatically turn experiments into GUI decisions.
++
++Rollback or stop evaluation if a graph cycle/unknown dependency appears, a
++non-finite credit enters arithmetic, results depend on order, unavailable evidence
++changes polarity, primary sensitivity is lost beyond an agreed bound, false
++positives exceed the agreed cohort limit, or explanations claim independence
++without evidence. These empirical bounds remain to be specified; none are
++invented from the Instagram and Midjourney examples.
++
++## Known limits of this implementation
++
++- Numeric experimental allocations apply to base credits only. Existing boosts,
++  synergies, camera moderation and penalty applicability remain fixed. This is
++  conditional diagnostic accounting, not full causal propagation or retraining.
++- Original domain diversity bonuses are preserved, not replaced by family counts.
++  A family cap would be a further model change.
++- A primary measurement ID means a distinguishable extraction, not an independent
++  sample. Masks and preprocessing can create shared failure modes across families.
++- The registry uses summary availability to describe actual feature availability;
++  future detectors should expose explicit feature contracts if a valid summary
++  does not reliably imply its upstream measurements existed.
++- Status checks and mixed-unit production gate issues identified by Phase 2B.1
++  are diagnosed, not silently repaired in this phase. No production confidence
++  or routing change is included.
++- Structural consistency does not authenticate metadata, validate a person mask
++  against ground truth or establish forensic accuracy.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b2_reference_comparison.md
+@@ -0,0 +1,242 @@
++# Phase 2B.2 ? actual reference production/shadow comparison
++
++Both existing references completed the full headless pipeline in `subject_based` mode with the final implementation. Images were read-only; SHA-256 hashes before/after matched. No raw images, prompts, attribution values or complete detector payloads are copied into this report. Detailed outputs remain ignored under `analyzed/phase2b2_validation/{instagram,midjourney}/`.
++
++## Policy boundary
++
++Default shadow scoring uses structural-restatement rules only. The audit does not establish any current detector as an exact restatement with no added localization, relationship or interpretation. Existing child credit is therefore retained provisionally; its calibrated marginal value is null. This is explicit uncertainty, not a claim that the child has full independent evidential weight. No coefficients or family budgets were invented.
++
++A separate explicit `ExperimentalCredits` call assigns zero base units to the audit-A composite set: cross, boundary, focus, alignment, regional FFT, spatial patch and process asymmetry, where those rows are present. This is an unvalidated conditional base-credit experiment. Existing adjusted boosts, penalties, camera attenuation and guards remain fixed. It does not produce a confidence tier or hypothesis and must not be evaluated against current production thresholds.
++
++## Main comparison
++
++| Metric | Instagram production | Instagram shadow | Midjourney production | Midjourney shadow |
++| --- | --- | --- | --- | --- |
++| Suspicious aggregate | 20.47705 | 20.47705 | 6.0375 | 6.0375 |
++| Benign aggregate | 2.25 | 2.25 | 1.5 | 1.5 |
++| Observed weighted section indicators | 13 | 13 | 6 | 6 |
++| Distinct feature-extraction ancestries | not previously tracked | 12 | not previously tracked | 6 |
++| Shared non-geometry ancestor groups | audit-derived | 4 | audit-derived | 2 |
++| Hypothesis | localized_editing | no shadow decision | synthetic_origin; unverified declaration | no shadow decision |
++| Confidence | High | not recalculated | Medium | not recalculated |
++| Failed stages | 0 | same run | 0 | same run |
++| Experimental audit-A S | authoritative baseline unchanged | 13.46455 | authoritative baseline unchanged | 3.9125 |
++
++Indicator counts mean status-weighted section records, including benign rows. Neutral parent maps can be measured and contribute ancestry without a base weight. Ancestry counts exclude selected mask geometry, retain optional measured parents used by asymmetry, and do not count statistically independent observations. No shadow tier, classification or independence count is assigned.
++
++## Instagram
++
++Production pattern: `possible_foreground_background_processing_mismatch`; confidence High; primary hypothesis `localized_editing`. Exact equality checks passed against the Phase 2A scorecard, calculation ledger, hypothesis assessments and decision dictionary. Enabling/disabling the sidecar on the same state also preserves the entire existing trace and rendered text/HTML.
++
++### Base indicator credits
++
++| Indicator | Polarity | Existing | Default shadow | Calibrated marginal | Reason category |
++| --- | --- | --- | --- | --- | --- |
++| base:boundary | suspicious | 3 | 3 | unquantified | incremental information pending validation |
++| base:boundary_focus | suspicious | 1.5 | 1.5 | unquantified | incremental information pending validation |
++| base:cfa_demosaic | benign | 0.5 | 0.5 | 0.5 | existing primary / counter-evidence |
++| base:compression_history | suspicious | 3 | 3 | 3 | existing primary / counter-evidence |
++| base:cross_signal | suspicious | 0.5 | 0.5 | unquantified | incremental information pending validation |
++| base:fft | suspicious | 3 | 3 | 3 | existing primary / counter-evidence |
++| base:patch_similarity | suspicious | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++| base:patch_spatial | suspicious | 1.5 | 1.5 | unquantified | incremental information pending validation |
++| base:sensor_origin | benign | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++| base:subject_boundary | suspicious | 3 | 3 | 3 | existing primary / counter-evidence |
++| base:subject_material_realism | suspicious | 1.5 | 1.5 | unquantified | incremental information pending validation |
++| base:subject_process_asymmetry | suspicious | 0.5 | 0.5 | unquantified | incremental information pending validation |
++| base:subject_texture_consistency | suspicious | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++
++### Family-level base amounts
++
++| Family | Existing S base | Default S base | Experimental A S base | Existing / default B base |
++| --- | --- | --- | --- | --- |
++| processing_residual | 5 | 5 | 0 | 0 |
++| spectral | 3 | 3 | 3 | 0 |
++| patch_recurrence | 3 | 3 | 1.5 | 0 |
++| subject_surface | 3.5 | 3.5 | 3 | 0 |
++| camera_pipeline | 0 | 0 | 0 | 2 |
++| compression_history | 3 | 3 | 3 | 0 |
++| intrinsic_edge_transition | 3 | 3 | 3 | 0 |
++
++These are base amounts before domain diversity. Component-operation references in each machine-readable family record can span several families and must not be summed as disjoint additional credits.
++
++Domain bonus: production/default suspicious 2.5; experimental suspicious 1.25. Existing benign-domain accounting is retained separately.
++
++### Components and adjusted arithmetic
++
++| Component | Before reliability | Production final | Default shadow final |
++| --- | --- | --- | --- |
++| camera_counter_support | 1.25 | 1.25 | 1.25 |
++| local_edit_support_score | 4.85 | 4.85 | 4.85 |
++| clone_support_score | 0 | 0 | 0 |
++| synthetic_boost | 0.4 | 0.4 | 0.4 |
++| edit_boost | 1.823 | 1.823 | 1.823 |
++| provenance_boost | 0 | 0 | 0 |
++| sensor_boost | 0 | 0 | 0 |
++| compression_boost | 0.75 | 0.75 | 0.75 |
++| caution_penalty | 1.6 | 1.6 | 1.6 |
++
++### Executed component rules
++
++| Field / operation | Operand | Later-adjusted additive amount | Observed source IDs / control | Reason |
++| --- | --- | --- | --- | --- |
++| camera_counter_support / add | 1.25 | 1.25 | evidence:sensor_origin | ds.camera_like_support |
++| caution_penalty / add | 0.35 | 0.35 | evidence:metadata, evidence:sensor_origin | ds.camera_like_support and ds.provenance_clean |
++| local_edit_support_score / add | 2 | 2 | evidence:boundary | ds.strong_local_edit |
++| local_edit_support_score / add | 0.75 | 0.75 | evidence:subject_boundary | boundary_strong |
++| local_edit_support_score / add | 0.4 | 0.4 | evidence:compression_history | ds.compression_inconsistency |
++| local_edit_support_score / add | 0.75 | 0.75 | evidence:subject_texture_consistency | ds.subject_texture_strong |
++| local_edit_support_score / add | 0.4 | 0.4 | evidence:subject_process_asymmetry | otherwise / asym_medium |
++| local_edit_support_score / add | 0.75 | 0.75 | evidence:subject_material_realism | otherwise / ds.material_realism_medium |
++| local_edit_support_score / add | -0.2 | -0.2 | evidence:sensor_origin | ds.camera_like_support |
++| edit_boost / add | 0.4 | 0.4 | evidence:subject_texture_consistency | ds.subject_texture_strong |
++| edit_boost / add | 0.15 | 0.15 | evidence:subject_process_asymmetry | otherwise / asym_medium |
++| edit_boost / add | 0.4 | 0.4 | evidence:subject_material_realism | otherwise / ds.material_realism_medium |
++| edit_boost / add | 0.873 | 0.873 | evidence:boundary, evidence:compression_history, evidence:sensor_origin, evidence:subject_boundary, evidence:subject_material_realism, evidence:subject_process_asymmetry, evidence:subject_texture_consistency | local_support_conversion |
++| clone_support_score / add | -0.9 | unquantified | evidence:metadata, evidence:patch_similarity, evidence:sensor_origin | usable_observation(ev.patch_similarity) / camera_benign |
++| clone_support_score / maximum | 0 | unquantified | evidence:metadata, evidence:patch_similarity, evidence:sensor_origin | clone_floor |
++| synthetic_boost / add | 0.4 | 0.4 | evidence:subject_material_realism | otherwise / ds.material_realism_medium |
++| compression_boost / add | 0.75 | 0.75 | evidence:boundary, evidence:compression_history, evidence:cross_signal, evidence:subject_boundary | ds.compression_inconsistency and (ds.strong_cross or ds.strong_local_edit or ds.subject_boundary_strong) |
++| caution_penalty / add | 1.25 | 1.25 | evidence:sensor_origin | measured_camera_caution |
++
++An operation operand is not necessarily an additive credit: multiplication, floors and routing intermediates retain their original semantics. A later floor makes individual additive attribution unquantified rather than falsely additive.
++
++### Confirmed shared ancestry
++
++| Measurement ancestry | Related scoring indicator IDs |
++| --- | --- |
++| measurement:ela_recompression_difference | evidence:boundary, evidence:boundary_focus, evidence:cross_signal |
++| measurement:luminance_residual | evidence:boundary, evidence:boundary_focus, evidence:cross_signal |
++| measurement:masked_hybrid_texture_descriptors | evidence:subject_process_asymmetry, evidence:subject_texture_consistency |
++| measurement:retained_patch_matches | evidence:patch_similarity, evidence:patch_spatial |
++
++### Corroboration gate diagnostics
++
++| Production gate | Current indicator count | Distinct extraction ancestry count | Ancestry review recommended |
++| --- | --- | --- | --- |
++| _boundary_corroborated | 3 | 3 | True |
++| camera_convergence_bonus | 1 | 1 | False |
++| determine_confidence.strong_signals | 1 | 2 | False |
++| suspicious_domain_bonus | 11 | 10 | True |
++| synthetic_fft_patch_conjunction | 2 | 2 | False |
++| synthetic_material_asymmetry_conjunction | 0 | 0 | False |
++| synthetic_supported_by_other_domains | 0 | 0 | False |
++
++Counts are descriptive. Gate evaluation, threshold, route order and confidence remain unchanged; no counterfactual gate truth value is inferred. A single composite can depend on two extractions without becoming two independent corroborating checks.
++
++### Existing hypothesis evidence roles
++
++- `synthetic_origin`: Inconclusive; supports: none; contradicts: none; moderates: cfa_demosaic:weak_camera_cfa_supported, sensor_origin:camera_like_acquisition_supported.
++- `localized_editing`: High; supports: boundary:possible_foreground_background_processing_mismatch, boundary_focus:boundary_focused_processing_mismatch, compression_history:localized_compression_inconsistency, cross_signal:partial_hotspot_convergence, subject_boundary:possible_subject_background_segmentation_artifact; contradicts: none; moderates: cfa_demosaic:weak_camera_cfa_supported, sensor_origin:camera_like_acquisition_supported.
++- `camera_acquisition`: Medium; supports: cfa_demosaic:weak_camera_cfa_supported, sensor_origin:camera_like_acquisition_supported; contradicts: none; moderates: none.
++
++Stage statuses: `{"success": 23}`; no errors. Mask status `reliable`, coverage 0.5961422390407987; maximum usable coverage remains 0.90. No unavailable regional observation is imputed.
++
++Thirty warm pure-sidecar calls: median 0.6415 ms, maximum 0.8632 ms. Timings are measured outside deterministic output and are machine-specific.
++
++## Midjourney
++
++Production pattern: `provenance_supported_synthetic_context`; confidence Medium; primary hypothesis `synthetic_origin`. Exact equality checks passed against the Phase 2A scorecard, calculation ledger, hypothesis assessments and decision dictionary. Enabling/disabling the sidecar on the same state also preserves the entire existing trace and rendered text/HTML.
++
++### Base indicator credits
++
++| Indicator | Polarity | Existing | Default shadow | Calibrated marginal | Reason category |
++| --- | --- | --- | --- | --- | --- |
++| base:boundary | suspicious | 0.5 | 0.5 | unquantified | incremental information pending validation |
++| base:cross_signal | suspicious | 1.5 | 1.5 | unquantified | incremental information pending validation |
++| base:fft | suspicious | 3 | 3 | 3 | existing primary / counter-evidence |
++| base:metadata | suspicious | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++| base:patch_similarity | suspicious | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++| base:sensor_origin | benign | 1.5 | 1.5 | 1.5 | existing primary / counter-evidence |
++
++### Family-level base amounts
++
++| Family | Existing S base | Default S base | Experimental A S base | Existing / default B base |
++| --- | --- | --- | --- | --- |
++| provenance | 1.5 | 1.5 | 1.5 | 0 |
++| processing_residual | 2 | 2 | 0 | 0 |
++| spectral | 3 | 3 | 3 | 0 |
++| patch_recurrence | 1.5 | 1.5 | 1.5 | 0 |
++| camera_pipeline | 0 | 0 | 0 | 1.5 |
++
++These are base amounts before domain diversity. Component-operation references in each machine-readable family record can span several families and must not be summed as disjoint additional credits.
++
++Domain bonus: production/default suspicious 1; experimental suspicious 0.5. Existing benign-domain accounting is retained separately.
++
++### Components and adjusted arithmetic
++
++| Component | Before reliability | Production final | Default shadow final |
++| --- | --- | --- | --- |
++| camera_counter_support | 1.25 | 1.25 | 1.25 |
++| local_edit_support_score | 1.3 | 0 | 0 |
++| clone_support_score | 0 | 0 | 0 |
++| synthetic_boost | 0 | 0 | 0 |
++| edit_boost | 0.734 | 0 | 0 |
++| provenance_boost | 0.75 | 0.75 | 0.75 |
++| sensor_boost | 0 | 0 | 0 |
++| compression_boost | 0 | 0 | 0 |
++| caution_penalty | 1.25 | 2.25 | 2.25 |
++
++### Executed component rules
++
++| Field / operation | Operand | Later-adjusted additive amount | Observed source IDs / control | Reason |
++| --- | --- | --- | --- | --- |
++| camera_counter_support / add | 1.25 | 1.25 | evidence:sensor_origin | ds.camera_like_support |
++| local_edit_support_score / add | 0.5 | 0 | evidence:boundary | otherwise / ds.fragmented_local_edit |
++| local_edit_support_score / add | 1 | 0 | evidence:cross_signal | ds.strong_cross |
++| local_edit_support_score / add | -0.2 | -0 | evidence:sensor_origin | ds.camera_like_support |
++| edit_boost / add | 0.5 | 0 | evidence:boundary, evidence:cross_signal | ds.fragmented_local_edit and ds.strong_cross |
++| edit_boost / add | 0.234 | 0 | evidence:boundary, evidence:cross_signal, evidence:sensor_origin | local_support_conversion |
++| clone_support_score / add | 0.35 | unquantified | evidence:patch_similarity | usable_observation(ev.patch_similarity) / detail(ev.patch_similarity, 'coverage_ratio', None) is not None and ds.coverage_ratio <= 0.18 |
++| clone_support_score / add | -0.9 | unquantified | evidence:metadata, evidence:patch_similarity, evidence:sensor_origin | usable_observation(ev.patch_similarity) / camera_benign |
++| clone_support_score / maximum | 0 | unquantified | evidence:metadata, evidence:patch_similarity, evidence:sensor_origin | clone_floor |
++| provenance_boost / add | 0.75 | 0.75 | evidence:metadata | otherwise / ds.metadata_synthetic or ds.metadata_enhancement |
++| caution_penalty / add | 1.25 | 1.25 | evidence:sensor_origin | measured_camera_caution |
++| local_edit_support_score / multiply | 0 | unquantified | evidence:region_masks | boundary_reliability |
++| edit_boost / multiply | 0 | unquantified | evidence:region_masks | boundary_reliability |
++| caution_penalty / add | 1 | 1 | evidence:region_masks | boundary_reliability_caution |
++
++An operation operand is not necessarily an additive credit: multiplication, floors and routing intermediates retain their original semantics. A later floor makes individual additive attribution unquantified rather than falsely additive.
++
++### Confirmed shared ancestry
++
++| Measurement ancestry | Related scoring indicator IDs |
++| --- | --- |
++| measurement:ela_recompression_difference | evidence:boundary, evidence:cross_signal |
++| measurement:luminance_residual | evidence:boundary, evidence:cross_signal |
++
++### Corroboration gate diagnostics
++
++| Production gate | Current indicator count | Distinct extraction ancestry count | Ancestry review recommended |
++| --- | --- | --- | --- |
++| _boundary_corroborated | 0 | 0 | False |
++| camera_convergence_bonus | 1 | 1 | False |
++| determine_confidence.strong_signals | 1 | 2 | False |
++| suspicious_domain_bonus | 5 | 5 | True |
++| synthetic_fft_patch_conjunction | 2 | 2 | False |
++| synthetic_material_asymmetry_conjunction | 0 | 0 | False |
++| synthetic_supported_by_other_domains | 1 | 1 | False |
++
++Counts are descriptive. Gate evaluation, threshold, route order and confidence remain unchanged; no counterfactual gate truth value is inferred. A single composite can depend on two extractions without becoming two independent corroborating checks.
++
++### Existing hypothesis evidence roles
++
++- `synthetic_origin`: Medium; supports: metadata:DECLARED_SYNTHETIC, metadata:EMBEDDED_GENERATION_PROMPT; contradicts: none; moderates: sensor_origin:camera_like_acquisition_supported.
++- `localized_editing`: Inconclusive; supports: boundary:possible_boundary_fragment_convergence, cross_signal:strong_hotspot_convergence; contradicts: none; moderates: sensor_origin:camera_like_acquisition_supported.
++- `camera_acquisition`: Medium; supports: sensor_origin:camera_like_acquisition_supported; contradicts: none; moderates: none.
++
++Stage statuses: `{"skipped": 8, "success": 14, "unavailable": 1}`; no errors. Mask status `unreliable`, coverage 0.9181777419747081; maximum usable coverage remains 0.90. No unavailable regional observation is imputed.
++
++Thirty warm pure-sidecar calls: median 0.5268 ms, maximum 1.5776 ms. Timings are measured outside deterministic output and are machine-specific.
++
++## Reconciliation and interpretation
++
++Instagram: Q = 23 + 0.4 + 1.823 + 0.75 = 25.973; S = Q*0.85 - 1.6 = 20.47705. Audit-A removes 7 base units and 1.25 domain units, so S decreases by 8.25*0.85 = 7.0125 to 13.46455. The default suppresses no asserted pure restatement because the registry does not invent such equivalence among these real detectors.
++
++Midjourney: Q = 9 + 0.75 = 9.75; S = Q*0.85 - 2.25 = 6.0375. Raw edit 0.734 is already zero after reliability r=0, and remains zero. Audit-A removes cross 1.5 + boundary 0.5 plus 0.5 domain units; the decrease is 2.5*0.85 = 2.125, yielding 3.9125. Metadata retains one base credit and one existing provenance boost despite multiple reporting identifiers; no new numerical credit is created by repeated reporting.
++
++Instagram processing children share ELA/residual extractions; patch spatial shares retained matches with patch similarity; asymmetry shares texture ancestry and has its own regional statistics plus optional regional spectra. Material realism shares feature definitions rather than the same cached metric result. Midjourney cross and boundary share ELA/residual ancestry; missing regional masks correctly prevent regional lineage from pretending to be measured.
++
++Both serialized lineage graphs restore to immutable records and shadow aggregates replay from serialized contributions plus the unchanged Phase 2A calculation. All component and aggregate comparisons use the existing 1e-12 numerical contract. The production-vs-default comparisons are exact on these references.
++
++These two selected cases cannot establish correlation, false-positive rate, true-positive rate, confidence calibration or optimal marginal weights. Experimental totals cannot justify changed confidence under existing thresholds. Activation remains deferred.
+--- /dev/null
++++ b/doc/phase2b_evidence_dependency/phase2b2_shadow_implementation.md
+@@ -0,0 +1,183 @@
++# Phase 2B.2 — evidence lineage and marginal corroboration implementation
++
++## Baseline and isolation
++
++Branch remains `fix/scorecard-integrity-phase2a`, HEAD `f64f226` (`phase 1`).
++Phase 2A and the Phase 2B.1 audit were inherited uncommitted. No branch was
++created and no inherited work was staged, moved, discarded or folded into a
++commit. Baseline suite: **184 passed, 0 failed, 0 skipped**.
++
++An exact 61-file inherited snapshot and SHA-256 manifest are kept locally under
++`analyzed/phase2b2_validation/inherited_baseline/`. Python copies end in
++`.py.baseline` so pytest cannot collect them. The first baseline attempt exposed
++duplicate test discovery before this suffix was corrected; an unprivileged run
++then encountered the existing Windows temporary-directory restriction. The
++properly permitted baseline run passed all 184 tests. These were verification
++setup issues, not production regressions.
++
++The isolated `analyzed/phase2b2_validation/phase2b2_only.patch` identifies this
++phase's modifications relative to that snapshot, separately from Phase 2A.
++Local generated outputs/snapshots remain ignored by Git. Prior audit reports,
++inventories, graph, script and Phase 2A implementation are preserved.
++
++## Audited architecture discrepancies resolved before implementation
++
++- Regional FFT performs fresh masked-crop transforms with the same FFT analyzer;
++  it does not consume global FFT results. The graph records shared feature code,
++  rather than an invented serial detector dependency.
++- Material realism independently samples metrics using asymmetry's feature
++  helpers; it does not feed material results into asymmetry. Actual optional
++  asymmetry inputs are subject texture and regional FFT.
++- Cross and boundary interpretation consume a common ELA/residual overlap; a
++  shared family does not make every child a pure restatement. Focus and alignment
++  add localization, patch spatial adds topology, and asymmetry adds comparative
++  measurements/interpretation.
++- The executed region-segmentation morphology stage is not synthesized as a
++  scoring section. The existing snapshot alias points at region masks. No new
++  mask-morphology scoring path is activated.
++
++These distinctions follow Phase 2B.1's actual code audit. They prevent the task's
++illustrative dependencies from becoming fictitious production relationships.
++
++## Added architecture
++
++| File | Responsibility |
++| --- | --- |
++| `evidence_lineage.py` | Frozen records/enums, validated family registry, stable IDs, required/optional ancestry, finite-size JSON restoration |
++| `marginal_corroboration.py` | Pure ancestry-ordered credit allocation, exact-restatement suppression, counter-evidence protection, explicit experimental credit parameters |
++| `evidence_dependency_analysis.py` | Phase 2A ledger lineage, base-credit shadow reconstruction, family effects, gate diagnostics, fail-tolerant optional sidecar |
++| `tests/test_evidence_lineage.py` | Structural, availability, cycle, determinism, serialization, allocation and production-invariance regressions |
++
++Modified integration files are deliberately small:
++
++- `decision_logic.synthesize_overall()` adds a keyword-only, default-false
++  `evidence_dependency_shadow` option. The existing production evaluation and
++  five-element return complete first; an optional sidecar is attached afterward.
++- `summary_synthesizer.build_summary_result()` forwards the optional flag.
++- `reasoning_persistence.build_reasoning_trace_text()` renders the optional
++  diagnostic section and states that it assigns no confidence or decision.
++
++`ScoreCard`, `EvidenceSnapshot`, production coefficients/aggregation and all
++decision functions remain unchanged relative to Phase 2A. No detector, threshold,
++mask, provenance-verification, dependency, GUI layout, build or workflow changed.
++
++Example opt-in:
++
++```python
++result = synthesize_overall(sections, evidence_dependency_shadow=True)
++diagnostic = result[4]["evidence_dependency_analysis"]
++
++summary = build_summary_result(state, evidence_dependency_shadow=True)
++```
++
++No flag is set globally; existing GUI/controller callers continue to use the
++authoritative production behavior. No expensive detector is rerun by the layer.
++
++## Marginal allocation policy and numerical boundary
++
++The default implements a structural rule, not an invented calibrated formula:
++
++1. Retain supported primary base credits.
++2. Withhold positive diagnostic base credits with unknown/missing required ancestry.
++3. Suppress a registered pure restatement only when an already credited actual
++   ancestor supplies the same measurements and hypothesis/target/polarity.
++4. Preserve contradictory/moderating evidence in its hypothesis scope; shared
++   ancestry alone does not erase it.
++5. Record new localization, relationships or interpretation separately. Retain
++   the existing base value provisionally, with numerical marginal value **null**
++   and an explicit empirical-validation requirement.
++
++No current audited detector is asserted to be a pure restatement with no added
++information. Consequently the default reference shadow aggregates equal
++production. Removing every composite would adopt the uncalibrated Phase 2B.1
++ablation, which the task explicitly prohibits as a default replacement.
++The layer supports exact structural deduplication (covered by constructed
++tests) without inventing duplicate equivalence in real detectors.
++
++An explicit `ExperimentalCredits` policy can vary supported suspicious base
++credit units. The optional sidecar API exposes this for isolated experiments;
++the production synthesis hook does not accept experimental allocations.
++The audit-A experiment sets the existing downstream-composite base credits to
++zero. It reproduces the prior numerical sensitivity, clearly labeled unvalidated,
++without a shadow tier or hypothesis. No new coefficient or budget is hidden in
++the default policy.
++
++## Arithmetic and auditability
++
++Existing final component terms and camera/floor/geometry/photo transforms are
++read from `scorecard_calculation`. Shadow base status credits and domain bonuses
++are reconstructed separately. Retained component operations carry exact source
++references and stable rule IDs, but are not independently added a second time.
++
++Family tables show existing/shadow base amounts and references to multi-family
++component operations. Domain diversity credit remains its own accounting item.
++Mixed-family operation references are not disjoint additive shares of final S;
++nonlinear floors and moderation make naive per-detector totals misleading.
++
++Known missing-mask penalties reference their reliability control even when the
++mask itself provides no measured ancestry. Absence cannot create new positive
++corroboration. Inconclusive parent interpretations can still have actual measured
++features, which is necessary for the existing ELA/residual cross-signal pipeline.
++
++Unknown future sections are marked unregistered with positive shadow base credit
++withheld. Unknown operation aliases or unattributed positive operations mark the
++sidecar partial, retaining explicitly legacy component arithmetic. Invalid
++production cards produce no shadow score. Diagnostic exceptions yield an error
++sidecar; they cannot alter the already completed production decision.
++
++## Corroboration and wording
++
++Diagnostics report weighted/supporting indicator counts, distinct feature
++extraction IDs, shared ancestors, overlap groups, composites, missing parents and
++single-family concentration. `independent_observation_count` is always null:
++the graph does not estimate statistical independence. No alternative gate result
++or replacement threshold is invented.
++
++Reviewed gates include strong-signal confidence counts, boundary corroboration,
++suspicious-domain diversity, FFT/patch and material/asymmetry synthetic
++conjunctions, synthetic support from other domains and camera convergence.
++The reference comparison records actual memberships and ancestry overlap.
++Production gates are unchanged.
++
++| Existing wording | Assessment | Recommended wording |
++| --- | --- | --- |
++| `signal_language` no-convergence label says “independent forensic signals” | Unsupported statistical independence adjective | “ELA and residual hotspot checks do not meaningfully overlap” |
++| Boundary-focused “corroboration” | Corroborative but shared anomaly/mask ancestry | “Agreement among related boundary checks” with parent measurements named |
++| “Multiple visual signals” in synthetic routes | Different interpretations/extractions, incremental value needs validation | “Related visual measurements show consistent structure; their incremental support is uncalibrated” |
++| Declaration acts “independently of inconclusive localized editing” | Logical hypothesis scope separation, not statistical independence | “Without requiring a conclusive localized-editing result” |
++| Rationale says outputs may be correlated and tiers are not probabilities | Accurate limitation | Retain |
++
++No production wording was changed, preserving full text/HTML equality. These
++recommendations remain separate from classification and confidence rules.
++
++## Validation
++
++Final suite: **232 passed, 0 failed, 0 skipped** — all original 184 plus 48 new
++cases. Tests cover required scenarios including explicit contradiction roles,
++five descendants of one measurement, registry/serialized cycles, missing parents,
++unknown signals, immutable collections, no payload arrays, stable IDs/order,
++repeated shared inputs, JSON restoration, experimental allocations, sidecar
++errors and exact production trace equality. No test dependency was added.
++
++Both actual references ran the full headless pipeline in `subject_based` mode.
++Production scorecards, Phase 2A calculations, hypotheses, decision dictionaries,
++rendered text and HTML were compared exactly. Read-only image hashes matched
++before/after. Instagram completed 23 stages; Midjourney completed 14 with one
++unavailable mask-selection stage and eight regional skips; both had zero errors
++or failed stages. Full details are in [phase2b2_reference_comparison.md](phase2b2_reference_comparison.md).
++
++Warm pure-sidecar overhead was measured externally over 30 calls per reference,
++approximately 0.5–0.6 ms median on this machine. It includes no detector work;
++it is not a hardware-independent performance guarantee. Timings are excluded
++from deterministic sidecar JSON.
++
++## Activation recommendation
++
++Keep production scoring authoritative. The structural rule is implemented and
++auditable, but real child localization/interpretation weights and gate reliability
++remain uncalibrated. See [phase2b2_activation_criteria.md](phase2b2_activation_criteria.md).
++Do not apply existing confidence thresholds to experimental scores.
++
++No staging, commits, pushes, merges, tags, stashes, resets or publication were
++performed. Reference outputs and baseline snapshots remain ignored; no image
++was modified or added to Git.
+--- /dev/null
++++ b/evidence_dependency_analysis.py
+@@ -0,0 +1,248 @@
++"""Optional shadow diagnostics over existing summaries and Phase 2A arithmetic.
++
++No detector execution, production card mutation, routing or shadow confidence.
++"""
++from collections import defaultdict
++from dataclasses import asdict
++from math import fsum, isclose
++from hashlib import sha256
++import re
++
++from evidence_lineage import Addition, Family, Kind, LineageError, REGISTRY, build_lineage, lineage_to_json
++from marginal_corroboration import Contribution, allocate_marginal
++from scorecard_integrity import COMPONENT_FIELDS, reconstruct_scorecard_calculation
++
++
++# Exact aliases from derive_signals/compute_scorecard, not guessed detector edges.
++_SIGNAL_GROUPS = {
++    'metadata':('metadata_synthetic','metadata_enhancement','metadata_missing','metadata_clean','metadata_camera_like','provenance_state'),
++    'osint':('osint_ai_context','osint_clean'),
++    'sensor_origin':('camera_like_support','sensor_trace_inconsistency'),
++    'cfa_demosaic':('cfa_camera_like_support','cfa_inconsistency'),
++    'compression_history':('compression_consistent','compression_inconsistency','double_jpeg_suspect','block_history_anomaly'),
++    'subject_boundary':('subject_boundary_strong','subject_boundary_medium'),
++    'subject_texture_consistency':('subject_texture_strong','subject_texture_moderate'),
++    'subject_process_asymmetry':('subject_process_asymmetry_strong','subject_process_asymmetry_moderate','region_geometry_unreliable'),
++    'subject_material_realism':('material_realism_strong','material_realism_medium','material_realism_weak','material_realism_low'),
++    'region_masks':('segmentation_fragmented','segmentation_clean','segmentation_natural','person_mask_reliable','subject_area_ratio','boundary_support_ratio','boundary_support_low','boundary_reliability_score'),
++    'segmentation_alignment':('segmentation_boundary_score','segmentation_boundary_strong','segmentation_boundary_medium'),
++    'fft':('fft_structured','fft_score','peak_periodicity','peak_symmetry','peak_count','axis_bias'),
++    'patch_similarity':('patch_structured','patch_score','repetition_score','coverage_ratio','pair_count','separated_pair_count','mean_similarity','max_similarity'),
++    'boundary':('strong_local_edit','fragmented_local_edit'),
++    'cross_signal':('strong_cross',),
++}
++SIGNAL_SOURCES = {name:(section,) for section,names in _SIGNAL_GROUPS.items() for name in names}
++SIGNAL_SOURCES.update(provenance_clean=('metadata','osint'),local_signals_weak=('ela','noise','cross_signal','boundary'))
++
++
++def _operation_sources(reason, previous, nodes, ds):
++    sources=set()
++    unrecognized=[]
++    for name in re.findall(r'\bds\.([a-zA-Z_]+)',reason):
++        if name not in SIGNAL_SOURCES:
++            unrecognized.append(name)
++        sources.update(SIGNAL_SOURCES.get(name,()))
++    sources.update(re.findall(r'\bev\.([a-zA-Z_]+)',reason))
++    if 'ctx.' in reason or 'natural_scene_risk' in reason:
++        sources.add('scene_context')
++    if 'asym_strong' in reason or 'asym_medium' in reason:
++        sources.add('subject_process_asymmetry')
++    if 'boundary_stack' in reason:
++        sources.update(('boundary','cross_signal'))
++        if 'boundary_stack_strong' in reason:
++            sources.add('fft')
++        sources.update(s for s,flag in (('subject_boundary','subject_boundary_strong'),('segmentation_alignment','segmentation_boundary_strong')) if getattr(ds,flag,False))
++    if re.search(r'(?<![\w.])boundary_(strong|medium)\b',reason):
++        # Actual OR members; don't invent a missing second observation.
++        strength='strong' if re.search(r'(?<![\w.])boundary_strong\b',reason) else 'medium'
++        sources.update(s for s,flag in (('subject_boundary','subject_boundary_'+strength),('segmentation_alignment','segmentation_boundary_'+strength)) if getattr(ds,flag,False))
++    if 'patch_spatial_' in reason:
++        sources.add('patch_spatial')
++    if 'camera_benign' in reason:
++        sources.update(('metadata','sensor_origin'))
++    if 'clone_candidate' in reason:
++        sources.add('patch_similarity')
++    if reason in {'boundary_reliability','boundary_reliability_caution'}:
++        sources.add('region_masks')
++    if reason in {'region_geometry_reliability','region_geometry_caution'}:
++        sources.add('subject_process_asymmetry')
++    if reason.startswith('photo_context_'):
++        sources.update(('metadata','scene_context'))
++    component=None
++    if reason=='local_support_conversion': component='local_edit_support_score'
++    elif reason=='measured_camera_caution' or 'card.camera_counter_support' in reason: component='camera_counter_support'
++    elif 'card.synthetic_boost' in reason: component='synthetic_boost'
++    elif reason=='clone_floor': component='clone_support_score'
++    if component:
++        for row in previous:
++            if row['field']==component:
++                sources.update(s.removeprefix('evidence:') for s in row['evidence_ids'])
++    # These can be absence conditions or negative OR alternatives rather than
++    # support. Keep the condition separately; never manufacture their ancestry.
++    ids=tuple(sorted('evidence:'+s for s in sources if 'evidence:'+s in nodes and nodes['evidence:'+s].available))
++    return ids,tuple(unrecognized)
++
++
++def _operation_records(calc, nodes, ds):
++    rows=[]
++    for index,op in enumerate(calc['component_operations']):
++        ids,unknown=_operation_sources(op['reason'],rows,nodes,ds)
++        # Contribution after later attenuation of this same component. This is
++        # not an additive attribution of nonlinear floors or Q to a detector.
++        factor=1.0
++        later_floor=False
++        for later in calc['component_operations'][index+1:]:
++            if later['field']==op['field']:
++                if later['operation']=='multiply': factor*=later['operand']
++                elif later['operation']=='maximum': later_floor=True
++        stable_rule_id=sha256(op['reason'].encode('utf-8')).hexdigest()[:12]
++        rows.append({'contribution_id':f'component:{op["field"]}:{op["operation"]}:{stable_rule_id}',
++            'ledger_index':index,
++            'field':op['field'],'operation':op['operation'],'raw_contribution':op['operand'],
++            'reliability_adjusted_contribution':op['operand']*factor if op['operation']=='add' and not later_floor else None,
++            'later_component_multiplier':factor,'nonlinear_floor_follows':later_floor,
++            'evidence_ids':ids,'measurement_ancestry':tuple(sorted({a for key in ids for a in nodes[key].measurement_ancestry})),
++            'condition':op['reason'],'unknown_signal_aliases':unknown,
++            'control_dependencies':('evidence:region_masks',) if op['reason'] in {'boundary_reliability','boundary_reliability_caution'} else (),
++            'diagnostic_contribution':op['operand'],'difference':0.0,
++            'reason':'Existing explicit arithmetic/control policy retained; not another independent evidence credit.'})
++    if len({r['contribution_id'] for r in rows})!=len(rows):
++        raise LineageError('Duplicate component-rule identifier; review operation lineage.')
++    return rows
++
++
++def _corroboration(ids, nodes):
++    selected=[nodes[key] for key in sorted(set(ids)) if key in nodes and nodes[key].available]
++    measurements={a for r in selected for a in r.measurement_ancestry if a!='measurement:selected_mask_geometry'}
++    shared=defaultdict(list)
++    overlaps=defaultdict(list)
++    for r in selected:
++        for a in r.measurement_ancestry:
++            if a!='measurement:selected_mask_geometry': shared[a].append(r.evidence_id)
++        for group in r.overlap_groups: overlaps[group].append(r.evidence_id)
++    families=sorted({r.family.value for r in selected if r.family not in {Family.GEOMETRY,Family.CONTEXT}})
++    return {'supporting_indicator_count':len(selected),'distinct_measurement_ancestries':sorted(measurements),
++        'measurement_ancestry_count':len(measurements),'distinct_measurement_families':families,
++        'shared_ancestry':{k:v for k,v in sorted(shared.items()) if len(v)>1},
++        'overlapping_feature_groups':{k:v for k,v in sorted(overlaps.items()) if len(v)>1},
++        'derived_or_composite_indicators':[r.evidence_id for r in selected if r.kind!=Kind.PRIMARY],
++        'missing_required_ancestry':{r.evidence_id:list(r.missing_dependencies) for r in selected if r.missing_dependencies},
++        'only_one_measurement_family':len(families)==1,
++        'independent_observation_count':None,
++        'interpretation':'Distinct extractions/families are descriptive, not a statistical independence count.'}
++
++
++def _gate_diagnostics(sections, ds, nodes, calc):
++    strong=[]
++    mat=sections.get('subject_material_realism')
++    if mat and mat.score is not None and mat.score>=.58: strong.append('evidence:subject_material_realism')
++    for key,pattern in (('subject_process_asymmetry','subject_process_asymmetry_strong'),('boundary','possible_foreground_background_processing_mismatch'),('cross_signal','strong_hotspot_convergence')):
++        if (section:=sections.get(key)) and section.pattern==pattern: strong.append('evidence:'+key)
++    boundary=['evidence:'+key for key in ('boundary','boundary_focus','subject_boundary','segmentation_alignment')
++        if (s:=sections.get(key)) and s.status in {'medium','strong'} and s.polarity=='suspicious']
++    groups={
++        'determine_confidence.strong_signals':strong,
++        '_boundary_corroborated':boundary,
++        'suspicious_domain_bonus':['evidence:'+r['section'] for r in calc['base_evidence'] if r['polarity']=='suspicious'],
++        'synthetic_material_asymmetry_conjunction':['evidence:'+k for k,f in (('subject_material_realism','material_realism_strong'),('subject_process_asymmetry','subject_process_asymmetry_strong')) if getattr(ds,f,False)],
++        'synthetic_fft_patch_conjunction':['evidence:'+k for k,f in (('fft','fft_structured'),('patch_similarity','patch_structured')) if getattr(ds,f,False)],
++        'camera_convergence_bonus':['evidence:'+k for k,f in (('metadata','metadata_camera_like'),('sensor_origin','camera_like_support'),('cfa_demosaic','cfa_camera_like_support')) if getattr(ds,f,False)],
++        'synthetic_supported_by_other_domains':['evidence:'+k for k,f in (('metadata','metadata_synthetic'),('osint','osint_ai_context'),('subject_material_realism','material_realism_strong')) if getattr(ds,f,False)],
++    }
++    return {name:{**_corroboration(ids,nodes),
++        'production_indicator_ids':ids,'production_indicator_count':len(ids),
++        'production_gate_changed':False,
++        'ancestry_review_recommended':bool(_corroboration(ids,nodes)['shared_ancestry'] or _corroboration(ids,nodes)['overlapping_feature_groups']),
++        'counterfactual_gate_result':None,
++        'limitation':'Gate can reuse ancestors or related feature definitions. No replacement threshold or independence test is defined.'}
++        for name,ids in sorted(groups.items())}
++
++
++def _aggregates(calc, allocated):
++    bases={}
++    for polarity in ('suspicious','benign'):
++        selected=[r for r in allocated if r['polarity']==polarity and r['diagnostic_contribution']>0]
++        domains={r['domain'] for r in selected if r['domain']}
++        bases[polarity]=fsum(r['diagnostic_contribution'] for r in selected)+max(0,len(domains)-1)*calc['domain_bonus']
++    values=calc['final_contributions']; t=calc['aggregate_transforms']
++    q=fsum([bases['suspicious'],*(values[n] for n in ('synthetic_boost','edit_boost','provenance_boost','sensor_boost','compression_boost'))])
++    return {'suspicious_score':max(0,q*t['camera_multiplier']-values['caution_penalty'])*t['geometry_multiplier']*t['photo_context_multiplier'],
++        'benign_score':bases['benign'],'base_suspicious':bases['suspicious'],'base_benign':bases['benign']}
++
++
++def build_dependency_analysis(sections, card, ds, *, context=None, hypotheses=(), experimental=None):
++    """Pure optional sidecar. Existing multi-role component policy stays fixed.
++
++    Default: structural restatement rules only. No current audited detector is a
++    declared pure restatement: all real children add relationships, localization
++    or interpretation. Thus valid baseline totals ordinarily remain identical.
++    """
++    if not card.is_valid:
++        return {'mode':'shadow','lineage_version':'2b2','status':'unavailable',
++            'production_score_unchanged':True,'limitations':['Production scorecard is invalid; shadow aggregation withheld.']}
++    calc=card.calculation
++    replay=reconstruct_scorecard_calculation(calc)
++    if any(not isclose(getattr(card,k),replay[k],rel_tol=1e-12,abs_tol=1e-12) for k in (*COMPONENT_FIELDS,'suspicious_score','benign_score')):
++        raise LineageError('Production card differs from its calculation; shadow aggregation withheld.')
++    records=build_lineage(sections,context=context)
++    nodes={r.evidence_id:r for r in records}
++    contributions=[Contribution('base:'+r['section'],('evidence:'+r['section'],),'base_'+r['polarity'],
++        r['weight'],r['polarity'],nodes['evidence:'+r['section']].hypotheses,r['domain']) for r in calc['base_evidence']]
++    allocated=allocate_marginal(contributions,records,experimental=experimental)
++    operations=_operation_records(calc,nodes,ds)
++    unknown_operations=[r['contribution_id'] for r in operations if r['unknown_signal_aliases'] or
++        (r['operation']=='add' and r['raw_contribution']>0 and not r['evidence_ids'] and not r['control_dependencies'])]
++    unknown_base=[c.contribution_id for c in contributions if any(not nodes[e].known for e in c.evidence_ids)]
++    aggregates=_aggregates(calc,allocated)
++    families={}
++    for family in Family:
++        rows=[r for r in allocated if any(nodes[e].family==family for e in r['evidence_ids'])]
++        if rows:
++            families[family.value]={
++                'evidence_ids':sorted({e for r in rows for e in r['evidence_ids']}),
++                'existing_suspicious_base':fsum(r['existing_contribution'] for r in rows if r['polarity']=='suspicious'),
++                'shadow_suspicious_base':fsum(r['diagnostic_contribution'] for r in rows if r['polarity']=='suspicious'),
++                'existing_benign_base':fsum(r['existing_contribution'] for r in rows if r['polarity']=='benign'),
++                'shadow_benign_base':fsum(r['diagnostic_contribution'] for r in rows if r['polarity']=='benign'),
++                'pending_incremental_credit_ids':[r['contribution_id'] for r in rows if r['requires_empirical_validation']],
++                'component_operation_ids':[r['contribution_id'] for r in operations if any(nodes[e].family==family for e in r['evidence_ids'])],
++                'component_attribution_note':'Operation references can span families; do not sum mixed-family references as disjoint credits.',
++            }
++    role_map={}
++    for h in hypotheses:
++        role_map[h.hypothesis_id]={role:list(getattr(h,role)) for role in ('supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence')}
++    scored_ids=['evidence:'+r['section'] for r in calc['base_evidence']]
++    return {'mode':'shadow','lineage_version':'2b2','status':'partial' if unknown_operations or unknown_base else 'complete','production_score_unchanged':True,
++        'policy':'structural_restatement_only' if experimental is None else 'experimental:'+experimental.name,
++        'lineage':lineage_to_json(records),'families':families,'contributions':allocated,
++        'component_lineage':operations,'production_calculation_version':calc['calculation_version'],
++        'lineage_coverage':{'scoring_indicator_count':len(contributions),
++            'known_scoring_indicator_count':sum(all(nodes[e].known for e in c.evidence_ids) for c in contributions),
++            'unknown_base_credit_ids':unknown_base,
++            'unknown_component_rule_ids':unknown_operations},
++        'domain_accounting':{'production_suspicious_bonus':calc['base_suspicious']-fsum(r['weight'] for r in calc['base_evidence'] if r['polarity']=='suspicious'),
++            'shadow_suspicious_bonus':aggregates['base_suspicious']-fsum(r['diagnostic_contribution'] for r in allocated if r['polarity']=='suspicious'),
++            'policy':'Existing 0.25 per additional credited domain retained; families are not substituted for domains.'},
++        'shared_ancestry':_corroboration(scored_ids,nodes),
++        'corroboration_gates':_gate_diagnostics(sections,ds,nodes,calc),
++        'hypothesis_evidence_roles':role_map,'shadow_aggregates':aggregates,
++        'comparison':{key:{'production':getattr(card,key),'shadow':aggregates[key],
++            'difference':aggregates[key]-getattr(card,key)} for key in ('suspicious_score','benign_score')},
++        'limitations':[
++            'Shadow totals have no confidence tier, hypothesis selection or probability interpretation.',
++            'Measurement ancestry does not establish statistical independence or forensic redundancy.',
++            'Added localization/interpretation has no calibrated marginal weight; existing credit is provisional.',
++            'Existing component synergies, camera moderation, penalties and domain bonus policy remain fixed. This is not a full causal ablation.',
++            'Measurement IDs describe feature extractions; overlapping helper code and masks are recorded separately.',
++            'The morphology segmentation stage is not scored in normal summary synthesis; its snapshot alias is region_masks.',
++        ]}
++
++
++def safe_dependency_analysis(*args, **kwargs):
++    """An optional diagnostic failure cannot change the authoritative decision."""
++    try:
++        return build_dependency_analysis(*args,**kwargs)
++    except Exception as exc:
++        return {'mode':'shadow','lineage_version':'2b2','status':'error','production_score_unchanged':True,
++            'errors':[f'{type(exc).__name__}: {exc}'],'shadow_aggregates':{},
++            'limitations':['Dependency diagnostics failed; no shadow conclusion or score is available.']}
+--- /dev/null
++++ b/evidence_lineage.py
+@@ -0,0 +1,239 @@
++"""Versioned, immutable measurement ancestry. A family is not independence.
++
++Registry follows the Phase 2B.1 code audit. Measurement IDs denote distinguishable
++feature extractions, not statistically independent samples or sensor attribution.
++"""
++from dataclasses import asdict, dataclass
++from enum import Enum
++from types import MappingProxyType
++
++
++class LineageError(ValueError):
++    pass
++
++
++class Family(str, Enum):
++    PROVENANCE = 'provenance'
++    PROCESSING = 'processing_residual'
++    SPECTRAL = 'spectral'
++    RECURRENCE = 'patch_recurrence'
++    SURFACE = 'subject_surface'
++    ACQUISITION = 'camera_pipeline'
++    COMPRESSION = 'compression_history'
++    EDGE = 'intrinsic_edge_transition'
++    GEOMETRY = 'geometry'
++    CONTEXT = 'analyst_context'
++    UNKNOWN = 'unknown'
++
++
++class Kind(str, Enum):
++    PRIMARY = 'primary'
++    DERIVED = 'derived'
++    COMPOSITE = 'composite'
++
++
++class Addition(str, Enum):
++    OBSERVATION = 'new_measurement'
++    LOCALIZATION = 'localization'
++    RELATIONSHIP = 'cross_measurement_relationship'
++    INTERPRETATION = 'interpretation'
++    RESTATEMENT = 'restatement'
++    CONTROL = 'reliability_or_context'
++
++
++@dataclass(frozen=True)
++class EvidenceSpec:
++    key: str
++    detector: str
++    family: Family
++    measurements: tuple[str, ...]
++    parents: tuple[str, ...] = ()
++    optional_parents: tuple[str, ...] = ()
++    hypotheses: tuple[str, ...] = ()
++    kind: Kind = Kind.PRIMARY
++    addition: Addition = Addition.OBSERVATION
++    overlap_groups: tuple[str, ...] = ()
++
++    def __post_init__(self):
++        if not isinstance(self.key,str) or not self.key or not isinstance(self.detector,str) or not self.detector:
++            raise LineageError('Evidence key and source detector must be nonempty text.')
++        for name in ('measurements','parents','optional_parents','hypotheses','overlap_groups'):
++            values=getattr(self,name)
++            if type(values) is not tuple or any(not isinstance(v,str) or not v for v in values) or len(set(values))!=len(values):
++                raise LineageError('Evidence collections must be immutable unique text tuples: '+name)
++        if self.addition==Addition.RESTATEMENT and self.measurements:
++            raise LineageError('A pure restatement cannot declare a new measurement.')
++
++
++@dataclass(frozen=True)
++class LineageRecord:
++    evidence_id: str
++    source_detector: str
++    family: Family
++    measurement_ancestry: tuple[str, ...]
++    direct_dependencies: tuple[str, ...]
++    optional_dependencies: tuple[str, ...]
++    missing_dependencies: tuple[str, ...]
++    hypotheses: tuple[str, ...]
++    status: str
++    available: bool
++    scoring_available: bool
++    kind: Kind
++    addition: Addition
++    overlap_groups: tuple[str, ...] = ()
++    known: bool = True
++
++    def __post_init__(self):
++        if not isinstance(self.evidence_id,str) or not self.evidence_id.startswith('evidence:') or not isinstance(self.source_detector,str) or not isinstance(self.status,str):
++            raise LineageError('Lineage identity, source and status must be text.')
++        if not isinstance(self.family,Family) or not isinstance(self.kind,Kind) or not isinstance(self.addition,Addition):
++            raise LineageError('Record categories must use lineage enums.')
++        for name in ('measurement_ancestry','direct_dependencies','optional_dependencies','missing_dependencies','hypotheses','overlap_groups'):
++            values=getattr(self,name)
++            if type(values) is not tuple or any(not isinstance(v,str) for v in values):
++                raise LineageError('Lineage records cannot retain mutable payload collections.')
++        if any(type(getattr(self,name)) is not bool for name in ('available','scoring_available','known')):
++            raise LineageError('Availability flags must be booleans.')
++
++
++SYN = ('synthetic_origin',)
++EDIT = ('localized_editing',)
++CAM = ('camera_acquisition',)
++SYN_EDIT = SYN + EDIT
++UNAVAILABLE = frozenset({'not_run', 'unavailable', 'skipped', 'failed', 'error'})
++ACTIVE = frozenset({'weak', 'medium', 'strong'})
++
++# Masks are required geometric inputs of regional consumers. They are controls,
++# not independent evidence of generation. Optional parents record actual payload
++# reuse without requiring parents the detector can run without.
++_SPECS = (
++    EvidenceSpec('metadata','exiftool_backend.analyze_file_with_exiftool',Family.PROVENANCE,('embedded_assertions',),hypotheses=SYN+CAM,overlap_groups=('provenance_assertion',)),
++    EvidenceSpec('osint','summary_sections.build_osint_section',Family.PROVENANCE,('reviewed_source_context',),hypotheses=SYN,overlap_groups=('provenance_assertion',)),
++    EvidenceSpec('ela','vf_ela.run_ela',Family.PROCESSING,('ela_recompression_difference',),hypotheses=EDIT,overlap_groups=('processing_anomalies',)),
++    EvidenceSpec('noise','vf_noise.run_noise_analysis',Family.PROCESSING,('luminance_residual',),hypotheses=EDIT,overlap_groups=('processing_anomalies','highpass_features')),
++    EvidenceSpec('cross_signal','vf_cross_signal.compute_cross_signal_payload',Family.PROCESSING,(),('ela','noise'),hypotheses=EDIT,kind=Kind.COMPOSITE,addition=Addition.RELATIONSHIP,overlap_groups=('processing_anomalies',)),
++    EvidenceSpec('boundary','vf_cross_signal.classify_boundary_convergence',Family.PROCESSING,(),('ela','noise'),hypotheses=EDIT,kind=Kind.COMPOSITE,addition=Addition.INTERPRETATION,overlap_groups=('processing_anomalies','contour_interpretation')),
++    EvidenceSpec('boundary_focus','vf_boundary_focus.run_boundary_focus_analysis',Family.PROCESSING,(),('ela','noise','region_masks'),hypotheses=EDIT,kind=Kind.COMPOSITE,addition=Addition.LOCALIZATION,overlap_groups=('processing_anomalies','selected_geometry')),
++    EvidenceSpec('segmentation_alignment','vf_segmentation_alignment.compute_segmentation_boundary_alignment',Family.PROCESSING,(),('cross_signal','region_masks'),hypotheses=EDIT,kind=Kind.COMPOSITE,addition=Addition.LOCALIZATION,overlap_groups=('processing_anomalies','selected_geometry')),
++    EvidenceSpec('fft','vf_fft.run_fft_analysis',Family.SPECTRAL,('global_spectral_features',),hypotheses=SYN_EDIT,overlap_groups=('spectral_feature_code',)),
++    EvidenceSpec('region_fft','vf_region_fft.run_region_fft_analysis',Family.SPECTRAL,('regional_spectral_features',),('region_masks',),hypotheses=SYN_EDIT,kind=Kind.DERIVED,addition=Addition.LOCALIZATION,overlap_groups=('spectral_feature_code','selected_geometry')),
++    EvidenceSpec('patch_similarity','vf_patch_similarity.run_patch_similarity_analysis',Family.RECURRENCE,('retained_patch_matches',),hypotheses=SYN_EDIT,overlap_groups=('texture_recurrence',)),
++    EvidenceSpec('patch_spatial','vf_patch_spatial.run_patch_spatial_analysis',Family.RECURRENCE,(),('patch_similarity','region_masks'),hypotheses=SYN_EDIT,kind=Kind.DERIVED,addition=Addition.LOCALIZATION,overlap_groups=('texture_recurrence','selected_geometry')),
++    EvidenceSpec('subject_texture_consistency','vf_subject_texture_consistency.run_subject_texture_consistency_analysis',Family.SURFACE,('masked_hybrid_texture_descriptors',),('region_masks',),hypotheses=SYN_EDIT,overlap_groups=('texture_recurrence','surface_feature_definitions','selected_geometry')),
++    EvidenceSpec('subject_process_asymmetry','vf_subject_process_asymmetry.run_subject_process_asymmetry_analysis',Family.SURFACE,('regional_patch_statistics',),('region_masks',),('subject_texture_consistency','region_fft'),SYN_EDIT,Kind.COMPOSITE,Addition.INTERPRETATION,('surface_feature_definitions','highpass_features','selected_geometry')),
++    EvidenceSpec('subject_material_realism','vf_subject_material_realism.run_subject_material_realism_analysis',Family.SURFACE,('subject_material_patch_statistics',),('region_masks',),hypotheses=SYN_EDIT,kind=Kind.DERIVED,addition=Addition.INTERPRETATION,overlap_groups=('surface_feature_definitions','highpass_features','selected_geometry')),
++    EvidenceSpec('sensor_origin','vf_sensor_origin.run_sensor_origin_analysis',Family.ACQUISITION,('luminance_phase_residual',),hypotheses=CAM+EDIT,overlap_groups=('highpass_features','acquisition_phase_features')),
++    EvidenceSpec('cfa_demosaic','vf_cfa_demosaic.run_cfa_demosaic_analysis',Family.ACQUISITION,('chroma_phase_directionality',),hypotheses=CAM+EDIT,overlap_groups=('highpass_features','acquisition_phase_features')),
++    EvidenceSpec('compression_history','vf_compression_history.run_compression_history_analysis',Family.COMPRESSION,('aligned_offgrid_boundary_energy',),hypotheses=EDIT+CAM,overlap_groups=('processing_anomalies',)),
++    EvidenceSpec('subject_boundary','vf_subject_boundary.run_subject_boundary_analysis',Family.EDGE,('intrinsic_edge_ring_features',),hypotheses=EDIT,overlap_groups=('highpass_features','image_gradients')),
++    EvidenceSpec('region_masks','vf_person_subject_mask.derive_region_masks_from_person_mask',Family.GEOMETRY,('selected_mask_geometry',),kind=Kind.DERIVED,addition=Addition.CONTROL,overlap_groups=('selected_geometry',)),
++    EvidenceSpec('scene_context','hypothesis_engine.build_context',Family.CONTEXT,(),addition=Addition.CONTROL),
++)
++
++
++def validate_registry(specs):
++    records = tuple(specs)
++    mapping = {s.key: s for s in records}
++    if len(mapping) != len(records):
++        raise LineageError('Duplicate evidence registration.')
++    for s in records:
++        if not isinstance(s.family,Family) or not isinstance(s.kind,Kind) or not isinstance(s.addition,Addition):
++            raise LineageError('Lineage category must be a declared enum.')
++        if not s.key or any(p not in mapping for p in s.parents+s.optional_parents):
++            raise LineageError('Empty identifier or unregistered parent.')
++        if len(set(s.parents+s.optional_parents)) != len(s.parents+s.optional_parents):
++            raise LineageError('Duplicate parent.')
++    visited, pending = set(), set()
++    def visit(key):
++        if key in pending:
++            raise LineageError('Cyclic evidence ancestry: '+key)
++        if key in visited:
++            return
++        pending.add(key)
++        for parent in mapping[key].parents+mapping[key].optional_parents:
++            visit(parent)
++        pending.remove(key); visited.add(key)
++    for key in sorted(mapping):
++        visit(key)
++    return MappingProxyType(mapping)
++
++
++REGISTRY = validate_registry(_SPECS)
++
++
++def build_lineage(sections, *, context=None, registry=REGISTRY):
++    """Snapshot status/ancestry only; never retain summaries, details or arrays.
++
++    Inconclusive detector interpretation can still provide a measured upstream
++    feature (e.g. ELA/noise maps). It has no status-weighted scoring credit.
++    Missing optional payloads do not invalidate a detector's own measurements.
++    """
++    registry = validate_registry(tuple(registry.values()))
++    results = {}
++    def build(key):
++        if key in results:
++            return results[key]
++        spec = registry.get(key)
++        section = sections.get(key)
++        status = getattr(section,'status','not_run')
++        available = status in ACTIVE or status == 'inconclusive'
++        if key == 'scene_context':
++            status = 'available' if context is not None else 'not_run'
++            available = context is not None
++        if spec is None:
++            record = LineageRecord('evidence:'+key,'unregistered',Family.UNKNOWN,(),(),(),(),(),status,
++                available,False,Kind.DERIVED,Addition.INTERPRETATION,known=False)
++        else:
++            parents = {p:build(p) for p in spec.parents+spec.optional_parents}
++            missing = tuple('evidence:'+p for p in spec.parents if not parents[p].available or parents[p].missing_dependencies)
++            ancestry = {'measurement:'+m for m in spec.measurements} if available else set()
++            for p,record in parents.items():
++                if record.available:
++                    ancestry.update(record.measurement_ancestry)
++            record = LineageRecord('evidence:'+key,spec.detector,spec.family,tuple(sorted(ancestry)),
++                tuple('evidence:'+p for p in spec.parents),tuple('evidence:'+p for p in spec.optional_parents),
++                missing,spec.hypotheses,status,available,status in ACTIVE and not missing,
++                spec.kind,spec.addition,spec.overlap_groups)
++        results[key]=record
++        return record
++    for key in sorted(set(registry)|set(sections)):
++        build(key)
++    return tuple(sorted(results.values(),key=lambda r:r.evidence_id))
++
++
++def lineage_to_json(records):
++    return [asdict(record) for record in sorted(records,key=lambda r:r.evidence_id)]
++
++
++def lineage_from_json(items):
++    """Restore validated immutable records, without accepting payload fields."""
++    result=[]
++    fields=set(LineageRecord.__dataclass_fields__)
++    tuple_fields=('measurement_ancestry','direct_dependencies','optional_dependencies','missing_dependencies','hypotheses','overlap_groups')
++    for item in items:
++        if set(item)!=fields:
++            raise LineageError('Serialized lineage fields do not match version 2b2.')
++        values=dict(item)
++        for name in tuple_fields:
++            if not isinstance(values[name],(list,tuple)):
++                raise LineageError('Serialized references must be lists.')
++            values[name]=tuple(values[name])
++        try:
++            for name,enum in (('family',Family),('kind',Kind),('addition',Addition)):
++                values[name]=enum(values[name])
++        except ValueError as exc:
++            raise LineageError('Unknown serialized lineage category.') from exc
++        result.append(LineageRecord(**values))
++    nodes={r.evidence_id:r for r in result}
++    if len(nodes)!=len(result):
++        raise LineageError('Duplicate serialized evidence identifier.')
++    visited=set()
++    def visit(key, pending=()):
++        if key not in nodes or key in pending:
++            raise LineageError('Missing or cyclic serialized lineage parent.')
++        if key in visited: return
++        for parent in nodes[key].direct_dependencies+nodes[key].optional_dependencies:
++            visit(parent,pending+(key,))
++        visited.add(key)
++    for key in nodes: visit(key)
++    return tuple(sorted(result,key=lambda r:r.evidence_id))
+--- /dev/null
++++ b/marginal_corroboration.py
+@@ -0,0 +1,126 @@
++"""Pure structural credit allocation; no learned weights or default family caps."""
++from dataclasses import asdict, dataclass
++from math import isfinite
++
++from evidence_lineage import Addition, Kind, LineageError
++
++
++@dataclass(frozen=True)
++class Contribution:
++    contribution_id: str
++    evidence_ids: tuple[str, ...]
++    target: str
++    value: float
++    polarity: str
++    hypotheses: tuple[str, ...]
++    domain: str | None = None
++    # Arithmetic transforms and explicit multi-role policy are not new independent
++    # observation credits. They remain visible but cannot be silently reweighted.
++    credit_role: str = 'observation_credit'
++    evidence_role: str = 'supporting_evidence'
++
++    def __post_init__(self):
++        if type(self.evidence_ids) is not tuple or type(self.hypotheses) is not tuple:
++            raise LineageError('Contribution references and hypotheses must be immutable tuples.')
++        if self.evidence_role not in {'supporting_evidence','contradicting_evidence','moderating_evidence','contextual_evidence'}:
++            raise LineageError('Unknown hypothesis evidence role.')
++
++
++@dataclass(frozen=True)
++class ExperimentalCredits:
++    """Explicit units of base credit, never a default coefficient or family cap."""
++    name: str
++    overrides: tuple[tuple[str, float], ...]
++
++    def __post_init__(self):
++        if not isinstance(self.name,str) or type(self.overrides) is not tuple or any(type(item) is not tuple or len(item)!=2 for item in self.overrides):
++            raise LineageError('Experimental policy must have immutable name/credit pairs.')
++        if not self.name.strip() or len(dict(self.overrides)) != len(self.overrides):
++            raise LineageError('Experimental policy needs a name and unique credit identifiers.')
++        for key,value in self.overrides:
++            if not isinstance(key,str) or not key.startswith('base:') or isinstance(value,bool) or not isinstance(value,(int,float)) or not isfinite(value) or value < 0:
++                raise LineageError('Experimental overrides must be finite, nonnegative base-credit units.')
++
++
++def allocate_marginal(contributions, lineage, *, experimental=None):
++    """Ancestry-ordered, hypothesis-specific allocation without input mutation.
++
++    Pure restatement is a registry assertion, not an inference from a family name.
++    Novel localization/relationships are reported with unknown calibrated margin;
++    their existing value is retained provisionally, not endorsed as independent.
++    """
++    if experimental is not None and not isinstance(experimental,ExperimentalCredits):
++        raise LineageError('Experimental credits require an explicit typed policy.')
++    records = tuple(contributions)
++    if len({c.contribution_id for c in records}) != len(records):
++        raise LineageError('Duplicate contribution identifier.')
++    lineage = tuple(lineage)
++    nodes = {r.evidence_id:r for r in lineage}
++    if len(nodes) != len(lineage):
++        raise LineageError('Duplicate lineage identifier.')
++    depth_cache = {}
++    def depth(key, pending=()):
++        if key in pending:
++            raise LineageError('Cyclic lineage record: '+key)
++        if key in depth_cache:
++            return depth_cache[key]
++        node = nodes.get(key)
++        parents = node.direct_dependencies+node.optional_dependencies if node else ()
++        depth_cache[key] = 1+max((depth(p,pending+(key,)) for p in parents),default=-1)
++        return depth_cache[key]
++    for key in sorted(nodes):
++        depth(key)
++    credits = dict(experimental.overrides) if experimental else {}
++    if set(credits)-{c.contribution_id for c in records}:
++        raise LineageError('Experimental override refers to an unknown contribution.')
++    accepted = []
++    output = []
++    for c in sorted(records,key=lambda c:(max((depth(s) for s in c.evidence_ids),default=0),c.contribution_id)):
++        if isinstance(c.value,bool) or not isinstance(c.value,(int,float)) or not isfinite(c.value):
++            raise LineageError('Contribution must be finite: '+c.contribution_id)
++        parents = [nodes.get(key) for key in c.evidence_ids]
++        valid = bool(parents) and all(r and r.known and r.available and not r.missing_dependencies for r in parents)
++        ancestry = tuple(sorted({a for r in parents if r for a in r.measurement_ancestry}))
++        adjusted, marginal, pending = c.value, c.value, False
++        reason = 'Primary measurement credit retained; no independence assertion.'
++        if c.credit_role != 'observation_credit':
++            marginal = None
++            reason = 'Existing arithmetic/control policy preserved; not a separate independent observation credit.'
++            pending = not valid and c.value > 0
++        elif c.value > 0 and not valid:
++            adjusted = marginal = 0.0
++            reason = 'Unknown, missing or unavailable ancestry: positive shadow credit withheld.'
++        elif c.polarity == 'benign' or c.value <= 0 or c.evidence_role in {'contradicting_evidence','moderating_evidence'}:
++            reason = 'Counter-evidence/signed contribution retained in its hypothesis scope.'
++        elif all(r.addition == Addition.RESTATEMENT for r in parents):
++            # Counted evidence must be an actual ancestor, not a sibling that merely
++            # shares a coarse family. Hypothesis and sign/target must also agree.
++            def ancestors(key):
++                node=nodes.get(key)
++                return set().union(*( {p}|ancestors(p) for p in node.direct_dependencies)) if node and node.direct_dependencies else set()
++            ancestor_ids=set().union(*(ancestors(key) for key in c.evidence_ids))
++            covered = {a for prior,prior_ancestry in accepted
++                if prior.target == c.target and prior.polarity == c.polarity
++                and prior.hypotheses == c.hypotheses and set(prior.evidence_ids) <= ancestor_ids
++                for a in prior_ancestry}
++            if ancestry and set(ancestry) <= covered:
++                adjusted = marginal = 0.0
++                reason = 'Pure restatement of already credited ancestors in the same hypothesis/target; no additional observation.'
++            else:
++                reason = 'Restatement has no previously credited equivalent ancestor; existing credit retained.'
++        elif any(r.kind != Kind.PRIMARY and r.addition != Addition.CONTROL for r in parents):
++            marginal, pending = None, True
++            reason = 'Added '+', '.join(sorted({r.addition.value for r in parents}))+' is identifiable; numerical marginal value is unvalidated. Existing credit retained provisionally.'
++        if c.contribution_id in credits:
++            if c.credit_role != 'observation_credit' or c.polarity != 'suspicious' or not valid:
++                raise LineageError('Experimental allocations apply only to supported suspicious base credits.')
++            if credits[c.contribution_id] > c.value:
++                raise LineageError('Experimental credit may not exceed the existing credit.')
++            adjusted, marginal, pending = credits[c.contribution_id], None, True
++            reason = 'Explicit unvalidated experimental allocation: '+experimental.name
++        if adjusted > 0 and valid and c.credit_role == 'observation_credit':
++            accepted.append((c,ancestry))
++        output.append({**asdict(c),'existing_contribution':c.value,'diagnostic_contribution':adjusted,
++            'difference':adjusted-c.value,'marginal_contribution':marginal,
++            'measurement_ancestry':ancestry,'reason':reason,'requires_empirical_validation':pending})
++    return sorted(output,key=lambda r:r['contribution_id'])
+--- /dev/null
++++ b/tests/test_evidence_lineage.py
+@@ -0,0 +1,335 @@
++"""Structural lineage, diagnostic allocation and production-invariance regressions."""
++from copy import deepcopy
++from dataclasses import FrozenInstanceError, asdict, replace
++import json
++
++import pytest
++
++import decision_logic as logic
++import evidence_dependency_analysis as analysis
++from evidence_lineage import (
++    Addition, EvidenceSpec, Family, Kind, LineageError, REGISTRY,
++    build_lineage, lineage_to_json, lineage_from_json, validate_registry,
++)
++from marginal_corroboration import Contribution, ExperimentalCredits, allocate_marginal
++from hypothesis_engine import build_context, build_evidence_snapshot, compute_scorecard, derive_signals
++from reasoning_persistence import build_reasoning_trace_text
++from test_reasoning import metadata, section
++from test_scorecard_integrity import boundary_sections
++
++
++def card_for(sections):
++    ev=build_evidence_snapshot(sections)
++    ds=derive_signals(ev)
++    return compute_scorecard(sections,build_context(None),ev,ds),ds
++
++
++def fixture_lineage(*, addition=Addition.RESTATEMENT, missing=False):
++    specs=(EvidenceSpec('p','test.primary',Family.PROCESSING,('m1',),hypotheses=('localized_editing',)),
++        EvidenceSpec('q','test.primary2',Family.PROCESSING,('m2',),hypotheses=('localized_editing',)),
++        EvidenceSpec('child','test.child',Family.PROCESSING,(),('p',),hypotheses=('localized_editing',),kind=Kind.DERIVED,addition=addition),
++        EvidenceSpec('child2','test.child2',Family.PROCESSING,(),('p',),hypotheses=('localized_editing',),kind=Kind.COMPOSITE,addition=addition))
++    registry=validate_registry(specs)
++    sections={k:section(k,'test') for k in ('p','q','child','child2')}
++    if missing: sections['p'].status='unavailable'
++    return build_lineage(sections,registry=registry)
++
++
++def credit(key='p', *, polarity='suspicious', hypotheses=('localized_editing',), value=1.5):
++    return Contribution('base:'+key,('evidence:'+key,),'base_'+polarity,value,polarity,hypotheses,'d')
++
++
++def by_id(items):
++    return {r['contribution_id']:r for r in items}
++
++
++def test_one_primary_observation_retains_existing_credit():
++    r=allocate_marginal([credit()],fixture_lineage())[0]
++    assert r['diagnostic_contribution']==r['marginal_contribution']==1.5
++    assert r['difference']==0 and not r['requires_empirical_validation']
++
++
++def test_primary_and_pure_descendant_suppress_only_restatement_credit():
++    rows=by_id(allocate_marginal([credit('child'),credit('p')],fixture_lineage()))
++    assert rows['base:p']['diagnostic_contribution']==1.5
++    assert rows['base:child']['diagnostic_contribution']==0
++    assert rows['base:child']['measurement_ancestry']==('measurement:m1',)
++
++
++def test_restatement_without_previously_credited_ancestor_is_not_arbitrarily_dropped():
++    assert allocate_marginal([credit('child')],fixture_lineage())[0]['diagnostic_contribution']==1.5
++
++
++def test_two_primary_measurements_in_same_family_remain_distinct():
++    records=fixture_lineage()
++    result=allocate_marginal([credit('p'),credit('q')],records)
++    assert sum(r['diagnostic_contribution'] for r in result)==3
++    diag=analysis._corroboration(['evidence:p','evidence:q'],{r.evidence_id:r for r in records})
++    assert diag['measurement_ancestry_count']==2
++    assert diag['only_one_measurement_family']
++    assert diag['independent_observation_count'] is None
++
++
++def test_composites_sharing_parent_are_visible_without_invented_independence():
++    records=fixture_lineage(addition=Addition.INTERPRETATION)
++    diag=analysis._corroboration(['evidence:p','evidence:child','evidence:child2'],{r.evidence_id:r for r in records})
++    assert diag['supporting_indicator_count']==3 and diag['measurement_ancestry_count']==1
++    assert len(diag['shared_ancestry']['measurement:m1'])==3
++    assert len(diag['derived_or_composite_indicators'])==2
++
++
++def test_five_descendants_of_one_measurement_are_not_five_independent_observations():
++    base=fixture_lineage()
++    node=next(r for r in base if r.evidence_id=='evidence:child')
++    records=base+tuple(replace(node,evidence_id='evidence:extra'+str(i)) for i in range(3))
++    ids=['evidence:child','evidence:child2',*['evidence:extra'+str(i) for i in range(3)]]
++    diag=analysis._corroboration(ids,{r.evidence_id:r for r in records})
++    assert diag['supporting_indicator_count']==5 and diag['measurement_ancestry_count']==1
++    assert diag['independent_observation_count'] is None
++
++
++def test_localization_addition_is_represented_without_inventing_numeric_margin():
++    row=by_id(allocate_marginal([credit(),credit('child')],fixture_lineage(addition=Addition.LOCALIZATION)))['base:child']
++    assert row['diagnostic_contribution']==1.5
++    assert row['marginal_contribution'] is None and row['requires_empirical_validation']
++    assert 'localization' in row['reason']
++
++
++@pytest.mark.parametrize('addition',[Addition.RESTATEMENT,Addition.LOCALIZATION,Addition.RELATIONSHIP])
++def test_missing_upstream_cannot_create_positive_marginal_credit(addition):
++    row=allocate_marginal([credit('child')],fixture_lineage(addition=addition,missing=True))[0]
++    assert row['diagnostic_contribution']==row['marginal_contribution']==0
++
++
++@pytest.mark.parametrize('polarity,hypotheses',[
++    ('benign',('localized_editing',)),('suspicious',('camera_acquisition',)),
++])
++def test_counter_evidence_or_different_hypothesis_is_not_deduplicated(polarity,hypotheses):
++    rows=by_id(allocate_marginal([credit(),credit('child',polarity=polarity,hypotheses=hypotheses)],fixture_lineage()))
++    assert rows['base:child']['diagnostic_contribution']==1.5
++
++
++def test_explicit_contradiction_with_same_polarity_and_ancestry_keeps_hypothesis_role():
++    child=replace(credit('child'),evidence_role='contradicting_evidence')
++    rows=by_id(allocate_marginal([credit(),child],fixture_lineage()))
++    assert rows['base:child']['diagnostic_contribution']==1.5
++    assert rows['base:child']['evidence_role']=='contradicting_evidence'
++
++
++def test_specific_subject_boundary_rule_does_not_invent_alignment_dependency():
++    sections=boundary_sections()
++    sections['subject_boundary']=section('subject','possible_subject_background_segmentation_artifact')
++    sections['segmentation_alignment']=section('alignment','segmentation_boundary_alignment',score=.4)
++    card,ds=card_for(sections)
++    nodes={r.evidence_id:r for r in build_lineage(sections)}
++    sources,_=analysis._operation_sources('ds.subject_boundary_strong and ds.strong_cross',[],nodes,ds)
++    assert sources==('evidence:cross_signal','evidence:subject_boundary')
++
++
++def test_unknown_evidence_is_explicit_and_positive_credit_withheld():
++    lineage=build_lineage({'future_detector':section('future','unknown')})
++    node=next(r for r in lineage if r.evidence_id=='evidence:future_detector')
++    assert not node.known and node.family==Family.UNKNOWN
++    assert allocate_marginal([credit('future_detector')],lineage)[0]['diagnostic_contribution']==0
++
++
++@pytest.mark.parametrize('variant',['cycle','duplicate','missing_parent','duplicate_parent'])
++def test_invalid_registry_rejected(variant):
++    primary=EvidenceSpec('p','test',Family.PROCESSING,('m',))
++    with pytest.raises(LineageError):
++        if variant=='cycle': specs=(replace(primary,parents=('q',)),replace(primary,key='q',parents=('p',)))
++        elif variant=='duplicate': specs=(primary,primary)
++        elif variant=='missing_parent': specs=(replace(primary,parents=('q',)),)
++        else: specs=(primary,replace(primary,key='q',parents=('p','p')))
++        validate_registry(specs)
++
++
++def test_cyclic_external_lineage_records_rejected():
++    lineage=fixture_lineage()
++    node=next(r for r in lineage if r.evidence_id=='evidence:p')
++    records=tuple(replace(r,direct_dependencies=('evidence:child',)) if r==node else r for r in lineage)
++    with pytest.raises(LineageError): allocate_marginal([credit()],records)
++
++
++def test_immutable_records_and_registry():
++    with pytest.raises(TypeError): REGISTRY['new']=REGISTRY['ela']
++    with pytest.raises(FrozenInstanceError): fixture_lineage()[0].status='failed'
++
++
++@pytest.mark.parametrize('change',[
++    {'parents':['p']},{'measurements':('m','m')},
++    {'addition':Addition.RESTATEMENT,'measurements':('new',)},
++])
++def test_registration_rejects_mutable_or_inconsistent_measurement_contracts(change):
++    with pytest.raises(LineageError): replace(REGISTRY['ela'],**change)
++
++
++def test_repeated_reversed_inputs_and_json_round_trip_are_deterministic():
++    sections=boundary_sections()
++    first=build_lineage(sections)
++    assert first==build_lineage(dict(reversed(list(sections.items()))))
++    inputs=[credit('p'),credit('child')]
++    baseline=allocate_marginal(inputs,fixture_lineage())
++    assert baseline==allocate_marginal(reversed(inputs),reversed(fixture_lineage()))
++    assert json.loads(json.dumps(lineage_to_json(first),allow_nan=False))==json.loads(json.dumps(lineage_to_json(build_lineage(sections)),allow_nan=False))
++    assert lineage_from_json(json.loads(json.dumps(lineage_to_json(first),allow_nan=False)))==first
++
++
++def test_serialized_lineage_rejects_payloads_cycles_and_unknown_enums():
++    serialized=json.loads(json.dumps(lineage_to_json(fixture_lineage())))
++    for variant in ('payload','cycle','enum'):
++        bad=deepcopy(serialized)
++        if variant=='payload': bad[0]['pixels']=[[1,2]]
++        elif variant=='cycle': bad[0]['direct_dependencies']=[bad[0]['evidence_id']]
++        else: bad[0]['family']='unregistered family'
++        with pytest.raises(LineageError): lineage_from_json(bad)
++
++
++def test_missing_detectors_safe_and_do_not_serialize_details():
++    import numpy as np
++    sections={'ela':section('ela','ela_inconclusive',details={'pixels':np.zeros((8,8)), 'secret':'omit'})}
++    serialized=json.dumps(lineage_to_json(build_lineage(sections)),allow_nan=False)
++    assert 'secret' not in serialized and 'pixels' not in serialized
++    empty=build_lineage({})
++    assert all(not r.available for r in empty)
++
++
++def test_inconclusive_parents_can_have_observed_features_without_base_credit():
++    sections={k:section(k,'inconclusive',status='inconclusive') for k in ('ela','noise')}
++    sections['cross_signal']=section('cross','strong_hotspot_convergence')
++    nodes={r.evidence_id:r for r in build_lineage(sections)}
++    assert nodes['evidence:ela'].available and not nodes['evidence:ela'].scoring_available
++    assert not nodes['evidence:cross_signal'].missing_dependencies
++    assert len(nodes['evidence:cross_signal'].measurement_ancestry)==2
++
++
++def test_optional_asymmetry_parents_and_actual_material_fft_direction():
++    sections=boundary_sections()
++    sections['subject_process_asymmetry']=section('asym','subject_process_asymmetry_strong')
++    nodes={r.evidence_id:r for r in build_lineage(sections)}
++    asym=nodes['evidence:subject_process_asymmetry']
++    assert not asym.missing_dependencies
++    assert asym.optional_dependencies==('evidence:subject_texture_consistency','evidence:region_fft')
++    assert 'evidence:subject_material_realism' not in asym.direct_dependencies+asym.optional_dependencies
++    assert 'evidence:fft' not in REGISTRY['region_fft'].parents
++    assert 'evidence:subject_process_asymmetry' not in REGISTRY['subject_material_realism'].parents
++
++
++@pytest.mark.parametrize('value',[float('nan'),float('inf'),-float('inf'),True])
++def test_nonfinite_or_boolean_credit_rejected(value):
++    with pytest.raises(LineageError): allocate_marginal([credit(value=value)],fixture_lineage())
++
++
++@pytest.mark.parametrize('name,overrides',[
++    ('',(('base:p',0),)),('bad',(('base:p',float('nan')),)),
++    ('bad',(('base:p',-1),)),('bad',(('operation:p',0),)),
++    ('bad',(('base:p',0),('base:p',1))),
++])
++def test_experimental_policy_requires_explicit_valid_values(name,overrides):
++    with pytest.raises(LineageError): ExperimentalCredits(name,overrides)
++
++
++def test_explicit_experiment_does_not_become_default_or_add_credit():
++    experiment=ExperimentalCredits('test-only',(('base:p',0),))
++    assert allocate_marginal([credit()],fixture_lineage(),experimental=experiment)[0]['diagnostic_contribution']==0
++    assert allocate_marginal([credit()],fixture_lineage())[0]['diagnostic_contribution']==1.5
++    with pytest.raises(LineageError): allocate_marginal([credit()],fixture_lineage(),experimental=ExperimentalCredits('excess',(('base:p',2),)))
++    with pytest.raises(LineageError): allocate_marginal([credit()],fixture_lineage(),experimental=ExperimentalCredits('unknown',(('base:missing',0),)))
++
++
++@pytest.mark.parametrize('case',['instagram','midjourney'])
++def test_full_snapshot_card_trace_integration_preserves_entire_production_result(case):
++    sections=boundary_sections()
++    # Include real measured neutral parents so composite ancestry is available.
++    sections.update(ela=section('ela','ela_inconclusive',polarity='neutral',status='weak'),
++        noise=section('noise','noise_inconclusive',polarity='neutral',status='weak'))
++    if case=='midjourney':
++        sections['metadata']=metadata('DECLARED_SYNTHETIC')
++        del sections['region_masks']
++    else:
++        sections['subject_boundary']=section('subject','possible_subject_background_segmentation_artifact')
++        sections['boundary_focus']=section('focus','boundary_focused_processing_mismatch')
++    before=deepcopy(sections)
++    ordinary=logic.synthesize_overall(sections)
++    shadow=logic.synthesize_overall(sections,evidence_dependency_shadow=True)
++    assert ordinary[:4]==shadow[:4]
++    diagnostic=shadow[4].pop('evidence_dependency_analysis')
++    assert shadow[4]==ordinary[4] and sections==before
++    assert diagnostic['status']=='complete' and diagnostic['production_score_unchanged']
++    assert diagnostic['comparison']['suspicious_score']['difference']==0
++    assert diagnostic['comparison']['benign_score']['difference']==0
++    assert 'confidence_tier' not in diagnostic and 'decision' not in diagnostic
++    assert len(diagnostic['component_lineage'])==len(ordinary[4]['scorecard_calculation']['component_operations'])
++    json.dumps(diagnostic,allow_nan=False)
++
++
++def test_pure_sidecar_does_not_mutate_shared_inputs_or_card_and_reconciles_experiment():
++    sections=boundary_sections()
++    sections.update(ela=section('ela','x',polarity='neutral'),noise=section('noise','x',polarity='neutral'))
++    card,ds=card_for(sections)
++    initial=deepcopy(asdict(card))
++    ordinary=analysis.build_dependency_analysis(sections,card,ds)
++    result=analysis.build_dependency_analysis(sections,card,ds,experimental=ExperimentalCredits('base-removal',(('base:cross_signal',0),)))
++    assert asdict(card)==initial
++    assert ordinary==analysis.build_dependency_analysis(dict(reversed(list(sections.items()))),card,ds)
++    assert result['shadow_aggregates']['base_suspicious']==3
++    assert result['comparison']['suspicious_score']['difference']==pytest.approx(-3.25)
++
++
++def test_shadow_failure_does_not_change_production_decision(monkeypatch):
++    def fail(*a,**k): raise RuntimeError('diagnostic failure')
++    ordinary=logic.synthesize_overall(boundary_sections())
++    monkeypatch.setattr(analysis,'build_dependency_analysis',fail)
++    shadow=logic.synthesize_overall(boundary_sections(),evidence_dependency_shadow=True)
++    assert ordinary[:4]==shadow[:4]
++    diagnostic=shadow[4].pop('evidence_dependency_analysis')
++    assert shadow[4]==ordinary[4]
++    assert diagnostic['status']=='error' and diagnostic['shadow_aggregates']=={}
++
++
++def test_invalid_production_card_has_no_shadow_score_and_text_is_compatible():
++    result=logic.synthesize_overall({'boundary':section('bad','x',score=float('nan'))},evidence_dependency_shadow=True)
++    diagnostic=result[4]['evidence_dependency_analysis']
++    assert diagnostic['status']=='unavailable' and 'shadow_aggregates' not in diagnostic
++    assert 'No shadow confidence tier' in build_reasoning_trace_text(result[4])
++    assert build_reasoning_trace_text(logic.synthesize_overall({})[4])
++
++
++def test_all_derived_signal_aliases_have_explicit_operation_sources():
++    from hypothesis_engine import DerivedSignals
++    assert set(DerivedSignals.__dataclass_fields__) <= analysis.SIGNAL_SOURCES.keys()
++
++
++def test_component_identifiers_do_not_depend_on_conditional_operation_position():
++    sections=boundary_sections()
++    sections.update(ela=section('ela','x',polarity='neutral'),noise=section('noise','x',polarity='neutral'))
++    card,ds=card_for(sections)
++    before=analysis.build_dependency_analysis(sections,card,ds)['component_lineage']
++    sections['sensor_origin']=section('sensor','camera_like_acquisition_supported',polarity='benign')
++    card,ds=card_for(sections)
++    after=analysis.build_dependency_analysis(sections,card,ds)['component_lineage']
++    first={r['condition']:r['contribution_id'] for r in before}
++    second={r['condition']:r['contribution_id'] for r in after}
++    assert all(first[k]==second[k] for k in first.keys()&second.keys())
++
++
++def test_unknown_future_component_alias_is_explicitly_partial():
++    sections=boundary_sections()
++    card,ds=card_for(sections)
++    card.calculation['component_operations'][0]['reason']='ds.future_detector_support'
++    sidecar=analysis.build_dependency_analysis(sections,card,ds)
++    assert sidecar['status']=='partial'
++    assert sidecar['lineage_coverage']['unknown_component_rule_ids']
++
++
++def test_default_corroboration_gates_do_not_claim_independence_or_change_gate_results():
++    sections=boundary_sections()
++    sections.update(ela=section('ela','x',polarity='neutral'),noise=section('noise','x',polarity='neutral'))
++    card,ds=card_for(sections)
++    sidecar=analysis.build_dependency_analysis(sections,card,ds)
++    gate=sidecar['corroboration_gates']['determine_confidence.strong_signals']
++    assert gate['supporting_indicator_count']==2
++    assert gate['measurement_ancestry_count']==2
++    assert gate['ancestry_review_recommended']
++    assert gate['independent_observation_count'] is None
++    assert not gate['production_gate_changed'] and gate['counterfactual_gate_result'] is None

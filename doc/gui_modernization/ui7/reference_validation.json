@@ -1,0 +1,30 @@
+{
+  "instagram": {
+    "source_sha256": "1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9",
+    "profile": "normal",
+    "suspicious_score": 21.327049999999996,
+    "benign_score": 2.25,
+    "pattern": "possible_foreground_background_processing_mismatch",
+    "confidence": "High",
+    "primary_hypothesis": "localized_editing",
+    "all_six_workspaces": true,
+    "annotation_revision": 1,
+    "preview_export_bytes_equal": true,
+    "original_pointer_unchanged": true,
+    "detectors_rerun": false
+  },
+  "midjourney": {
+    "source_sha256": "08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9",
+    "profile": "normal",
+    "suspicious_score": 6.674999999999999,
+    "benign_score": 1.5,
+    "pattern": "provenance_supported_synthetic_context",
+    "confidence": "Medium",
+    "primary_hypothesis": "synthetic_origin",
+    "all_six_workspaces": true,
+    "annotation_revision": 1,
+    "preview_export_bytes_equal": true,
+    "original_pointer_unchanged": true,
+    "detectors_rerun": false
+  }
+}

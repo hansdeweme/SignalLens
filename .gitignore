@@ -84,3 +84,6 @@ Thumbs.db
 # UI-6 non-destructive reference/export validation and preferences.
 /doc/gui_modernization/ui6/validation_output/
 /doc/gui_modernization/ui6/capture_preferences.ini
+
+# UI-7 isolated native/performance/build outputs and preferences.
+/doc/gui_modernization/ui7/validation_output/

@@ -1,0 +1,212 @@
+{
+  "scorecard": {
+    "camera_counter_support": 1.25,
+    "suspicious_score": 20.47705,
+    "benign_score": 2.25,
+    "local_edit_support_score": 4.85,
+    "clone_support_score": 0.0,
+    "synthetic_boost": 0.4,
+    "edit_boost": 1.823,
+    "provenance_boost": 0.0,
+    "sensor_boost": 0.0,
+    "compression_boost": 0.75,
+    "caution_penalty": 1.6,
+    "clone_candidate": false,
+    "clone_ambiguous": false,
+    "contextual_false_positive_risk": false,
+    "synthetic_supported_by_other_domains": false,
+    "suspicious_domains": [
+      "boundary",
+      "boundary_focus",
+      "boundary_semantic",
+      "compression",
+      "cross_signal",
+      "frequency",
+      "patch",
+      "patch_spatial",
+      "region_asymmetry",
+      "subject_material",
+      "subject_texture"
+    ],
+    "benign_domains": [
+      "sensor",
+      "sensor_cfa"
+    ]
+  },
+  "decision": {
+    "primary_hypothesis": "localized_editing",
+    "selection_reason": "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.",
+    "decision_branch": "possible_foreground_background_processing_mismatch",
+    "dominant_pattern": "possible_foreground_background_processing_mismatch",
+    "confidence_tier": "High",
+    "polarity": "suspicious",
+    "supporting_evidence": [
+      "boundary:possible_foreground_background_processing_mismatch",
+      "boundary_focus:boundary_focused_processing_mismatch",
+      "compression_history:localized_compression_inconsistency",
+      "cross_signal:partial_hotspot_convergence",
+      "subject_boundary:possible_subject_background_segmentation_artifact"
+    ],
+    "supporting_signals": [
+      "possible_foreground_background_processing_mismatch",
+      "boundary_focused_processing_mismatch",
+      "localized_compression_inconsistency",
+      "partial_hotspot_convergence",
+      "possible_subject_background_segmentation_artifact"
+    ],
+    "supporting_explanations": [
+      "foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+      "subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use."
+    ],
+    "contradicting_evidence": [],
+    "contradicting_signals": [],
+    "contradicting_explanations": [],
+    "moderating_evidence": [
+      "cfa_demosaic:weak_camera_cfa_supported",
+      "sensor_origin:camera_like_acquisition_supported"
+    ],
+    "moderating_signals": [
+      "weak_camera_cfa_supported",
+      "camera_like_acquisition_supported"
+    ],
+    "moderating_explanations": [
+      "weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+      "low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing."
+    ],
+    "contextual_evidence": [
+      "subject_material_realism:subject_material_regularization_dominant",
+      "subject_process_asymmetry:subject_background_texture_asymmetry",
+      "subject_texture_consistency:subject_internal_stochastic_repetition"
+    ],
+    "contextual_signals": [
+      "subject_material_regularization_dominant",
+      "subject_background_texture_asymmetry",
+      "subject_internal_stochastic_repetition"
+    ],
+    "contextual_explanations": [
+      "subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+      "texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+      "subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism."
+    ],
+    "limitations": [
+      "Localized editing evidence does not by itself establish AI generation."
+    ],
+    "evidence_details": {
+      "boundary:possible_foreground_background_processing_mismatch": {
+        "section": "boundary",
+        "pattern": "possible_foreground_background_processing_mismatch",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "foreground and background appear to have been processed differently",
+        "observed_status": "strong",
+        "observed_score": null
+      },
+      "boundary_focus:boundary_focused_processing_mismatch": {
+        "section": "boundary_focus",
+        "pattern": "boundary_focused_processing_mismatch",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "boundary region shows elevated processing relative to subject and background",
+        "observed_status": "medium",
+        "observed_score": 6.711709976196289
+      },
+      "cfa_demosaic:weak_camera_cfa_supported": {
+        "section": "cfa_demosaic",
+        "pattern": "weak_camera_cfa_supported",
+        "role": "moderating_evidence",
+        "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+        "observations": [],
+        "label": "weak camera cfa supported",
+        "observed_status": "weak",
+        "observed_score": 0.08142067492008209
+      },
+      "compression_history:localized_compression_inconsistency": {
+        "section": "compression_history",
+        "pattern": "localized_compression_inconsistency",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "compression artifacts vary across regions",
+        "observed_status": "strong",
+        "observed_score": 0.00486650038510561
+      },
+      "cross_signal:partial_hotspot_convergence": {
+        "section": "cross_signal",
+        "pattern": "partial_hotspot_convergence",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "some forensic signals converge on localized regions",
+        "observed_status": "weak",
+        "observed_score": null
+      },
+      "sensor_origin:camera_like_acquisition_supported": {
+        "section": "sensor_origin",
+        "pattern": "camera_like_acquisition_supported",
+        "role": "moderating_evidence",
+        "interpretation": "Camera-compatible structure may describe the base image and does not rule out later localized editing.",
+        "observations": [],
+        "label": "low-level signals are consistent with a camera acquisition pipeline",
+        "observed_status": "medium",
+        "observed_score": 0.05393149331212044
+      },
+      "subject_boundary:possible_subject_background_segmentation_artifact": {
+        "section": "subject_boundary",
+        "pattern": "possible_subject_background_segmentation_artifact",
+        "role": "supporting_evidence",
+        "interpretation": "A regional processing anomaly supports localized-processing concern; it does not identify AI use.",
+        "observations": [],
+        "label": "subject boundary suggests a segmentation or cutout artifact",
+        "observed_status": "strong",
+        "observed_score": 0.6771309242149195
+      },
+      "subject_material_realism:subject_material_regularization_dominant": {
+        "section": "subject_material_realism",
+        "pattern": "subject_material_regularization_dominant",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "subject material appears overly regularized and lacks natural variability",
+        "observed_status": "medium",
+        "observed_score": 0.5533233826460278
+      },
+      "subject_process_asymmetry:subject_background_texture_asymmetry": {
+        "section": "subject_process_asymmetry",
+        "pattern": "subject_background_texture_asymmetry",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "texture characteristics differ between subject and background",
+        "observed_status": "weak",
+        "observed_score": 0.589284147850057
+      },
+      "subject_texture_consistency:subject_internal_stochastic_repetition": {
+        "section": "subject_texture_consistency",
+        "pattern": "subject_internal_stochastic_repetition",
+        "role": "contextual_evidence",
+        "interpretation": "Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.",
+        "observations": [],
+        "label": "subject texture shows repeated stochastic patterns",
+        "observed_status": "medium",
+        "observed_score": 1.0
+      }
+    },
+    "confidence_rationale": [
+      "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.",
+      "Confidence concerns localized processing or reuse, not whether AI was used.",
+      "Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.",
+      "Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities."
+    ],
+    "overall_text": "Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.\nSupporting Signals:\n- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.\nContextual Signals:\n- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\nEvidence Limitations:\n- Localized editing evidence does not by itself establish AI generation.\nConfidence Rationale:\n- Corroborated localized-mechanism evidence leads; generation evidence is assessed separately.\n- Confidence concerns localized processing or reuse, not whether AI was used.\n- Moderating observations qualify this hypothesis; they do not automatically establish or exclude a different origin.\n- Multiple module outputs are not assumed to be statistically independent; support tiers are not probabilities.\n\nsynthetic_origin: Inconclusive (neutral). Synthetic origin is not established by the available evidence.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may coexist with synthetic creation or editing; it does not refute a generation declaration.\nContextual Signals:\n- frequency structure suggests a grid-like or decoder-driven generation process: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.\n- repeated structured patch motifs are present: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- repeated patch structures are concentrated within the subject: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- subject material appears overly regularized and lacks natural variability: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- texture characteristics differ between subject and background: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\n- subject texture shows repeated stochastic patterns: Structural regularity is present but nonspecific; it does not independently establish synthetic origin.\nLimitations: Heuristic support levels are not probabilities. Missing provenance coverage is a limitation, not positive generation evidence. No substantive generation declaration or specific visual generation finding is established.\n\nlocalized_editing: High (suspicious). Strong evidence of localized compositing or subject-level editing. Boundary-focused forensic signals indicate inconsistent processing between foreground and background regions.\nContextual factors moderate this interpretation: low-level sensor-origin analysis remains broadly compatible with a camera-like base image.\nSupporting Signals:\n- foreground and background appear to have been processed differently: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- boundary region shows elevated processing relative to subject and background: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- compression artifacts vary across regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- some forensic signals converge on localized regions: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\n- subject boundary suggests a segmentation or cutout artifact: A regional processing anomaly supports localized-processing concern; it does not identify AI use.\nModerating Signals:\n- weak camera cfa supported: Camera-compatible structure may describe the base image and does not rule out later localized editing.\n- low-level signals are consistent with a camera acquisition pipeline: Camera-compatible structure may describe the base image and does not rule out later localized editing.\nContextual Signals:\n- subject material appears overly regularized and lacks natural variability: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- texture characteristics differ between subject and background: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\n- subject texture shows repeated stochastic patterns: Subject structure or processing differs, but this observation does not establish a compositing or copy-move mechanism.\nLimitations: Localized editing evidence does not by itself establish AI generation.\n\ncamera_acquisition: Medium (benign). Camera-like acquisition evidence is present.\nSupporting Signals:\n- weak camera cfa supported: Measured structure is compatible with camera acquisition; it does not authenticate the image.\n- low-level signals are consistent with a camera acquisition pipeline: Measured structure is compatible with camera acquisition; it does not authenticate the image.\nContextual Signals:\n- metadata is sparse or stripped and provides no provenance clues: Missing provenance coverage limits assessment and supports neither synthetic nor photographic origin.\nLimitations: Camera compatibility does not authenticate an image and may coexist with synthetic creation or later editing.\n"
+  },
+  "stages": {
+    "completed": 23,
+    "skipped": 0,
+    "failed": 0
+  }
+}

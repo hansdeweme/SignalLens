@@ -1,0 +1,122 @@
+[
+  {
+    "file": "native_01_Overview.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_02_Reports.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_03_Image_Forensics.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_04_Image_Forensics.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_05_Evidence.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_06_Reasoning.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_07_Provenance.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_08_Provenance.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1707,
+      996
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": true
+  },
+  {
+    "file": "native_09_Reports.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  },
+  {
+    "file": "native_10_Overview.png",
+    "platform": "windows",
+    "native": true,
+    "size": [
+      1281,
+      902
+    ],
+    "dpr": 1.5,
+    "screen_dpi": 96.0,
+    "maximized": false
+  }
+]

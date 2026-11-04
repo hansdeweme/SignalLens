@@ -1,0 +1,82 @@
+{
+  "pattern_before": "moderate_suspicious_convergence",
+  "pattern_after": "moderate_suspicious_convergence",
+  "tier_before": "High",
+  "tier_after": "Medium",
+  "suspicious_score": 4.905,
+  "benign_score": 0.0,
+  "numerical_invariance_passed": true,
+  "gate": {
+    "gate_id": "confidence.strong_source_diversity",
+    "hypothesis": "unresolved_anomaly",
+    "requirement_kind": "distinct_measurement_sources",
+    "minimum_indicators": 2,
+    "minimum_sources": 2,
+    "distinct_families_required": false,
+    "considered_evidence": [
+      "evidence:boundary",
+      "evidence:cross_signal"
+    ],
+    "eligible_evidence": [
+      "evidence:boundary",
+      "evidence:cross_signal"
+    ],
+    "excluded_evidence": {},
+    "evidence_roles": {
+      "evidence:boundary": "supporting_evidence",
+      "evidence:cross_signal": "supporting_evidence"
+    },
+    "distinct_ancestry_groups": [
+      {
+        "witness": "evidence:boundary",
+        "measurements": [
+          "measurement:ela_recompression_difference",
+          "measurement:luminance_residual"
+        ],
+        "family": "processing_residual"
+      }
+    ],
+    "corroborating_source_count": 1,
+    "shared_ancestry": {
+      "measurement:ela_recompression_difference": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ],
+      "measurement:luminance_residual": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ]
+    },
+    "overlapping_feature_groups": {
+      "processing_anomalies": [
+        "evidence:boundary",
+        "evidence:cross_signal"
+      ]
+    },
+    "incremental_support_findings": [
+      {
+        "evidence_id": "evidence:boundary",
+        "addition": "interpretation",
+        "new_measurement_claim": false,
+        "numeric_weight_changed": false
+      },
+      {
+        "evidence_id": "evidence:cross_signal",
+        "addition": "cross_measurement_relationship",
+        "new_measurement_claim": false,
+        "numeric_weight_changed": false
+      }
+    ],
+    "provisional_lineage": {},
+    "requirement_satisfied": false,
+    "explanation": "1 measurement-disjoint supporting indicator(s) do not satisfy the existing 2-source diversity requirement.",
+    "limitations": [
+      "Feature-definition/content overlap remains; disjoint extraction IDs do not demonstrate statistical independence.",
+      "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+    ],
+    "observed_strong_indicator_count": 2,
+    "score_requirement_satisfied": true,
+    "gate_passed": false,
+    "production_correction": "Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged."
+  }
+}
