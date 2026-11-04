@@ -1,4 +1,5 @@
 """UI-4 identity, unsafe paths, coordinates, async and comparison gates."""
+from gui_helpers import publish, wait_for
 from dataclasses import replace
 import json
 
@@ -6,8 +7,6 @@ import pytest
 from PIL import Image
 from PyQt6.QtCore import Qt
 
-from test_workspace_shell import app, window, source, publish
-from test_overview_workspace import wait_for
 from artifact_models import Registration, SpatialTransform
 from artifact_presenter import digest_file, discover_artifacts, discovery_context, scoped_path, shared_read
 from investigation_presenters import build_presentation

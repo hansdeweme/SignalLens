@@ -37,7 +37,9 @@ def restore_workspace(window, settings):
     for name, splitter in (('navigation', window.workspace.splitter), ('overview', window.workspace.overview_splitter),
                            ('forensics/catalog', window.workspace.forensics.splitter),
                            ('forensics/views', window.workspace.forensics.view_splitter),
-                           ('forensics/details', window.workspace.forensics.vertical)):
+                           ('forensics/details', window.workspace.forensics.vertical),
+                           ('evidence/details', window.workspace.evidence.splitter),
+                           ('provenance/details', window.workspace.provenance.splitter)):
         sizes = settings.value(PREFIX+name)
         try:
             sizes = [int(size) for size in sizes]
@@ -55,6 +57,8 @@ def save_workspace(window, settings):
     settings.setValue(PREFIX+'destination', window.workspace.current_destination)
     settings.setValue(PREFIX+'navigation', window.workspace.splitter.sizes())
     settings.setValue(PREFIX+'overview', window.workspace.overview_splitter.sizes())
+    settings.setValue(PREFIX+'evidence/details', window.workspace.evidence.splitter.sizes())
+    settings.setValue(PREFIX+'provenance/details', window.workspace.provenance.splitter.sizes())
     for name, splitter in (('catalog', window.workspace.forensics.splitter),
                            ('views', window.workspace.forensics.view_splitter),
                            ('details', window.workspace.forensics.vertical)):

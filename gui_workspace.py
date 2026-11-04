@@ -201,60 +201,39 @@ class WorkspaceShell(QWidget):
         self.stage_details = self.forensics.stage_details
 
     def _evidence(self):
-        body = self._page('Evidence', 'Recorded hypothesis-specific roles. These observations are not independent votes.')
-        panel = Panel('Structured evidence · initial view')
-        self.evidence_details = text_view()
-        panel.body.addWidget(self.evidence_details, 1)
-        button = QPushButton('Read investigation narrative')
-        button.clicked.connect(lambda: self.navigate('Overview', focus=True))
-        panel.body.addWidget(button, 0, Qt.AlignmentFlag.AlignLeft)
-        body.addWidget(panel, 1)
+        from explorer_workspace import EvidenceWorkspace
+        self.evidence = EvidenceWorkspace(self.host,self.navigate_context)
+        self.pages['Evidence'] = self.evidence
+        self.stack.addWidget(self.evidence)
+        self.empty_states['Evidence'] = self.evidence.empty
+        self.evidence_details = self.evidence.compatibility_details
 
     def _reasoning(self):
-        body = self._page('Reasoning', 'Authoritative hypothesis and policy explanations, with access to the existing Decision Trace.')
-        panel = Panel('Recorded reasoning')
-        self.trace_button = QPushButton('Open Decision Trace')
-        self.trace_button.clicked.connect(self.host.show_decision_trace_dialog)
-        panel.body.addWidget(self.trace_button, 0, Qt.AlignmentFlag.AlignLeft)
-        self.reasoning_details = text_view()
-        panel.body.addWidget(self.reasoning_details, 1)
-        body.addWidget(panel, 1)
+        from explorer_workspace import ReasoningWorkspace
+        self.reasoning = ReasoningWorkspace(self.host,self.navigate_context)
+        self.pages['Reasoning'] = self.reasoning
+        self.stack.addWidget(self.reasoning)
+        self.empty_states['Reasoning'] = self.reasoning.empty
+        self.trace_button = self.reasoning.trace_button
+        self.reasoning_details = self.reasoning.compatibility_details
+        self.explorer_snapshot = None
+        self.forensics.catalog_changed.connect(self.refresh_explorers)
 
     def _provenance(self):
-        body = self._page('Provenance', 'Metadata declarations and manual source research. Presence is not authentication.', empty=False)
-        content = QWidget()
-        layout = QVBoxLayout(content)
-        layout.setContentsMargins(0, 0, 0, 0)
-        panel = Panel('Metadata and provenance')
-        self.declaration = MetadataRow('Declaration state')
-        self.verification = MetadataRow('Metadata verification', 'Unknown')
-        self.metadata_description = label('No metadata result is available.', 'secondary')
-        panel.body.addWidget(self.declaration)
-        panel.body.addWidget(self.verification)
-        panel.body.addWidget(self.metadata_description)
-        layout.addWidget(panel)
-        self.host.osint_group = self.host.build_osint_group()
-        self.host.osint_group.setMinimumHeight(280)
-        layout.addWidget(self.host.osint_group)
-        layout.addStretch()
-        body.addWidget(scroll_content(content), 1)
+        from provenance_workspace import ProvenanceWorkspace
+        self.provenance = ProvenanceWorkspace(self.host,self.navigate_context)
+        self.pages['Provenance'] = self.provenance
+        self.stack.addWidget(self.provenance)
+        for name in ('declaration','verification','metadata_description'):
+            setattr(self,name,getattr(self.provenance,name))
 
     def _reports(self):
-        body = self._page('Reports', 'Publish the current investigation revision using the existing summary and trace formats.')
-        panel = Panel('Report snapshot')
-        self.report_state = MetadataRow('Synchronization')
-        self.report_identity = MetadataRow('Result / annotation revision')
-        panel.body.addWidget(self.report_state)
-        panel.body.addWidget(self.report_identity)
-        panel.body.addWidget(label('JSON, HTML and text reports retain the frozen forensic findings and separately versioned current annotations. Export always checks the active revision.', 'secondary'))
-        self.host.open_json_button = QPushButton('Open Results Folder')
-        self.host.open_json_button.clicked.connect(self.host.open_output_folder)
-        panel.body.addWidget(self.host.open_json_button, 0, Qt.AlignmentFlag.AlignLeft)
-        load = QPushButton('Open stored summary…')
-        load.clicked.connect(self.host.open_stored_summary)
-        panel.body.addWidget(load, 0, Qt.AlignmentFlag.AlignLeft)
-        panel.body.addStretch()
-        body.addWidget(panel, 1)
+        from report_workspace import ReportsWorkspace
+        self.reports = ReportsWorkspace(self.host,self.navigate_context)
+        self.pages['Reports'] = self.reports
+        self.stack.addWidget(self.reports)
+        self.report_state = self.reports.report_state
+        self.report_identity = self.reports.report_identity
 
     def navigate(self, name, *, focus=False):
         if name not in self.pages:
@@ -265,6 +244,52 @@ class WorkspaceShell(QWidget):
         if focus:
             self.nav_items[name].setFocus()
         return True
+
+    def navigate_context(self,name,key=None,*,hypothesis=None,evidence=None,role=None,artifact=None,tab=None,detector=None,
+                         annotation_revision=None,field=None):
+        from explorer_models import ExplorerIdentity
+        session = self.host.session
+        current = ExplorerIdentity(session.session_id,session.invocation.analysis_id if session.invocation else None,
+            session.result_id,session.analysis_revision,session.state.value)
+        if self.host._closing or key is not None and key != current:
+            return False
+        if annotation_revision is not None and annotation_revision != session.annotation_revision:
+            return False
+        if not self.explorer_snapshot or self.explorer_snapshot.identity != current:
+            return False
+        if not self.navigate(name):
+            return False
+        if name == 'Evidence':
+            return self.evidence.focus(hypothesis,evidence,role,detector) if any(
+                value is not None for value in (hypothesis,evidence,role,detector)) else True
+        if name == 'Reasoning':
+            return self.reasoning.focus(hypothesis,tab,detector)
+        if name == 'Image Forensics':
+            return self.forensics.focus_artifact(artifact) if artifact else True
+        if name == 'Provenance':
+            if tab == 'OSINT':
+                self.provenance.tabs.setCurrentIndex(1)
+                return True
+            return self.provenance.focus(evidence,field)
+        return True
+
+    def refresh_explorers(self):
+        from explorer_presenter import build_explorer
+        from explorer_models import ExplorerIdentity
+        snapshot = self.host.view_snapshot
+        session = self.host.session
+        current = ExplorerIdentity(session.session_id,session.invocation.analysis_id if session.invocation else None,
+            session.result_id,session.analysis_revision,session.state.value)
+        if not snapshot or (snapshot.session_id,snapshot.analysis_id,snapshot.result_id,snapshot.analysis_revision,
+                            snapshot.summary.status) != (current.session_id,current.analysis_id,current.result_id,
+                                                        current.analysis_revision,current.status):
+            return
+        result = build_explorer(snapshot,self.host.session.summary_data() or {},self.forensics.artifacts)
+        if self.explorer_snapshot == result:
+            return
+        self.explorer_snapshot = result
+        self.evidence.bind(result)
+        self.reasoning.bind(result)
 
     def artifact_directory(self):
         h = self.host
@@ -300,6 +325,9 @@ class WorkspaceShell(QWidget):
         self.identity.setText(f'Investigation {snapshot.session_id[:8]}\n{snapshot.summary.image_name or "No image selected"}\n' + ('Current result available' if complete else 'No completed result'))
         self.overview.bind(snapshot)
         self.forensics.bind(snapshot)
+        self.refresh_explorers()
+        self.provenance.bind(snapshot)
+        self.reports.bind(snapshot)
         for destination, empty in self.empty_states.items():
             unavailable = not complete or (destination == 'Evidence' and not snapshot.evidence) or (destination == 'Reasoning' and not snapshot.hypotheses)
             empty.setVisible(unavailable)

@@ -1,0 +1,92 @@
+[
+  {
+    "probe": "route_policy_order",
+    "target": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments[midjourney]",
+        "assertion_failure": true
+      },
+      {
+        "nodeid": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments[instagram]",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  },
+  {
+    "probe": "repeated_evaluation",
+    "target": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments[midjourney]",
+        "assertion_failure": true
+      },
+      {
+        "nodeid": "tests/test_reasoning.py::test_irrelevant_route_order_does_not_change_assessments[instagram]",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  },
+  {
+    "probe": "scorecard_mutation",
+    "target": "tests/test_confidence_policy.py::test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_confidence_policy.py::test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy[instagram]",
+        "assertion_failure": true
+      },
+      {
+        "nodeid": "tests/test_confidence_policy.py::test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy[midjourney]",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  },
+  {
+    "probe": "empty_polarity",
+    "target": "tests/test_hypothesis_scoping.py::test_no_meaningful_evidence_has_no_invented_support_or_contradictions",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_hypothesis_scoping.py::test_no_meaningful_evidence_has_no_invented_support_or_contradictions",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  },
+  {
+    "probe": "digital_capture_enhancement",
+    "target": "tests/test_hypothesis_scoping.py::test_populated_source_type_is_not_enough_for_a_generation_declaration",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_hypothesis_scoping.py::test_populated_source_type_is_not_enough_for_a_generation_declaration[http://cv.iptc.org/newscodes/digitalsourcetype/digitalCapture]",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  },
+  {
+    "probe": "ignored_detector_filter",
+    "target": "tests/test_explorer_workspace.py::test_filters_are_explicit_backend_values",
+    "detected_by_retained_assertion": true,
+    "pytest_exit": 1,
+    "failures": [
+      {
+        "nodeid": "tests/test_explorer_workspace.py::test_filters_are_explicit_backend_values[detector-boundary]",
+        "assertion_failure": true
+      }
+    ],
+    "setup_teardown_errors": []
+  }
+]

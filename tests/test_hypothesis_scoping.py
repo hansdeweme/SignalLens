@@ -160,6 +160,8 @@ def test_conflicting_camera_metadata_and_declaration_both_survive_extraction():
 ])
 def test_populated_source_type_is_not_enough_for_a_generation_declaration(value):
     payload = payload_from_record({"XMP-iptcExt:DigitalSourceType": value})
+    assert not payload['classification']['declared_generation']
+    assert not payload['classification']['declared_enhancement']
     result = logic.synthesize_overall({"metadata": build_metadata_section(payload)})
     assert hypotheses(result[4])["synthetic_origin"]["supporting_evidence"] == []
     assert result[3] == "neutral"
@@ -204,14 +206,6 @@ def test_unknown_pattern_names_do_not_infer_hypothesis_relevance():
     trace = assess(env)[4]
     assert "fft:synthetic_origin_definitely_proven_by_unknown_pattern" not in hypotheses(trace)["synthetic_origin"]["supporting_evidence"]
     assert "boundary_focus:boundary_anomaly_from_unknown_source" not in hypotheses(trace)["localized_editing"]["supporting_evidence"]
-
-
-@pytest.mark.parametrize("case", ["midjourney", "instagram"])
-def test_scoping_does_not_change_any_scorecard_value(case):
-    env = reference_env(case)
-    before = asdict(env.card)
-    assess(env)
-    assert asdict(env.card) == before
 
 
 @pytest.mark.parametrize("case", ["midjourney", "instagram"])

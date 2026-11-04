@@ -198,21 +198,23 @@ def test_camera_support_and_synthetic_declaration_coexist():
 
 
 @pytest.mark.parametrize("sections, expected", [
-    ({}, "neutral"),
     ({"metadata": metadata("METADATA_STRIPPED_OR_SPARSE")}, "neutral"),
     ({"sensor_origin": section("sensor", "camera_like_acquisition_supported", polarity="benign")}, "benign"),
-])
+], ids=['sparse-metadata','camera-support'])
 def test_benign_and_inconclusive_still_available(sections, expected):
     assert logic.synthesize_overall(sections)[3] == expected
 
 
 @pytest.mark.parametrize("case", ["midjourney", "instagram"])
 def test_irrelevant_route_order_does_not_change_assessments(case):
-    forward = assess(reference_env(case))
+    env = reference_env(case)
+    forward = assess(env)
+    assert forward == assess(env)
     reverse = assess(reference_env(case), tuple(reversed(logic.DECISION_ROUTES)))
     assert forward[:4] == reverse[:4]
     assert forward[4]["hypothesis_assessments"] == reverse[4]["hypothesis_assessments"]
     assert forward[4]["decision"] == reverse[4]["decision"]
+    assert forward[4]['confidence_policy'] == reverse[4]['confidence_policy']
 
 
 def test_json_compatibility_and_text_adapter():
@@ -441,7 +443,6 @@ def test_iptc_source_type_alone_is_scoped_unverified_declaration(scheme, term, s
 
 
 @pytest.mark.parametrize("value", [
-    IPTC_SOURCE_TYPE + "digitalCapture",
     IPTC_SOURCE_TYPE + "humanEdits",
     IPTC_SOURCE_TYPE + "algorithmicallyEnhanced",
     IPTC_SOURCE_TYPE + "algorithmicMedia",

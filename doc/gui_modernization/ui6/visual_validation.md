@@ -1,0 +1,9 @@
+# Visual validation and native release requirements
+
+capture_validation.py generated QWidget captures using Qt offscreen rendering on Windows, installed Segoe UI fonts and DPR 1.0. capture_manifest.json records each size and fixture marker. These are not native Windows desktop screenshots and do not validate 100%, 125% or 150% physical display scaling. Native DPI, multi-monitor geometry, keyboard focus appearance and drag/splitter behavior remain explicit UI-7 release checks.
+
+Captures include empty Provenance/Reports; real recorded metadata; an unverified DigitalSourceType declaration; existing OSINT edit dialog; committed annotation revision and source detail; current report readiness; saved export; minimum metadata, research and report layouts; and stored narrative-only/missing-metadata fallback. Stale preview and export failure states use labeled UI-only fixtures; the test suite exercises actual rejected dispatch and background failure. No reference image or baseline result was altered.
+
+Inspected minimum-size metadata, contextual research and report previews plus normal source/declaration views. The first contextual layout compressed controls at 1040×720; it now uses a native scroll area with minimum usable control/list/detail heights. All buttons are reachable by scrolling. Metadata columns can scroll horizontally and selected fields scroll into view. Long values and report text have bounded/scrollable detail surfaces. Exact source fields remain copyable and declaration/verification labels remain separate.
+
+The HTML preview uses the same report snapshot and generator footer as export, with the existing dark-theme adaptation and Qt's supported rich-text layout. It does not fetch external resources. It is not a browser-fidelity assertion for arbitrary historical HTML. Cryptographic-verification limits are visible in the summary/footer and selected-field detail. No decorative scores or authenticity percentages were added.

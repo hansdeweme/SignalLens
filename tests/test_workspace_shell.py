@@ -1,88 +1,24 @@
 """UI-2 native-widget contracts; no pixel-perfect or forensic reclassification tests."""
+from gui_helpers import publish
 import os
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
-from copy import deepcopy
 from dataclasses import asdict
 import json
-from pathlib import Path
 
 import pytest
 from PIL import Image
-from PyQt6.QtCore import Qt, QSettings, QByteArray, QTimer, QRect
-from PyQt6.QtGui import QPalette, QColor, QFontDatabase
+from PyQt6.QtCore import Qt, QByteArray, QTimer
+from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtTest import QTest
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QScrollArea
+from PyQt6.QtWidgets import QMainWindow, QDialog, QScrollArea
 
 import signallens_gui as gui
 from gui_design_system import COLORS, LIGHT, TYPE, SPACE, GEOMETRY, apply_theme, lifecycle_color
 from gui_components import (Panel, SectionHeader, StatusIndicator, ConfidenceIndicator,
                             EmptyState, NavigationItem, MetadataRow, CollapsibleSection, StatusMessage)
 from gui_workspace_state import PREFIX, save_workspace, restore_workspace, ensure_visible
-from signallens_settings import DEFAULT_SETTINGS
-from signallens_controller import AnalysisState
-from summary_types import SummaryResult
 from settings_dialog import SettingsDialog
 from osint_dialogs import OSINTFindingDialog
-
-
-@pytest.fixture(scope='module')
-def app():
-    app = QApplication.instance() or QApplication([])
-    # The Windows offscreen platform does not enumerate system font files.
-    # Register the same installed UI font used by native Windows rendering.
-    for filename in ('segoeui.ttf', 'segoeuib.ttf', 'consola.ttf'):
-        path = Path('C:/Windows/Fonts') / filename
-        if path.is_file():
-            QFontDatabase.addApplicationFont(str(path))
-    app.setQuitOnLastWindowClosed(False)
-    return app
-
-
-@pytest.fixture
-def window(app, tmp_path, monkeypatch):
-    settings = deepcopy(DEFAULT_SETTINGS)
-    settings['output_root'] = str(tmp_path / 'analysis')
-    monkeypatch.setattr(gui, 'load_settings', lambda: settings)
-    preferences = QSettings(str(tmp_path / 'workspace.ini'), QSettings.Format.IniFormat)
-    w = gui.SignalLensGui(ui_settings=preferences)
-    w.resize(1280, 900)
-    w.show()
-    app.processEvents()
-    yield w
-    assert not w.workers.busy
-    w.close()
-    w.deleteLater()
-    app.processEvents()
-
-
-@pytest.fixture
-def source(tmp_path):
-    path = tmp_path / 'source.png'
-    Image.new('RGB', (32, 48), 'gray').save(path)
-    return path
-
-
-def publish(window, source):
-    window.set_selected_file(source)
-    token = window.session.begin_analysis('normal', {}, window.settings, window.settings['output_root'])
-    data = SummaryResult(full_text='Recorded narrative', full_html='<p>Recorded narrative</p>',
-        reasoning_trace={'decision': {'primary_hypothesis': 'synthetic_origin', 'confidence_tier': 'Medium',
-            'dominant_pattern': 'declared_synthetic_candidate', 'selection_reason': 'Recorded selection'},
-            'hypothesis_assessments': [{'hypothesis_id': 'synthetic_origin', 'explanation': 'Unverified generation declaration.',
-                'confidence_tier': 'Medium', 'supporting_evidence': ['metadata:DECLARED_SYNTHETIC'],
-                'contradicting_evidence': [], 'moderating_evidence': [], 'contextual_evidence': [],
-                'limitations': ['Metadata authenticity is unverified.'],
-                'evidence_details': {'metadata:DECLARED_SYNTHETIC': {'label': 'Generation declaration', 'section': 'metadata',
-                    'interpretation': 'An unverified declaration.'}}}],
-            'provenance_evidence': {'state': 'unverified_generation_declaration', 'metadata_authenticity_verified': False},
-            'pipeline_status': {'coverage': {'status': 'partial'}, 'stages': {'Region FFT': {'status': 'unavailable', 'reason': 'No reliable mask'}}}})
-    state = AnalysisState(Path(token.image_path), Path(token.output_dir))
-    state.output_dir.mkdir(parents=True)
-    window.session.complete(token, state, data)
-    window.analysis_state = state
-    window.current_analysis_dir = state.output_dir
-    window.update_summary()
-    return token
 
 
 def luminance(color):
@@ -98,6 +34,7 @@ def test_design_tokens_and_readable_text_contrast():
             assert (b+.05)/(a+.05) >= 4.5
     assert set(asdict(COLORS)) >= {'background', 'navigation', 'focus', 'selected', 'disabled_text', 'neutral'}
     assert SPACE == tuple(sorted(SPACE)) and TYPE.monospace != TYPE.family
+    assert lifecycle_color('completed') != lifecycle_color('failed')
 
 
 def test_theme_scoped_to_root_and_can_accept_another_palette(app):
@@ -115,11 +52,8 @@ def test_theme_scoped_to_root_and_can_accept_another_palette(app):
 @pytest.mark.parametrize('state', ['pending', 'analyzing', 'completed', 'failed', 'cancelled', 'unavailable', 'unknown'])
 def test_lifecycle_status_is_textual_and_separate_from_confidence(app, state):
     status = StatusIndicator(state)
-    confidence = ConfidenceIndicator('Inconclusive')
-    assert status.text() and status.accessibleName().startswith('Investigation status:')
-    assert 'Inconclusive' in confidence.text()
-    assert '%' not in confidence.text()
-    assert lifecycle_color('completed') != lifecycle_color('failed')
+    assert status.text()==state.capitalize()
+    assert status.accessibleName().startswith('Investigation status:')
 
 
 @pytest.mark.parametrize('tier', ['High', 'Medium', 'Low', 'Inconclusive', None])
@@ -128,6 +62,7 @@ def test_confidence_preserves_label_without_color_classification(app, tier):
     assert item.tier == tier
     assert item.text() == 'Confidence · ' + (tier or 'Unavailable')
     assert item.styleSheet() == ConfidenceIndicator('High').styleSheet()
+    assert '%' not in item.text()
 
 
 def test_reusable_components_focus_copy_and_disclosure(app):

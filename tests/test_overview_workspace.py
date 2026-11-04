@@ -1,4 +1,5 @@
 """UI-3 contracts: bounded source display and faithful structured projections."""
+from gui_helpers import publish, wait_for, set_trace
 from dataclasses import replace
 import hashlib
 import json
@@ -12,19 +13,9 @@ from PyQt6.QtGui import QImage
 from PyQt6.QtTest import QTest
 from PyQt6.QtWidgets import QDialog, QPushButton
 
-from test_workspace_shell import app, window, source, publish
 from investigation_presenters import build_presentation
 from source_image_viewer import SourceImageViewer, PreviewResult, read_preview, fingerprint
 import source_image_viewer as viewer_module
-
-
-def wait_for(app, predicate):
-    for _ in range(200):
-        app.processEvents()
-        if predicate():
-            return
-        QTest.qWait(10)
-    assert predicate(), 'preview did not complete'
 
 
 @pytest.mark.parametrize('size', [(40, 80), (3000, 50), (50, 3000), (3200, 2400)])
@@ -107,13 +98,6 @@ def test_source_monitor_clears_changed_or_missing_pixels(app, source):
     assert view._image.isNull() and 'changed' in view.message.text()
     assert not view.zoom_in.isEnabled()
     view.deleteLater()
-
-
-def set_trace(window, trace):
-    data = window.session.summary_data()
-    data['reasoning_trace'] = trace
-    window.session.summary_json = json.dumps(data)
-    window.update_summary()
 
 
 @pytest.mark.parametrize('primary,tier', [('localized_editing', 'High'), ('synthetic_origin', 'Medium'), ('unresolved_anomaly', 'Inconclusive'), (None, None)])

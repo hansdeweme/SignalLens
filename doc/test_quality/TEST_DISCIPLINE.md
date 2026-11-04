@@ -1,0 +1,28 @@
+# Mandatory test-development discipline
+
+This is the authoritative policy for future SignalLens development. Repository AGENTS.md requires it to be read before test changes. The behavioral coverage matrix identifies ownership; the overlap matrix explains intentional layers. User instructions take precedence when they explicitly change task scope.
+
+1. **Coverage audit first.** Search existing tests by invariant, production target and failure mode before writing a test. Read the relevant body and fixtures; names alone do not establish coverage or duplication.
+2. **Behavioral contracts.** Prefer externally observable outcomes and stable interfaces. A private implementation test requires a concrete regression that is difficult to observe at the public boundary. Do not mirror production algorithms as assertions without an independent oracle.
+3. **Reuse existing protection.** Extend a relevant test or a simple existing fixture before creating a parallel scenario. Avoid importing fixtures from test modules; shared fixtures belong in conftest.py, small helpers in an ordinary helper module.
+4. **Central ownership.** Session lifecycle, owned-worker callbacks, score arithmetic, confidence/provenance semantics and generic shell navigation have authoritative tests. Other workspaces test their distinct display, selection or context-transfer behavior rather than replaying the whole lifecycle.
+5. **Unit and integration boundaries.** Use pure inputs for adapters/formatting and real Qt widgets for widget behavior. Retain integration coverage when it catches a wiring or persistence defect a unit test cannot. Do not replace a necessary boundary test with many small implementation checks.
+6. **Limit pipeline repetition.** Use deterministic synthetic sections and saved reference mechanisms for reasoning regressions. Run full private-image pipelines only when a detector/input/persistence change makes existing reference coverage insufficient. A GUI phase does not automatically justify another complete pipeline run.
+7. **Responsible parameterization.** Parameterize genuinely related inputs with diagnosable IDs. Distinct branches, formats, boundaries and roles may each merit a collected case. Do not merge unrelated contracts into a giant test or hide growth inside loops.
+8. **Unique value.** Every new group must state what previously unprotected defect it detects and why an existing test cannot detect it. A test that only verifies a nonempty result can be inadequate when a wrong result is also nonempty; filtering tests need positive and negative rows.
+9. **Growth review.** A net increase of more than **10 collected cases in a future GUI phase** requires explicit justification in the final Codex report. This is a review threshold, not a hard cap. Count parameterized cases, not just test functions, and never game it with oversized tests.
+10. **Transparent accounting.** Report baseline collected cases; cases added, consolidated and removed; final collection; net change; new behavioral protection; existing coverage reused; passed/failed/skipped outcomes and material limitations. Explain renamed or redistributed parameter groups so arithmetic remains auditable.
+11. **Final complete gate.** Run targeted tests during development and the full suite once after the final test/code change. Another complete run is allowed for a failure, a subsequent change or a stated risk. Do not repeatedly run the full suite for unchanged documentation or to accumulate green output.
+12. **Value over counts.** Quality means defect detection, deterministic isolation, understandable failures and affordable maintenance. Remove a case only after documenting its fault and equivalent retained/replacement protection. A smaller green suite alone is not proof of equivalence.
+
+## Working procedure
+
+Before implementation, record branch/HEAD, inherited work and baseline collection/outcomes. For a requested rationalization or material fixture change, measure baseline durations and inspect slow tests. Preserve external test assets and existing artifacts.
+
+During implementation, make a short coverage note naming the reused owner test, proposed change and unique failure mode. Add or update the overlap matrix for consolidations. When practical, use isolated in-memory fault injection against retained tests; record whether the intended assertion fails. Avoid new test-management or mutation dependencies.
+
+Use the shared session-scoped QApplication and function-scoped workspace/source fixtures in tests/conftest.py. tests/gui_helpers.py contains publish/preview/trace helpers. The worker suite deliberately overrides the ordinary window fixture to release semaphore-controlled workers safely; preserve that teardown. All GUI preferences and outputs must use each test's temporary directory. Pure presenter tests should not construct SignalLensGui.
+
+For normal pytest environments use `py -3.13 -m pytest tests -q`. In this Windows sandbox, private pytest temporary-directory ACLs are inaccessible; the established runner is `py -3.13 doc/gui_modernization/ui4/run_validation.py tests -q`. Neither path skips tests. Optional `tools/test_suite_report.py --output <path> tests -q` adds per-node inventory, fixtures, durations, outcomes and warnings using the same sandbox temp support. Use `--collect-only` to inspect counts without executing tests; its report will say “not run.”
+
+Native Windows/DPI inspection and full empirical forensic calibration remain separate from synthetic/offscreen regression acceptance. Report these gaps without pretending they were covered by a large green test count.

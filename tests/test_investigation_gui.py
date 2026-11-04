@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
-from PyQt6.QtCore import QObject, QThread, QSemaphore, QEventLoop, QTimer, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QThread, QSemaphore, QEventLoop, QTimer, QSettings, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 import signallens_gui as gui
@@ -70,13 +70,6 @@ class ControlledWorker(QObject):
             self.finished.emit(self.result)
 
 
-@pytest.fixture(scope='module')
-def app():
-    app = QApplication.instance() or QApplication([])
-    app.setQuitOnLastWindowClosed(False)
-    return app
-
-
 @pytest.fixture
 def window(app, tmp_path, monkeypatch):
     settings = deepcopy(DEFAULT_SETTINGS)
@@ -84,7 +77,8 @@ def window(app, tmp_path, monkeypatch):
     monkeypatch.setattr(gui, 'load_settings', lambda: settings)
     for name in ('warning', 'critical', 'information'):
         monkeypatch.setattr(QMessageBox, name, lambda *args: QMessageBox.StandardButton.Ok)
-    w = gui.SignalLensGui()
+    preferences = QSettings(str(tmp_path/'workspace.ini'),QSettings.Format.IniFormat)
+    w = gui.SignalLensGui(ui_settings=preferences)
     yield w
     # Never destroy live Qt threads, even when an assertion fails.
     if w.workers.busy:

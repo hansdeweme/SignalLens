@@ -1,0 +1,9 @@
+# Evidence Explorer
+
+EvidenceWorkspace replaces the transitional Evidence destination with a native QTableView over immutable EvidenceDetailView rows. Rows retain assessment order and are scoped by `(hypothesis_id, role, evidence_id)`; repeated references within that scope are deduplicated. The same observation may appear under multiple hypotheses with different recorded roles. No universal “AI evidence” polarity is assigned.
+
+Filters select hypothesis, role, detector, reliability and observed availability/status. Unknown values are explicitly filterable as “Not recorded.” Text search matches recorded IDs, labels and detector names. Filtering does not rank, rescore or change evidence. Clearing filters restores the complete recorded list; an empty match clears details and artifact links. Selection is preserved across annotation refreshes where possible; investigation changes reset it.
+
+Observation & relevance separates measured status/score/observations, derived interpretation, and the hypothesis-specific role. Technical detail preserves original detail fields and the corresponding detector section, with exact copyable values. Limitations are displayed where recorded; the interface directs users to hypothesis constraints rather than inventing detail-level limitations. Detector strength is not treated as reliability.
+
+The Lineage tab exposes a bounded direct-neighborhood table. Associated artifacts are offered only when the UI-4 catalog explicitly records the evidence ID under the same investigation/revision. Missing artifact associations are stated and the open button is disabled. Hypothesis, Confidence and Contributions actions preserve identity and scope. Keyboard row selection, native copyable text, technical tooltips, a result-local Back history and adjustable table/detail proportions are supported. Filters are not written into analysis results.

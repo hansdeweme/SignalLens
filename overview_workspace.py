@@ -45,7 +45,8 @@ class HypothesisCard(Panel):
         self.body.addWidget(self.limitation)
         self.body.addStretch()
         self.open = QPushButton('Open reasoning')
-        self.open.clicked.connect(lambda: navigate('Reasoning'))
+        self.hypothesis_id = None
+        self.open.clicked.connect(lambda: navigate('Reasoning',hypothesis=self.hypothesis_id))
         self.body.addWidget(self.open)
         self.setMinimumWidth(0)
 
@@ -79,7 +80,7 @@ class OverviewWorkspace(QWidget):
         for destination, title in (('Image Forensics', 'Image forensics'), ('Evidence', 'Evidence'),
                                    ('Reasoning', 'Reasoning'), ('Provenance', 'Provenance'), ('Reports', 'Reports')):
             action = QPushButton(title)
-            action.clicked.connect(lambda checked=False, name=destination: navigate(name))
+            action.clicked.connect(lambda checked=False, name=destination: self.open_context(name))
             commands.addWidget(action)
             self.actions[destination] = action
         body.addLayout(commands)
@@ -111,7 +112,7 @@ class OverviewWorkspace(QWidget):
             self.finding_panel.body.addWidget(widget)
         self.finding_panel.body.addStretch()
         reasoning = QPushButton('Read full reasoning')
-        reasoning.clicked.connect(lambda: navigate('Reasoning'))
+        reasoning.clicked.connect(lambda: self.open_context('Reasoning'))
         self.finding_panel.body.addWidget(reasoning)
         self.primary_reasoning = reasoning
         self.splitter.addWidget(source)
@@ -122,7 +123,8 @@ class OverviewWorkspace(QWidget):
         grid = QGridLayout()
         self.cards = {}
         for index, (hid, name) in enumerate(HYPOTHESES.items()):
-            card = HypothesisCard(name, navigate)
+            card = HypothesisCard(name, self.open_context)
+            card.hypothesis_id = hid
             self.cards[hid] = card
             grid.addWidget(card, 0, index)
             grid.setColumnStretch(index, 1)
@@ -164,6 +166,14 @@ class OverviewWorkspace(QWidget):
         narrative_layout.addWidget(close)
         apply_theme(self.narrative_dialog)
         self.snapshot = None
+
+    def open_context(self,destination,hypothesis=None):
+        from explorer_presenter import identity
+        if destination in ('Evidence','Reasoning') and self.snapshot:
+            return self.host.workspace.navigate_context(destination,identity(self.snapshot),
+                hypothesis=hypothesis or self.snapshot.summary.primary_hypothesis,
+                tab='Hypotheses' if destination=='Reasoning' else None)
+        return self.navigate(destination)
 
     def show_narrative(self):
         self.narrative_dialog.show()

@@ -184,19 +184,6 @@ def test_missing_regional_coverage_is_limitation_not_declaration_penalty():
     assert missing[4]['decision']['limitations']==hypotheses(missing[4])['synthetic_origin']['limitations']==list(record['reliability_limitations'])
 
 
-@pytest.mark.parametrize('case',['instagram','midjourney'])
-def test_route_order_and_repeated_evaluation_do_not_set_policy_confidence(case):
-    env=reference_env(case)
-    first=assess(env)
-    repeated=assess(env)
-    assert first==repeated
-    reordered=reference_env(case)
-    result=logic.evaluate_hypotheses(reordered,reversed(logic.DECISION_ROUTES))
-    reversed_result=logic.finish_decision(reordered,result)
-    assert first[:4]==reversed_result[:4]
-    assert first[4]['confidence_policy']==reversed_result[4]['confidence_policy']
-
-
 @pytest.mark.parametrize('legacy_tier',['Low','High','Inconclusive'])
 def test_tampering_with_every_route_tier_cannot_change_selection_or_policy(monkeypatch,legacy_tier):
     sections=reference_env('instagram').sections
@@ -277,8 +264,9 @@ def test_summary_gui_consumption_and_coverage_are_compatible():
     assert summary.reasoning_trace['evidence_dependency_analysis']['policy']=='structural_restatement_only'
 
 
-def test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy():
-    env=reference_env('instagram')
+@pytest.mark.parametrize('case',['instagram','midjourney'])
+def test_scorecard_shadow_and_corroboration_audits_are_unchanged_by_policy(case):
+    env=reference_env(case)
     original=deepcopy(asdict(env.card))
     # Use a recomputed card for replay; the old reference_env deliberately injects legacy values.
     sections=env.sections

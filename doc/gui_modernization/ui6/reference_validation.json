@@ -1,0 +1,46 @@
+{
+  "instagram": {
+    "source_sha256": "1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9",
+    "profile": "normal",
+    "suspicious_score": 21.327049999999996,
+    "benign_score": 2.25,
+    "pattern": "possible_foreground_background_processing_mismatch",
+    "confidence": "High",
+    "metadata_fields": 7,
+    "namespaces": [
+      "ICC_Profile",
+      "File identity"
+    ],
+    "recorded_verification": "unverified",
+    "raw_metadata_recovery": "Recorded watchlist payload; the complete original ExifTool record is not persisted.",
+    "annotation_revision_before": 0,
+    "annotation_revision_after": 1,
+    "preview_export_snapshot_equal": true,
+    "frozen_summary_and_original_pointer_unchanged": true,
+    "export_pointer": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui6\\validation_output\\exports\\ea64e4b620f641188e4e4836646c7b7d\\5992dd6cf6d245a98eb51c91b36667f6-a1-25af8a525b5640c78ce6a3f7d645552a\\current_report.json",
+    "detectors_rerun": false
+  },
+  "midjourney": {
+    "source_sha256": "08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9",
+    "profile": "normal",
+    "suspicious_score": 6.674999999999999,
+    "benign_score": 1.5,
+    "pattern": "provenance_supported_synthetic_context",
+    "confidence": "Medium",
+    "metadata_fields": 10,
+    "namespaces": [
+      "PNG",
+      "XMP-x",
+      "XMP-iptcExt",
+      "File identity"
+    ],
+    "recorded_verification": "unverified",
+    "raw_metadata_recovery": "Recorded watchlist payload; the complete original ExifTool record is not persisted.",
+    "annotation_revision_before": 0,
+    "annotation_revision_after": 1,
+    "preview_export_snapshot_equal": true,
+    "frozen_summary_and_original_pointer_unchanged": true,
+    "export_pointer": "D:\\Coding\\SignalLens\\doc\\gui_modernization\\ui6\\validation_output\\exports\\da527aecd755486d86bc5fdb8ddf36e3\\d83b5b2136264974ba5b7a7fb79e1755-a1-394cc6f0dd304f1d871b35fd7450d7c1\\current_report.json",
+    "detectors_rerun": false
+  }
+}

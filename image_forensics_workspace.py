@@ -32,6 +32,7 @@ class _CatalogJob(QRunnable):
 
 
 class ImageForensicsWorkspace(QWidget):
+    catalog_changed = pyqtSignal()
     def __init__(self, host, navigate):
         super().__init__()
         self.host,self.navigate = host,navigate
@@ -67,7 +68,7 @@ class ImageForensicsWorkspace(QWidget):
         commands.addWidget(self.artifact_button)
         for destination in ('Evidence','Reasoning','Provenance'):
             button = QPushButton(destination)
-            button.clicked.connect(lambda checked=False,name=destination:navigate(name))
+            button.clicked.connect(lambda checked=False,name=destination:self.open_context(name))
             commands.addWidget(button)
         body.addLayout(commands)
         self.vertical = QSplitter(Qt.Orientation.Vertical)
@@ -175,7 +176,37 @@ class ImageForensicsWorkspace(QWidget):
         elif result:
             self.tree.setCurrentItem(self.tree.topLevelItem(0).child(0))
         self.persist_catalog()
+        self.catalog_changed.emit()
         return True
+
+    def focus_artifact(self,artifact_id):
+        for index in range(self.tree.topLevelItemCount()):
+            group = self.tree.topLevelItem(index)
+            for child in range(group.childCount()):
+                item = group.child(child)
+                artifact = item.data(0,Qt.ItemDataRole.UserRole)
+                if artifact.artifact_id == artifact_id:
+                    self.tree.setCurrentItem(item)
+                    return True
+        self.tree.setCurrentItem(None)
+        self.details.setPlainText('Requested artifact unavailable in this investigation: '+str(artifact_id))
+        return False
+
+    def open_context(self,destination):
+        from explorer_presenter import identity
+        if not getattr(self,'snapshot',None):
+            return
+        if self.selected and destination in ('Evidence','Reasoning'):
+            artifact = self.selected
+            if not artifact.evidence_ids:
+                self.details.appendPlainText('\nNo explicit evidence association is recorded for this artifact.')
+                return
+            self.host.workspace.navigate_context(destination,identity(self.snapshot),
+                evidence=artifact.evidence_ids[0],
+                hypothesis=artifact.hypothesis_ids[0] if artifact.hypothesis_ids else None,
+                tab='Hypotheses' if destination=='Reasoning' else None)
+        else:
+            self.host.workspace.navigate_context(destination,identity(self.snapshot))
 
     def persist_catalog(self):
         context = self._catalog_context

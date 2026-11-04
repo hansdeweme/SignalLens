@@ -1,0 +1,350 @@
+[
+  {
+    "file": "01_empty_evidence_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_02_evidence_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_03_supporting_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_04_moderating_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_05_lineage_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_06_hypotheses_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_06_routes_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_06_corroboration_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_06_confidence_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_06_scorecard_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_07_calculation_audit_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "instagram_08_minimum_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_02_evidence_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_03_supporting_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_04_moderating_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_05_lineage_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_06_hypotheses_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_06_routes_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_06_corroboration_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_06_confidence_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_06_scorecard_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_07_calculation_audit_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "midjourney_08_minimum_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "fixture_09_contradicting_offscreen.png",
+    "fixture": true,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "fixture_10_missing_lineage_offscreen.png",
+    "fixture": true,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "fixture_11_numerical_deduplication_offscreen.png",
+    "fixture": true,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "fixture_12_legacy_result_offscreen.png",
+    "fixture": true,
+    "platform": "offscreen",
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  },
+  {
+    "file": "13_maximized_qt_state_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      796,
+      796
+    ],
+    "dpr": 1.0,
+    "maximized_state": true,
+    "native_desktop": false
+  },
+  {
+    "file": "14_expanded_logical_window_offscreen.png",
+    "fixture": false,
+    "platform": "offscreen",
+    "size": [
+      1920,
+      1080
+    ],
+    "dpr": 1.0,
+    "maximized_state": false,
+    "native_desktop": false
+  }
+]

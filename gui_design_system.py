@@ -128,7 +128,10 @@ def stylesheet(c=COLORS) -> str:
     QPushButton[slNavigation="true"] {{ text-align: left; border: 1px solid transparent; padding: 10px 12px; border-radius: {g.radius}px; }}
     QPushButton[slNavigation="true"]:checked {{ background: {c.selected}; color: {c.accent}; border-left: 3px solid {c.accent}; font-weight: 600; }}
     QPushButton[slNavigation="true"]:focus {{ border: 2px solid {c.focus}; }}
-    QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser, QListWidget, QTreeWidget, QSpinBox, QDoubleSpinBox, QComboBox {{ background: {c.background}; color: {c.text}; selection-background-color: {c.selected}; selection-color: {c.text}; border: 1px solid {c.border}; border-radius: 4px; padding: 5px; }}
+    QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser, QListWidget, QTreeWidget, QTableView, QSpinBox, QDoubleSpinBox, QComboBox {{ background: {c.background}; color: {c.text}; selection-background-color: {c.selected}; selection-color: {c.text}; border: 1px solid {c.border}; border-radius: 4px; padding: 5px; }}
+    QTableView {{ gridline-color: {c.divider}; }}
+    QHeaderView::section {{ background: {c.secondary_panel}; color: {c.text}; border: 1px solid {c.divider}; padding: 6px; }}
+    QTableView:focus {{ border: 2px solid {c.focus}; }}
     QTreeWidget::item {{ padding: 5px 2px; }}
     QTreeWidget::item:selected {{ background: {c.selected}; color: {c.text}; }}
     QTreeWidget:focus {{ border: 2px solid {c.focus}; }}

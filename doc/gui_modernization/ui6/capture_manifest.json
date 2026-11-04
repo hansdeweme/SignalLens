@@ -1,0 +1,277 @@
+[
+  {
+    "file": "01_empty_provenance_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "02_empty_reports_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_03_metadata_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_05_osint_edit_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      520,
+      420
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_06_annotation_revision_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_07_report_ready_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_08_stale_fixture_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_09_export_saved_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_10_export_failure_fixture_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_11_minimum_provenance_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_11_minimum_osint_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "instagram_12_minimum_reports_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_03_metadata_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_04_unverified_declaration_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_05_osint_edit_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      520,
+      420
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_06_annotation_revision_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_07_report_ready_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_08_stale_fixture_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_09_export_saved_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_10_export_failure_fixture_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_11_minimum_provenance_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_11_minimum_osint_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "midjourney_12_minimum_reports_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": false,
+    "size": [
+      1040,
+      720
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "fixture_13_legacy_missing_metadata_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  },
+  {
+    "file": "fixture_14_legacy_report_offscreen.png",
+    "platform": "offscreen",
+    "native": false,
+    "fixture": true,
+    "size": [
+      1280,
+      900
+    ],
+    "dpr": 1.0
+  }
+]

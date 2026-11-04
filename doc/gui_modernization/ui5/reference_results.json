@@ -1,0 +1,64 @@
+{
+  "instagram": {
+    "source_sha256": "1feeccab1ddce2b24ddec95447e5c86cbbf2b77deabf7b01c76bdf3388d219f9",
+    "profile": "normal",
+    "suspicious_score": 21.327049999999996,
+    "benign_score": 2.25,
+    "pattern": "possible_foreground_background_processing_mismatch",
+    "confidence": "High",
+    "hypothesis_count": 3,
+    "evidence_role_count": 22,
+    "roles": {
+      "moderating_evidence": 4,
+      "contextual_evidence": 11,
+      "supporting_evidence": 7
+    },
+    "route_count": 20,
+    "gate_count": 5,
+    "contribution_count": 13,
+    "reconciliation": "Reconciled",
+    "confidence_rules": {
+      "synthetic_origin": "synthetic.not_established",
+      "localized_editing": "localized.reliable_boundary_compound",
+      "camera_acquisition": "camera.acquisition_compatibility"
+    },
+    "linked_evidence_count": 19,
+    "navigation_checked": {
+      "evidence_id": "cfa_demosaic:weak_camera_cfa_supported",
+      "artifact_id": "cfa_demosaic/overlay_path"
+    },
+    "unchanged_summary_and_report_pointer": true,
+    "detectors_rerun": false
+  },
+  "midjourney": {
+    "source_sha256": "08c27f51a3bc9f6546d9ca3f99ad910ae293d2610679d1fdea6e53130902dda9",
+    "profile": "normal",
+    "suspicious_score": 6.674999999999999,
+    "benign_score": 1.5,
+    "pattern": "provenance_supported_synthetic_context",
+    "confidence": "Medium",
+    "hypothesis_count": 3,
+    "evidence_role_count": 15,
+    "roles": {
+      "supporting_evidence": 5,
+      "moderating_evidence": 2,
+      "contextual_evidence": 8
+    },
+    "route_count": 20,
+    "gate_count": 4,
+    "contribution_count": 6,
+    "reconciliation": "Reconciled",
+    "confidence_rules": {
+      "synthetic_origin": "synthetic.unverified_generation_declaration",
+      "localized_editing": "localized.not_established",
+      "camera_acquisition": "camera.acquisition_compatibility"
+    },
+    "linked_evidence_count": 7,
+    "navigation_checked": {
+      "evidence_id": "sensor_origin:camera_like_acquisition_supported",
+      "artifact_id": "sensor_origin/sensor_overlay_path"
+    },
+    "unchanged_summary_and_report_pointer": true,
+    "detectors_rerun": false
+  }
+}
