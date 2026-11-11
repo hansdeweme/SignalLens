@@ -85,7 +85,10 @@ def build_summary_result(state, osint_result=None, scene_context: dict | None = 
         return result
     result.context_info = build_context_info(scene_context)
     # Per-module sections
-    result.sections["osint"] = build_osint_section(osint_result)
+    # External claims belong to the versioned investigation synthesis, regardless
+    # of whether they were entered before or after these pixel measurements.
+    result.sections["osint"] = build_osint_section(None)
+    result.sections['osint'].note = 'External source context is assessed separately in the investigation synthesis.'
     result.sections["metadata"] = build_metadata_section(state.exif_payload)
     result.sections["ela"] = build_ela_section(state.ela_payload)
     result.sections["noise"] = build_noise_section(state.noise_payload)

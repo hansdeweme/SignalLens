@@ -221,7 +221,7 @@ def test_settings_and_osint_dialog_workflows_still_open(window, source, app):
     assert seen == ['dark', ''] and window.session.annotation_revision == 0
 
 
-def test_legacy_narrative_and_artifact_access_still_available(window, source):
+def test_legacy_narrative_and_artifact_access_still_available(window, source, monkeypatch):
     publish(window, source)
     assert window.workspace.artifact_button.isEnabled()
     assert window.workspace.artifact_directory() == window.current_analysis_dir
@@ -229,6 +229,26 @@ def test_legacy_narrative_and_artifact_access_still_available(window, source):
     assert window.workspace.trace_button.isEnabled()
     assert 'Generation declaration' in window.workspace.evidence_details.toPlainText()
     assert 'Unverified generation declaration' in window.workspace.reasoning_details.toPlainText()
+    # The original technical dialog is a separate rendering surface; it must
+    # expose recorded qualified findings alongside scoped raw triggers.
+    from gui_helpers import set_trace
+    trace = window.session.summary_data()['reasoning_trace']
+    trace['derived_signals'] = {'strong_local_edit': True, 'strong_cross': True}
+    trace['hypothesis_assessments'].append({'hypothesis_id': 'localized_editing',
+        'confidence_tier': 'Low', 'polarity': 'neutral'})
+    trace['causal_interpretation'] = {'separate_edit_status': 'not_established_from_regional_anomalies'}
+    set_trace(window, trace)
+    frozen = window.session.summary_json
+    def inspect_dialog(dialog):
+        text = dialog.findChild(gui.QTextBrowser).toPlainText()
+        assert 'Derived Measurement Signals (raw triggers)' in text
+        assert 'Raw regional-processing trigger' in text
+        assert 'localized_editing: Low / neutral' in text
+        assert 'separate_edit_status: not_established_from_regional_anomalies' in text
+        return 0
+    monkeypatch.setattr(gui.QDialog, 'exec', inspect_dialog)
+    window.show_decision_trace_dialog()
+    assert window.session.summary_json == frozen
 
 
 def test_status_text_remains_exact_but_layout_is_bounded(app):

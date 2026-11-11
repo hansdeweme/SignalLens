@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QComboBox,QLineEdit
 from gui_components import label, EmptyState
 from gui_design_system import SPACE, apply_theme
 from explorer_presenter import display
+from signal_language import DERIVED_SIGNAL_NOTICE
 import json
 
 HYPOTHESES = {'synthetic_origin':'Synthetic origin','localized_editing':'Localized editing',
@@ -441,7 +442,7 @@ class ReasoningWorkspace(QWidget):
         self.tabs.addTab(self.scorecard,'Scorecard')
         raw = QWidget()
         rawbody = QVBoxLayout(raw)
-        rawbody.addWidget(label('The original trace is available for technical audit. Structured tabs show the recorded findings without recalculating them.','secondary'))
+        rawbody.addWidget(label('The original trace is available for technical audit. ' + DERIVED_SIGNAL_NOTICE,'secondary'))
         self.raw_button = QPushButton('Open copyable raw trace')
         self.raw_button.clicked.connect(self.show_raw)
         rawbody.addWidget(self.raw_button)
@@ -583,6 +584,7 @@ class ReasoningWorkspace(QWidget):
         dialog.setWindowTitle('Recorded reasoning trace')
         dialog.resize(900,650)
         body = QVBoxLayout(dialog)
+        body.addWidget(label(DERIVED_SIGNAL_NOTICE, 'secondary'))
         view = text_view('Unmodified recorded reasoning trace')
         view.setPlainText(self.snapshot.raw_trace)
         body.addWidget(view)

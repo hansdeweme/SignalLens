@@ -14,9 +14,12 @@
 # - Visual forensic audit trail.
 # - Metadata support via external ExifTool.
 # - Known limitation: unsigned build.
+# november 2026 major upgrade:
+# - reasoning engine substantially improved
+# - GUI modernisation: 6 workspaces
 
 APP_NAME = "SignalLens"
-APP_VERSION = "0.0.1-Beta"
+APP_VERSION = "0.1.0-Beta"
 APP_STAGE = "Beta"
 VERSION = f"version: {APP_VERSION}"
 APP_DISPLAY_NAME = f"{APP_NAME} {APP_VERSION}"

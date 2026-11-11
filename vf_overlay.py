@@ -5,6 +5,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any, Iterable
 from PIL import Image, ImageDraw, ImageColor
@@ -33,7 +34,7 @@ def create_shared_boundary_overlays(output_dir: Path, selected_file: Path, cross
         )
     paths = {}
     # 1. Original image overlay
-    original_overlay_path = output_dir / f"{selected_file.stem}_shared_boundary_overlay_original.png"
+    original_overlay_path = output_dir / f"{artifact_stem(selected_file)}_shared_boundary_overlay_original.png"
     draw_cluster_overlay(
         base_image_path=selected_file,
         output_path=original_overlay_path,
@@ -48,7 +49,7 @@ def create_shared_boundary_overlays(output_dir: Path, selected_file: Path, cross
     # 2. ELA differential overlay
     if ela_payload is not None:
         ela_diff_path = Path(ela_payload["ela"]["ela_image_path"])
-        ela_overlay_path = output_dir / f"{selected_file.stem}_shared_boundary_overlay_ela.png"
+        ela_overlay_path = output_dir / f"{artifact_stem(selected_file)}_shared_boundary_overlay_ela.png"
         draw_cluster_overlay(
             base_image_path=ela_diff_path,
             output_path=ela_overlay_path,
@@ -63,7 +64,7 @@ def create_shared_boundary_overlays(output_dir: Path, selected_file: Path, cross
     # 3. Residual overlay
     if noise_payload is not None:
         noise_diff_path = Path(noise_payload["noise"]["residual_image_path"])
-        noise_overlay_path = output_dir / f"{selected_file.stem}_shared_boundary_overlay_noise.png"
+        noise_overlay_path = output_dir / f"{artifact_stem(selected_file)}_shared_boundary_overlay_noise.png"
         draw_cluster_overlay(
             base_image_path=noise_diff_path,
             output_path=noise_overlay_path,

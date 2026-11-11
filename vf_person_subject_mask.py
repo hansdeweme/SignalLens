@@ -8,6 +8,7 @@
 # 
 # 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any, Dict, Tuple
 import cv2
@@ -371,7 +372,7 @@ def run_person_subject_mask_analysis(
     person_mask_reliability = quality["mask_reliability"]
     quality["person_instance_count"] = int(person_count)
     quality["backend_error"] = backend_error
-    stem = image_path.stem
+    stem = artifact_stem(image_path)
     # debug 
     model_candidate = resource_path("selfie_segmenter.tflite")
     debug_info: dict[str, Any] = {
@@ -454,7 +455,7 @@ def derive_region_masks_from_person_mask(person_mask_path: str | Path, image_pat
     eroded = cv2.erode(subject, kernel, iterations=1)
     boundary = ((dilated > 0) & (eroded == 0)).astype(np.uint8)
     background = (subject == 0).astype(np.uint8)
-    stem = Path(image_path).stem
+    stem = artifact_stem(image_path)
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     subject_path = out / f"{stem}_person_subject_region_mask.png"

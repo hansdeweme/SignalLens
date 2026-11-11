@@ -5,6 +5,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 import cv2
@@ -784,7 +785,7 @@ def run_subject_texture_consistency_analysis(
             "so this result should not be interpreted as a stable subject-level texture finding."
         )
 
-        stem = image_path.stem
+        stem = artifact_stem(image_path)
         mask_overlay_path = output_dir / f"{stem}_subject_texture_focus_mask.png"
         _save_mask_overlay(
             gray=gray,
@@ -987,7 +988,7 @@ def run_subject_texture_consistency_analysis(
             "for a specific synthetic-texture conclusion."
         )
                     
-    stem = image_path.stem
+    stem = artifact_stem(image_path)
     overlay_path = output_dir / f"{stem}_subject_texture_consistency_overlay.png"
     _save_subject_similarity_overlay(
         gray=gray,

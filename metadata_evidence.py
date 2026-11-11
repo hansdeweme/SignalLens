@@ -102,3 +102,23 @@ def metadata_provenance_state(section) -> ProvenanceState:
     if section.pattern == "edited_or_processed_but_inconclusive":
         return ProvenanceState.AMBIGUOUS_TOOL_OR_WORKFLOW_METADATA
     return ProvenanceState.NO_SUBSTANTIVE_PROVENANCE_EVIDENCE
+
+
+def metadata_creation_context(section):
+    """General declaration semantics; detailed graph topology remains optional."""
+    details = (getattr(section, 'details', None) or {})
+    workflow = details.get('workflow_interpretation') or {}
+    state = metadata_provenance_state(section)
+    if workflow.get('graph_interpretation_status') == 'coherent':
+        kind, process = 'structured_workflow', workflow.get('declared_process')
+    elif state == ProvenanceState.UNVERIFIED_GENERATION_DECLARATION:
+        kind, process = 'explicit_generation_declaration', 'unspecified_generation_process'
+    elif state == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION:
+        kind, process = 'explicit_processing_declaration', 'unspecified_enhancement_process'
+    elif state == ProvenanceState.AMBIGUOUS_TOOL_OR_WORKFLOW_METADATA:
+        kind, process = 'ambiguous_tool_or_workflow', None
+    else:
+        kind, process = 'unspecified', None
+    return {'kind': kind, 'declared_process': process,
+            'provenance_authenticity': 'unverified' if kind != 'unspecified' or state == ProvenanceState.PROVENANCE_PRESENT_UNVERIFIED else 'not_assessed',
+            'workflow_interpretation': workflow or None}

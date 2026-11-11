@@ -38,6 +38,7 @@ from settings_dialog       import SettingsDialog
 from signallens_version    import VERSION, APP_VERSION, FEEDBACK_URL
 from investigation_session import InvestigationSession, InvestigationState, json_snapshot
 from investigation_presenters import build_presentation
+from signal_language import DERIVED_SIGNAL_NOTICE, DERIVED_SIGNAL_SCOPES
 from investigation_reports import (annotation_appendix, annotations_object, create_report_snapshot,
                                    persist_report_snapshot, load_investigation, forensic_html)
 from investigation_workers import InvestigationWorkers
@@ -91,6 +92,7 @@ class SignalLensGui(QMainWindow):
         self.subject_material_realism_payload = None
         self.analysis_mode = "normal"       # default or subject_based patch profile for patch-based analyses, can be extended in the future with more options
         self.setWindowIcon(QIcon("signallens.png"))
+        print("[Info] Building UI...")        
         self._build_ui()  # creates the layout 
         self.setMinimumSize(GEOMETRY.minimum_width, GEOMETRY.minimum_height)
         self.resize(GEOMETRY.normal_width, GEOMETRY.normal_height)
@@ -158,6 +160,7 @@ class SignalLensGui(QMainWindow):
         if self._closing or session_id != self.session.session_id:
             return False
         try:
+            self.session.validate_annotations(draft)
             if json_snapshot(draft) == self.session.annotations_json:
                 return False
             staging = self._session_dir / f'.annotation-{uuid4().hex}'
@@ -182,7 +185,7 @@ class SignalLensGui(QMainWindow):
         if self.session.session_id != session_id:
             return True
         if self.session.state == InvestigationState.COMPLETED:
-            self.status_label.setText('OSINT annotations updated; forensic findings remain frozen.')
+            self.status_label.setText('Investigation conclusion updated from source review; forensic findings remain frozen.')
             self.refresh_report_snapshot()
         return True
 
@@ -222,6 +225,7 @@ class SignalLensGui(QMainWindow):
         try:
             imported = load_investigation(path)
             annotations = annotations_object(json.loads(imported.annotations_json))
+            imported_directory = imported.storage_directory(load_settings()['output_root'])
         except Exception as exc:
             QMessageBox.warning(self, 'Stored result could not be loaded', str(exc))
             return False
@@ -229,9 +233,8 @@ class SignalLensGui(QMainWindow):
         self.session = imported
         self.clear_analysis_state()
         self.selected_file = self.current_image_path = Path(imported.image_path) if imported.image_path else None
-        self._session_dir = (Path(load_settings()['output_root']).resolve()
-                             / (self.selected_file.stem if self.selected_file else 'imported') / imported.session_id)
-        self.current_analysis_dir = self._session_dir / imported.result_id
+        self._session_dir = imported_directory
+        self.current_analysis_dir = self._session_dir
         self.output_json = None
         self.osint_result = annotations
         self.file_edit.setText(imported.image_path or 'Source path not recorded in stored result')
@@ -344,11 +347,12 @@ class SignalLensGui(QMainWindow):
         self.btn_add_osint = QPushButton("Add Finding")
         self.btn_edit_osint = QPushButton("Edit Selected")
         self.btn_delete_osint = QPushButton("Delete Selected")
+        self.btn_verify_osint = QPushButton("Verify source image")
         self.osint_status_label = QLabel("OSINT status: no image loaded")
         self.osint_findings_list = QListWidget()
         button_row = QGridLayout()
         for index, button in enumerate((self.btn_google, self.btn_yandex, self.btn_tineye,
-                self.btn_mark_no_match, self.btn_add_osint, self.btn_edit_osint, self.btn_delete_osint)):
+                self.btn_mark_no_match, self.btn_add_osint, self.btn_edit_osint, self.btn_delete_osint, self.btn_verify_osint)):
             button_row.addWidget(button, index // 3, index % 3)
         layout = QVBoxLayout(group)
         layout.addLayout(button_row)
@@ -362,6 +366,7 @@ class SignalLensGui(QMainWindow):
         self.btn_add_osint.clicked.connect(self.add_osint_finding)
         self.btn_edit_osint.clicked.connect(self.edit_selected_osint_finding)
         self.btn_delete_osint.clicked.connect(self.delete_selected_osint_finding)
+        self.btn_verify_osint.clicked.connect(self.verify_selected_osint_finding)
         return group
 
     def show_settings_dialog(self):
@@ -391,11 +396,16 @@ class SignalLensGui(QMainWindow):
         self.log_box.ensureCursorVisible()
         
     def update_summary(self) -> None:
-        # Rendering is a projection of the frozen analysis, never new synthesis.
+        # Investigation synthesis projects frozen analysis plus current review;
+        # this never re-runs the forensic engine or pixel detectors.
         data = self.session.summary_data()
         self.summary_result = SimpleNamespace(**data) if data else None
         if data:
-            self.summary_box.setHtml(display_html(forensic_html(data) + annotation_appendix(self.session)[1]))
+            from investigation_synthesis import synthesis_text
+            from html import escape
+            current = synthesis_text(self.session.investigation_synthesis())
+            self.summary_box.setHtml(display_html('<h3>Current investigation synthesis</h3><pre>' + escape(current)
+                + '</pre><h3>Frozen forensic analysis</h3>' + forensic_html(data) + annotation_appendix(self.session)[1]))
         else:
             self.summary_box.clear()
         self._report_snapshot = None
@@ -457,6 +467,7 @@ class SignalLensGui(QMainWindow):
                 if candidate.image_sha256 == annotations.image_sha256:
                     annotations = candidate
             session = InvestigationSession.selected(path, annotations)
+            session_directory = session.storage_directory(self.settings['output_root'])
         except Exception as exc:
             QMessageBox.warning(self, 'Image selection failed', str(exc))
             return
@@ -464,7 +475,7 @@ class SignalLensGui(QMainWindow):
         self.session = session
         self.clear_analysis_state()
         self.selected_file = self.current_image_path = path
-        self._session_dir = Path(self.settings['output_root']).resolve() / path.stem / session.session_id
+        self._session_dir = session_directory
         self.current_analysis_dir = self._session_dir
         self.output_json = None
         self.osint_result = annotations_object(json.loads(session.annotations_json))
@@ -546,6 +557,43 @@ class SignalLensGui(QMainWindow):
         )
         self.btn_edit_osint.setEnabled(has_real_selection)
         self.btn_delete_osint.setEnabled(has_real_selection)
+        self.btn_verify_osint.setEnabled(has_real_selection)
+
+    def verify_selected_osint_finding(self):
+        if not self.ensure_osint_ready():
+            return
+        row = self.osint_findings_list.currentRow()
+        if not 0 <= row < len(self.osint_result.matches):
+            return
+        from source_verification_dialog import SourceVerificationDialog
+        from source_image_verification import retain
+        from osint_reverse_search import sha256_of_file
+        from dataclasses import asdict
+        session_id, revision = self.session.session_id, self.session.annotation_revision
+        draft = deepcopy(self.osint_result)
+        dialog = SourceVerificationDialog(self, self.session.image_path, self.session.source_sha256, draft.matches[row])
+        accepted = dialog.exec()
+        selected_result = dialog.selected_result
+        dialog.deleteLater()
+        if not accepted or not selected_result:
+            return
+        if self._closing or (session_id, revision) != (self.session.session_id, self.session.annotation_revision):
+            return
+        try:
+            if sha256_of_file(self.session.image_path) != self.session.source_sha256:
+                raise ValueError('Local image changed during verification; result was not accepted.')
+            record, data = selected_result
+            match = draft.matches[row]
+            match.verification = retain(self._session_dir, record, data, asdict(match), session_id, revision + 1)
+            if record['association'] == 'ambiguous':
+                match.image_association = 'analyst_associated'
+                match.association_method = 'analyst_visual_check'
+                match.association_details = 'Analyst selected unresolved candidate: ' + record['final_url']
+            # Automated states come exclusively from validated receipts, never a dropdown.
+            draft.analyst_reviewed = True
+            self._commit_osint(session_id, draft)
+        except (OSError, ValueError) as exc:
+            QMessageBox.warning(self, 'Verification not saved', str(exc))
 
     def open_osint_engine(self, provider: str) -> None:
         if not self.ensure_osint_ready():
@@ -620,11 +668,17 @@ class SignalLensGui(QMainWindow):
         self.update_osint_buttons()
     
     def ensure_osint_ready(self) -> bool:
-        if self._closing or self.current_image_path is None or self._session_dir is None:
-            QMessageBox.information(self, 'OSINT', 'Load an image with an available source first.')
+        if self._closing or not self.session.source_sha256 or self._session_dir is None:
+            QMessageBox.information(self, 'OSINT', 'Load an image or stored investigation with a recorded source SHA-256 first.')
             return False
         self.osint_result = annotations_object(json.loads(self.session.annotations_json))
-        return self.osint_result is not None
+        if self.osint_result is None:
+            from osint_reverse_search import ReverseSearchResult, utc_now_iso, guess_mime_type
+            path = self.session.image_path or ''
+            self.osint_result = ReverseSearchResult(success=True, image_path=path,
+                image_sha256=self.session.source_sha256, file_size_bytes=0, mime_type=guess_mime_type(path),
+                started_at_utc=utc_now_iso(), completed_at_utc=utc_now_iso())
+        return True
     
     #----------------------------------------------------------------
     # This method runs the analysis pipeline: EXIF analysis, ELA, noise analysis, cross-signal analysis, and FFT analysis. 
@@ -665,7 +719,7 @@ class SignalLensGui(QMainWindow):
         invocation = self.session.begin_analysis(self.analysis_mode, context, self.settings, self.settings['output_root'])
         self.current_analysis_dir = Path(invocation.output_dir)
         self._session_dir = self.current_analysis_dir.parent
-        self.output_json = self.current_analysis_dir / f'{Path(invocation.image_path).stem}_exif_signals.json'
+        self.output_json = self.current_analysis_dir / 'evidence' / 'metadata.json'
         self.clear_analysis_state()
         self.osint_result = annotations_object(json.loads(self.session.annotations_json))
         self.summary_box.clear()
@@ -689,8 +743,9 @@ class SignalLensGui(QMainWindow):
             if (Path(state.selected_file).resolve() != Path(invocation.image_path).resolve()
                     or Path(state.output_dir).resolve() != Path(invocation.output_dir).resolve()):
                 raise ValueError('Worker result does not match its invocation source/output.')
-            # This is the existing, authoritative synthesis operation, invoked once
-            # using launch-time context and annotations. Post-run edits do not call it.
+            # Frozen forensic synthesis runs once using launch-time scene context.
+            # Captured annotations remain auditable but source review is consumed
+            # only by the separate current investigation synthesis.
             summary = build_summary_result(state,
                 annotations_object(json.loads(invocation.annotations_json)),
                 scene_context=dict(invocation.scene_context))
@@ -830,7 +885,17 @@ class SignalLensGui(QMainWindow):
             if key in scorecard:
                 html.append(f"<li><b>{key}:</b> {fmt(scorecard.get(key))}</li>")
         html.append("</ul>")
-        html.append("<h3>Derived Signals</h3><ul>")
+        html.append('<h3>Qualified Forensic Assessments</h3><ul>')
+        for assessment in reasoning_trace.get('hypothesis_assessments', []):
+            html.append(f"<li><b>{fmt(assessment.get('hypothesis_id'))}:</b> "
+                        f"{fmt(assessment.get('confidence_tier'))} / {fmt(assessment.get('polarity'))}</li>")
+        causal = reasoning_trace.get('causal_interpretation') or {}
+        for key in ('separate_edit_status', 'confidence_scope', 'lead_explanation'):
+            if key in causal:
+                html.append(f'<li><b>{key}:</b> {fmt(causal[key])}</li>')
+        html.append('</ul>')
+        html.append('<h3>Derived Measurement Signals (raw triggers)</h3><p>'
+                    + escape(DERIVED_SIGNAL_NOTICE) + '</p><ul>')
         for key in [
             "person_mask_reliable",
             "subject_area_ratio",
@@ -838,7 +903,9 @@ class SignalLensGui(QMainWindow):
             "boundary_support_low",
             "boundary_reliability_score",
             "strong_local_edit",
+            "fragmented_local_edit",
             "strong_cross",
+            "subject_boundary_medium",
             "region_geometry_unreliable",
             "patch_structured",
             "fft_structured",
@@ -848,7 +915,8 @@ class SignalLensGui(QMainWindow):
             "local_signals_weak",
         ]:
             if key in derived:
-                html.append(f"<li><b>{key}:</b> {fmt(derived.get(key))}</li>")
+                scope = DERIVED_SIGNAL_SCOPES.get(key, '')
+                html.append(f"<li><b>{key}:</b> {fmt(derived.get(key))} {escape(scope)}</li>")
         html.append("</ul>")
         html.append("<h3>Route Evaluation</h3>")
         html.append(
@@ -1067,6 +1135,7 @@ def main() -> None:
     if getattr(sys, 'frozen', False):
         os.chdir(Path(sys.executable).resolve().parent)
     app = QApplication(sys.argv)
+    print("[Info] Creating Main Window")
     window = SignalLensGui()
     window.show()
     QTimer.singleShot(150, lambda: ensure_visible(window))
@@ -1074,6 +1143,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
+        print("[Info] Starting main()")
         main()
     except Exception as exc:
         if getattr(sys, 'frozen', False):

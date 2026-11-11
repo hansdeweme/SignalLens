@@ -16,6 +16,7 @@ from hypothesis_engine import compute_base_scores, derive_signals, build_evidenc
 from metadata_evidence import ProvenanceState
 from reasoning_persistence import build_reasoning_trace_text
 from summary_sections import build_metadata_section
+from reasoning_helpers import comfy_graph, ui_workflow
 
 
 def section(name, pattern, *, status="strong", polarity="suspicious", score=0.7, details=None):
@@ -121,14 +122,15 @@ def test_metadata_only_generation_declaration():
     assert result[2:4] == ("Medium", "suspicious")
     assert result[4]["scorecard"]["provenance_boost"] == 0.75
     assert "unverified" in result[1]
+    assert result[4]['causal_interpretation']['declared_process'] == 'unspecified_generation_process'
     assert hypotheses(result[4])["localized_editing"]["confidence_tier"] == "Inconclusive"
 
 
 @pytest.mark.parametrize("record", [
     {"PNG:Parameters": "a red boat\nSteps: 20, Sampler: Euler, CFG scale: 7, Seed: 42"},
-    {"PNG:Prompt": {"1": {"class_type": "KSampler", "inputs": {"seed": 42}}}},
-    {"PNG:Workflow": '{"nodes": [{"class_type": "KSamplerAdvanced"}]}'},
-    {"PNG:Workflow": {"nodes": [{"type": "KSampler"}]}},
+    {"PNG:Prompt": comfy_graph()},
+    {"PNG:Workflow": json.dumps(ui_workflow(comfy_graph()))},
+    {"PNG:Workflow": ui_workflow(comfy_graph())},
 ])
 def test_embedded_prompt_propagates(record):
     payload = payload_from_record(record)
@@ -141,6 +143,26 @@ def test_embedded_prompt_propagates(record):
     assert trace["derived_signals"]["provenance_state"] == "unverified_generation_declaration"
     assert "metadata:EMBEDDED_GENERATION_PROMPT" in hypotheses(trace)["synthetic_origin"]["supporting_evidence"]
     assert trace["evidence_snapshot"]["metadata"]["details"]["metadata_signals"] == payload["signals"]
+
+
+# Previously unprotected: saved-output reachability and source/mask semantics,
+# with identifiers/parameters kept distinct from enhancement declarations.
+@pytest.mark.parametrize('process', ['full_image_generation', 'image_to_image', 'inpainting', 'indeterminate'])
+def test_connected_workflow_process_and_unverified_semantics(process):
+    graph = comfy_graph(process)
+    payload = payload_from_record({'PNG:Prompt': graph, 'PNG:Workflow': json.dumps(ui_workflow(graph))})
+    summary = build_metadata_section(payload)
+    workflow = summary.details['workflow_interpretation']
+    assert workflow['declared_process'] == process
+    assert workflow['provenance_authenticity'] == 'unverified'
+    assert workflow['declaration_count'] == (0 if process == 'indeterminate' else 1)
+    ids = {s['id'] for s in payload['signals']}
+    assert ('DECLARED_ENHANCEMENT' in ids) == (process == 'inpainting')
+    assert ('EMBEDDED_GENERATION_PROMPT' in ids) == (process != 'indeterminate')
+    result = logic.synthesize_overall({'metadata': summary})
+    assert result[4]['provenance_evidence']['metadata_authenticity_verified'] is False
+    assert hypotheses(result[4])['synthetic_origin']['confidence_tier'] != 'High'
+    assert workflow['graph_interpretation_status'] == ('unsupported' if process == 'indeterminate' else 'coherent')
 
 
 @pytest.mark.parametrize("record", [
@@ -265,18 +287,47 @@ def test_enhancement_is_distinct_from_generation():
     assert trace["provenance_evidence"]["state"] == ProvenanceState.UNVERIFIED_ENHANCEMENT_DECLARATION.value
     assert result[0] == "provenance_supported_enhancement_context"
     assert "not whole-image synthetic generation" in result[1]
+    structured = build_metadata_section(payload_from_record({'PNG:Prompt': comfy_graph('enhancement')}))
+    assert structured.details['workflow_interpretation']['declared_process'] == 'enhancement'
+    assert structured.pattern == 'declared_enhancement_candidate'
+    assert logic.synthesize_overall({'metadata': structured})[4]['derived_signals']['metadata_synthetic'] is False
+    prose = payload_from_record({'PNG:Description': 'Photograph enhanced and denoised after capture.'})
+    assert 'DECLARED_ENHANCEMENT' in {s['id'] for s in prose['signals']}
 
 
 @pytest.mark.parametrize("signal_id", ["AI_TOOL_NAME_MATCH", "AMBIGUOUS_WORKFLOW_METADATA", "C2PA_PRESENT", "DECLARED_SYNTHETIC"])
 def test_strong_local_edit_is_not_overwritten_by_metadata(signal_id):
     env = reference_env("instagram")
-    env.sections["metadata"] = metadata(signal_id)
+    env.sections["metadata"] = (build_metadata_section(payload_from_record({'PNG:Prompt': comfy_graph()}))
+                                if signal_id == 'DECLARED_SYNTHETIC' else metadata(signal_id))
     env.ev = build_evidence_snapshot(env.sections)
     env.ds = derive_signals(env.ev)
     result = assess(env)
     assert result[0] == "possible_foreground_background_processing_mismatch"
     assert result[2] == "High"
     assert result[4]["decision"]["primary_hypothesis"] == "localized_editing"
+    if signal_id == 'DECLARED_SYNTHETIC':
+        causal = result[4]['causal_interpretation']
+        assert causal['rule'] == 'declared_generation_with_regional_anomalies'
+        assert 'not established' in causal['lead_explanation']
+        assert 'provenance authenticity is unverified' in result[1]
+        assert 'separate_edit_status' in build_reasoning_trace_text(result[4])
+
+
+def test_non_graph_declaration_keeps_origin_distinct_from_anomaly_and_edit():
+    """New contract: prose declarations survive causal projection without a graph."""
+    from investigation_synthesis import build_synthesis
+    env = reference_env('instagram')
+    env.sections['metadata'] = build_metadata_section(payload_from_record({'PNG:Description': MIDJOURNEY_DESCRIPTION}))
+    env.ev = build_evidence_snapshot(env.sections)
+    env.ds = derive_signals(env.ev)
+    trace = assess(env)[4]
+    assert trace['causal_interpretation']['declared_process'] == 'unspecified_generation_process'
+    assert trace['causal_interpretation']['provenance_authenticity'] == 'unverified'
+    conclusion = build_synthesis({'reasoning_trace': trace}, None, None)
+    assert conclusion['origin_assessment']['status'] == 'declared_generation'
+    assert conclusion['regional_anomaly_assessment']['status'] == 'observations_present'
+    assert conclusion['separate_edit_assessment']['status'] == 'not_established'
 
 
 @pytest.mark.parametrize("unreliable_geometry", [False, True])
@@ -322,6 +373,10 @@ def test_summary_and_render_integration_preserves_interface():
     result = build_summary_result(state)
     assert result.overall_pattern == "provenance_supported_synthetic_context"
     assert result.reasoning_trace["analysis_mode"] == "full"
+    reviewed = SimpleNamespace(analyst_reviewed=True, matches_found=True, dominant_source_type='ai_gallery', summary='Reviewed source claim')
+    with_source = build_summary_result(state, reviewed)
+    assert with_source.reasoning_trace['scorecard'] == result.reasoning_trace['scorecard']
+    assert with_source.reasoning_trace['section_snapshot']['osint']['status'] == 'not_run'
     assert "synthetic_origin" in result.full_text
     assert "synthetic_origin" in result.full_html
 
@@ -379,12 +434,17 @@ def test_region_unreliability_limits_region_dependent_generation():
 
 def test_clone_reuse_is_independent_of_boundary_safeguards():
     env = reference_env("instagram")
+    env.sections['metadata'] = build_metadata_section(payload_from_record({'PNG:Prompt': comfy_graph()}))
+    env.ev = build_evidence_snapshot(env.sections)
+    env.ds = derive_signals(env.ev)
     env.card.clone_support_score = 10.0
     env.ds.boundary_reliability_score = 0.25
     result = assess(env)
     assert result[0] == "possible_clone_reuse"
     assert result[2:4] == ("High", "suspicious")
-    assert hypotheses(result[4])["synthetic_origin"]["polarity"] == "neutral"
+    assert hypotheses(result[4])["synthetic_origin"]["confidence_tier"] == 'Medium'
+    assert result[4]['causal_interpretation']['separate_edit_status'] == 'specific_spatial_reuse_supported'
+    assert result[4]['causal_interpretation']['lead_title'] == ''
 
 
 def test_legacy_embedded_pattern_without_signal_ids():
@@ -423,6 +483,23 @@ def test_midjourney_raw_metadata_path_regression():
     hs = hypotheses(result[4])
     assert hs["localized_editing"]["confidence_tier"] == "Low"
     assert hs["synthetic_origin"]["confidence_tier"] == "Medium"
+    # Raw pattern triggers survive a qualified Low local assessment. Rendering
+    # must disclose their scope without changing frozen facts or editing history.
+    from copy import deepcopy
+    from investigation_synthesis import build_synthesis
+    trace = result[4]
+    assert trace['derived_signals']['strong_local_edit'] is True
+    assert trace['derived_signals']['strong_cross'] is True
+    assert hs['localized_editing']['polarity'] == 'neutral'
+    assert trace['causal_interpretation']['separate_edit_status'] == 'not_established_from_regional_anomalies'
+    before = deepcopy(trace)
+    text = build_reasoning_trace_text(json.loads(json.dumps(trace)))
+    assert 'Derived Measurement Signals (raw triggers)' in text
+    assert 'strong_local_edit: true' in text and 'Raw regional-processing trigger' in text
+    assert 'not hypothesis confidence' in text
+    assert 'confidence_tier: Low' in text and 'separate_edit_status: not_established' in text
+    assert build_synthesis({'reasoning_trace': trace}, None, None)['separate_edit_assessment']['status'] == 'not_established'
+    assert trace == before
 
 
 @pytest.mark.parametrize("scheme", ["http", "https"])

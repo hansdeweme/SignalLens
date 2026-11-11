@@ -5,6 +5,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any
 import cv2
@@ -225,7 +226,7 @@ def run_compression_history_analysis(image_path: str | Path, output_dir: str | P
         block_anomaly_score=block_anomaly_score,
     )
     top_blocks = build_top_blocks(block_map_n, top_k=12)
-    overlay_path = output_dir / f"{image_path.stem}_compression_history_overlay.jpg"
+    overlay_path = output_dir / f"{artifact_stem(image_path)}_compression_history_overlay.jpg"
     overlay_path_str = create_compression_overlay(
         image_bgr=image_bgr,
         score_map=block_map_n,

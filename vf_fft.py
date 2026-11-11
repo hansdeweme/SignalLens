@@ -7,6 +7,8 @@
 # This module behaves like a “structured periodicity / raster regularity detector”, not a “synthetic image detector”
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
+from investigation_storage import compact_artifacts
 import json
 import math
 from dataclasses import dataclass
@@ -519,8 +521,8 @@ def run_fft_analysis(
     grid_hypothesis = select_dominant_grid_hypothesis(peaks=peaks, h=spectrum_shifted.shape[0], w=spectrum_shifted.shape[1],)
     grid_response = None
     grid_features = summarize_grid_hypothesis(None, None)
-    fft_grid_overlay_path = out_dir / f"{image_path.stem}_fft_grid_overlay.png"
-    fft_grid_response_path = out_dir / f"{image_path.stem}_fft_grid_response.png"
+    fft_grid_overlay_path = out_dir / f"{artifact_stem(image_path)}_fft_grid_overlay.png"
+    fft_grid_response_path = out_dir / f"{artifact_stem(image_path)}_fft_grid_response.png"
     if grid_hypothesis is not None:
         grid_response = build_spatial_grid_response(
             image_gray=image_gray,
@@ -550,8 +552,8 @@ def run_fft_analysis(
     )
     multi_grid_response = None
     multi_grid_features = summarize_multi_grid_hypothesis([], None)
-    fft_multi_grid_response_path = out_dir / f"{image_path.stem}_fft_multi_grid_response.png"
-    fft_multi_grid_overlay_path = out_dir / f"{image_path.stem}_fft_multi_grid_overlay.png"
+    fft_multi_grid_response_path = out_dir / f"{artifact_stem(image_path)}_fft_multi_grid_response.png"
+    fft_multi_grid_overlay_path = out_dir / f"{artifact_stem(image_path)}_fft_multi_grid_overlay.png"
     if top_grid_hypotheses:
         multi_grid_response = build_multi_grid_response(image_gray=image_gray, hypotheses=top_grid_hypotheses,)
         if pmode:
@@ -586,11 +588,11 @@ def run_fft_analysis(
         anisotropy_features=anisotropy_features,
         grid_response_score=effective_grid_response_score,
     )
-    stem = image_path.stem
+    stem = artifact_stem(image_path)
     spectrum_path = out_dir / f"{stem}_fft_spectrum.png"
     radial_plot_path = out_dir / f"{stem}_fft_radial_profile.png"
     peakmap_path = out_dir / f"{stem}_fft_peakmap.png"
-    json_path = out_dir / "fft_results.json"
+    json_path = out_dir / (f'{stem}_fft.json' if compact_artifacts() else 'fft_results.json')
     save_spectrum_image(spectrum_norm_u8, spectrum_path)
     save_radial_profile_plot(
         radial_profile=radial_profile,

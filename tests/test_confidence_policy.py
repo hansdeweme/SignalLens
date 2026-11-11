@@ -29,6 +29,34 @@ def hypotheses(trace):
     return {h['hypothesis_id']:h for h in trace['hypothesis_assessments']}
 
 
+@pytest.mark.parametrize('status,polarity', [('inconclusive', 'neutral'), ('weak', 'benign')])
+def test_non_supporting_focus_cannot_supply_compound_strength(status, polarity):
+    """Missing negative control: a retained raw intensity is not positive strength."""
+    sections = measured_boundary(.04)
+    sections['boundary'].score = None
+    sections['subject_boundary'] = section('subject', 'possible_boundary_transition_inconsistency', status='medium', score=.393)
+    sections['boundary_focus'] = section('focus', 'boundary_processing_inconclusive' if status == 'inconclusive'
+        else 'boundary_processing_convergence_supported', status=status, polarity=polarity, score=9.0)
+    env = logic.build_decision_env(sections)
+    assert not logic._boundary_corroborated(env)
+    gate = next(g for g in env.corroboration_gates if g['gate_id'] == 'boundary.compound_support')
+    assert not gate['strength_requirement_satisfied'] and gate['strength_witnesses'] == []
+    assert gate['eligible_evidence'] == ['evidence:boundary', 'evidence:subject_boundary']
+    # Count success must never hide the actual production strength failure.
+    conditions = {c['condition_id']: c for c in gate['conditions']}
+    assert conditions['indicator_count']['passed'] is True
+    assert conditions['supporting_strength']['passed'] is False
+    assert gate['failure_reasons'] == [conditions['supporting_strength']['explanation']]
+    assert '>= 0.45' in gate['overall_explanation']
+    observations = {o['evidence_id']: o for o in gate['strength_observations']}
+    assert observations['evidence:subject_boundary']['score'] == .393
+    assert not observations['evidence:boundary_focus']['eligible_for_strength']
+    assert not snapshot_confidence_facts(sections, env.card, env.ds, env.corroboration_gates, {}).boundary_compound
+    text = build_reasoning_trace_text(logic.synthesize_overall(sections)[4])
+    assert 'indicator_count: PASS' in text and 'supporting_strength: FAIL' in text
+    assert 'Overall FAIL' in text and '0.393' in text and '>= 0.45' in text
+
+
 def test_unverified_generation_is_bounded_and_identifies_policy_rule():
     result=logic.synthesize_overall({'metadata':metadata('DECLARED_SYNTHETIC')})
     record=policy(result[4],'synthetic_origin')

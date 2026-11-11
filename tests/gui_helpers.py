@@ -21,7 +21,7 @@ def publish(window,source):
             'provenance_evidence':{'state':'unverified_generation_declaration','metadata_authenticity_verified':False},
             'pipeline_status':{'coverage':{'status':'partial'},'stages':{'Region FFT':{'status':'unavailable','reason':'No reliable mask'}}}})
     state=AnalysisState(Path(token.image_path),Path(token.output_dir))
-    state.output_dir.mkdir(parents=True)
+    state.output_dir.mkdir(parents=True, exist_ok=True)
     window.session.complete(token,state,data)
     window.analysis_state=state
     window.current_analysis_dir=state.output_dir

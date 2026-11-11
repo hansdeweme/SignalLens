@@ -6,17 +6,18 @@
 from __future__ import annotations
 from typing import Optional
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit, QMessageBox, QPlainTextEdit, QVBoxLayout
+from PyQt6.QtWidgets import QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QLineEdit, QMessageBox, QPlainTextEdit, QVBoxLayout, QWidget
 from osint_reverse_search import ReverseSearchMatch
 from gui_design_system import apply_theme
+from evidence_relationships import CLAIM_PROCESSES, ASSOCIATIONS, DEPENDENCIES
 
 class OSINTFindingDialog(QDialog):
     def __init__(self, parent=None, existing_match: Optional[ReverseSearchMatch] = None) -> None:
         super().__init__(parent)
         apply_theme(self)
-        self.setWindowTitle("OSINT Finding")
+        self.setWindowTitle("Source & Context — reviewed analyst record")
         self.setModal(True)
-        self.resize(520, 420)
+        self.resize(660, 740)
 
         self.provider_combo = QComboBox()
         self.provider_combo.addItems(["google", "yandex", "tineye", "bing", "other"])
@@ -51,12 +52,30 @@ class OSINTFindingDialog(QDialog):
         form = QFormLayout()
         form.addRow("Provider", self.provider_combo)
         form.addRow("Result page URL *", self.page_url_edit)
-        form.addRow("Title", self.title_edit)
+        form.addRow("Source description / claim", self.title_edit)
         form.addRow("Source image URL", self.image_url_edit)
         form.addRow("Similarity (0.00 - 1.00)", self.similarity_spin)
         form.addRow("First-seen estimate", self.first_seen_edit)
         form.addRow("Source type", self.source_type_combo)
         form.addRow("Notes", self.notes_edit)
+        self.relationship_fields = {}
+        choices = {'claim_process': CLAIM_PROCESSES, 'claimed_by': ('unknown', 'creator', 'publisher', 'third_party'),
+                   'image_association': ASSOCIATIONS,
+                   'association_method': ('', 'analyst_assertion', 'analyst_visual_check'),
+                   'source_dependency': DEPENDENCIES}
+        for key, title in (('claim_process', 'Claimed creation process'), ('claim_text', 'Relevant source claim'),
+                ('model_family', 'Claimed model family'), ('workflow_details', 'Source workflow details'),
+                ('claimed_by', 'Who makes the claim'), ('attribution', 'Reported attribution'),
+                ('image_association', 'Association with this image'), ('association_method', 'Association method'),
+                ('association_details', 'Association basis'), ('source_dependency', 'Source dependence'),
+                ('claim_limitations', 'Remaining uncertainty')):
+            field = QComboBox() if key in choices else QLineEdit()
+            if key in choices:
+                for value in choices[key]:
+                    field.addItem(value.replace('_', ' ').capitalize() or 'Not recorded', value)
+            field.setAccessibleName(title)
+            self.relationship_fields[key] = field
+            form.addRow(title, field)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
@@ -65,7 +84,13 @@ class OSINTFindingDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
+        from gui_components import label
+        layout.addWidget(label('Optional source review. Saving records your assessment. Use Verify source image on a saved finding to retrieve and compare it. Similarity here is analyst-reported; source claims remain unauthenticated.', 'caption'))
+        layout.addWidget(label('Association requires your explicit assertion, method and basis. A visual check remains analyst-reported. Creator attribution and source independence remain unverified.', 'caption'))
+        from gui_components import scroll_area
+        fields = QWidget()
+        fields.setLayout(form)
+        layout.addWidget(scroll_area(fields), 1)
         layout.addWidget(buttons)
 
         if existing_match is not None:
@@ -80,6 +105,12 @@ class OSINTFindingDialog(QDialog):
         self._set_combo_value(self.source_type_combo, match.source_type or "unknown")
         self.similarity_spin.setValue(match.similarity_score if match.similarity_score is not None else 0.0)
         self.notes_edit.setPlainText(match.notes or "")
+        for key, field in self.relationship_fields.items():
+            value = getattr(match, key, '') or ''
+            if isinstance(field, QComboBox):
+                field.setCurrentIndex(max(0, field.findData(value)))
+            else:
+                field.setText(value)
 
     def _set_combo_value(self, combo: QComboBox, value: str) -> None:
         index = combo.findText(value, Qt.MatchFlag.MatchFixedString)
@@ -91,6 +122,11 @@ class OSINTFindingDialog(QDialog):
     def _on_accept(self) -> None:
         if not self.page_url_edit.text().strip():
             QMessageBox.warning(self, "Missing URL", "Result page URL is required.")
+            return
+        if self.relationship_fields['image_association'].currentData() == 'analyst_associated' and (
+                not self.relationship_fields['association_method'].currentData() or
+                not self.relationship_fields['association_details'].text().strip()):
+            QMessageBox.warning(self, 'Association basis required', 'Record the method and basis for your image association.')
             return
         self.accept()
 
@@ -107,4 +143,6 @@ class OSINTFindingDialog(QDialog):
             "first_seen_estimate": self.first_seen_edit.text().strip() or None,
             "source_type": self.source_type_combo.currentText().strip(),
             "notes": self.notes_edit.toPlainText().strip(),
+            **{key: field.currentData() if isinstance(field, QComboBox) else field.text().strip()
+               for key, field in self.relationship_fields.items()},
         }

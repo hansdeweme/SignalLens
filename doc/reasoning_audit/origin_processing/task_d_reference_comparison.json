@@ -1,0 +1,1323 @@
+{
+  "midjourney": {
+    "baseline_report": "analyzed\\high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8\\787bb410a43346ba8b82322bea3f5038\\debab88d98b04bbb9c53fb359e6f1aab\\report_revisions\\debab88d98b04bbb9c53fb359e6f1aab-a0-3f1613a95075481c8c3f113ebae5b8dc\\summary\\final_summary.json",
+    "source": "D:\\Coding\\SignalLens\\test_images\\midjourney\\high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8.png",
+    "sha256": "b5548eb02f4a3841d0f89a3542fc743d48edfcb93253c5d848bbdd6c089fc7f1",
+    "profile": "normal",
+    "settings": {
+      "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+      "output_root": "./analyzed/",
+      "patch_similarity_profiles": {
+        "normal": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 60,
+          "max_pairs_to_keep": 300,
+          "patch_size": 24,
+          "similarity_threshold": 0.965,
+          "stride": 12
+        },
+        "subject_based": {
+          "descriptor_size": 8,
+          "max_pairs_for_overlay": 80,
+          "max_pairs_to_keep": 500,
+          "patch_size": 16,
+          "similarity_threshold": 0.945,
+          "stride": 8
+        }
+      },
+      "subject_background_profiles": {
+        "normal": {
+          "background": 128,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 96
+        },
+        "subject_based": {
+          "background": 64,
+          "boundary": 64,
+          "boundry": 64,
+          "subject": 160
+        }
+      },
+      "supported_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".tif",
+        ".tiff",
+        ".bmp",
+        ".heic",
+        ".heif"
+      ]
+    },
+    "reviewed_record": "analyzed\\high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8\\787bb410a43346ba8b82322bea3f5038\\osint_results.json",
+    "baseline_primary": "localized_editing",
+    "baseline_scorecard": {
+      "benign_domains": [
+        "sensor"
+      ],
+      "benign_score": 1.5,
+      "camera_counter_support": 1.25,
+      "caution_penalty": 1.25,
+      "clone_ambiguous": false,
+      "clone_candidate": true,
+      "clone_support_score": 2.1,
+      "compression_boost": 0.0,
+      "contextual_false_positive_risk": false,
+      "edit_boost": 2.295,
+      "is_valid": true,
+      "local_edit_support_score": 5.25,
+      "provenance_boost": 0.75,
+      "sensor_boost": 0.0,
+      "suspicious_domains": [
+        "boundary",
+        "boundary_semantic",
+        "cross_signal",
+        "frequency",
+        "metadata",
+        "patch",
+        "region_asymmetry",
+        "region_frequency",
+        "subject_material",
+        "subject_texture"
+      ],
+      "suspicious_score": 18.04075,
+      "synthetic_boost": 0.4,
+      "synthetic_supported_by_other_domains": true,
+      "validation_errors": []
+    },
+    "after_primary": "synthetic_origin",
+    "after_scorecard": {
+      "camera_counter_support": 1.25,
+      "suspicious_score": 18.04075,
+      "benign_score": 1.5,
+      "local_edit_support_score": 5.25,
+      "clone_support_score": 0.7500000000000001,
+      "synthetic_boost": 0.4,
+      "edit_boost": 2.295,
+      "provenance_boost": 0.75,
+      "sensor_boost": 0.0,
+      "compression_boost": 0.0,
+      "caution_penalty": 1.25,
+      "clone_candidate": true,
+      "clone_ambiguous": true,
+      "contextual_false_positive_risk": false,
+      "synthetic_supported_by_other_domains": true,
+      "suspicious_domains": [
+        "boundary",
+        "boundary_semantic",
+        "cross_signal",
+        "frequency",
+        "metadata",
+        "patch",
+        "region_asymmetry",
+        "region_frequency",
+        "subject_material",
+        "subject_texture"
+      ],
+      "benign_domains": [
+        "sensor"
+      ],
+      "is_valid": true,
+      "validation_errors": []
+    },
+    "after_tiers": {
+      "synthetic_origin": "Medium",
+      "localized_editing": "Low",
+      "camera_acquisition": "Medium"
+    },
+    "boundary_gate": {
+      "gate_id": "boundary.compound_support",
+      "hypothesis": "localized_editing",
+      "requirement_kind": "compound_interpretations",
+      "minimum_indicators": 2,
+      "minimum_sources": null,
+      "distinct_families_required": false,
+      "considered_evidence": [
+        "evidence:boundary",
+        "evidence:subject_boundary"
+      ],
+      "eligible_evidence": [
+        "evidence:boundary",
+        "evidence:subject_boundary"
+      ],
+      "excluded_evidence": {},
+      "evidence_roles": {
+        "evidence:boundary": "supporting_evidence",
+        "evidence:subject_boundary": "supporting_evidence"
+      },
+      "distinct_ancestry_groups": [
+        {
+          "witness": "evidence:boundary",
+          "measurements": [
+            "measurement:ela_recompression_difference",
+            "measurement:luminance_residual"
+          ],
+          "family": "processing_residual"
+        },
+        {
+          "witness": "evidence:subject_boundary",
+          "measurements": [
+            "measurement:intrinsic_edge_ring_features"
+          ],
+          "family": "intrinsic_edge_transition"
+        }
+      ],
+      "corroborating_source_count": 2,
+      "shared_ancestry": {},
+      "overlapping_feature_groups": {},
+      "incremental_support_findings": [
+        {
+          "evidence_id": "evidence:boundary",
+          "addition": "interpretation",
+          "new_measurement_claim": false,
+          "numeric_weight_changed": false
+        }
+      ],
+      "provisional_lineage": {},
+      "requirement_satisfied": true,
+      "explanation": "2 observed supporting indicator(s) satisfy the 2-indicator compound_interpretations condition; shared ancestry is allowed and is not independent confirmation.",
+      "limitations": [
+        "Source groups are structural measurement ancestry, not probabilities or statistically independent samples."
+      ],
+      "strength_requirement_satisfied": false,
+      "strength_witnesses": [],
+      "gate_passed": false,
+      "production_condition_changed": false,
+      "interpretation": "Related boundary checks establish compound spatial/processing agreement; they are not counted as separate independent measurement sources."
+    },
+    "without_osint": {
+      "external_source_corroboration": {
+        "contradicting_observations": [],
+        "creator_generation_claim": [],
+        "evidence_dependency": [],
+        "evidence_refs": [],
+        "image_association": "matched",
+        "interpretation": "Source evidence does not currently supply reviewed, image-associated corroboration.",
+        "limitations": [
+          "Manual similarity is analyst-reported; it is not a computed file-hash match or cryptographic authentication.",
+          "Repeated metadata and source claims are not assumed independent."
+        ],
+        "matches": [],
+        "moderating_observations": [],
+        "review_status": "not_recorded",
+        "source_image_match_status": "not_assessed",
+        "status": "not_recorded",
+        "support_tier": null,
+        "supporting_observations": []
+      },
+      "forensic_fingerprint": "c64915b99812e8a5d2c2988f9a824a3350455a54126057d0774617edf5cbccad",
+      "forensic_snapshot_id": "5e9159b9b8a644cda3ceb19f7abfd453",
+      "image_sha256": "b5548eb02f4a3841d0f89a3542fc743d48edfcb93253c5d848bbdd6c089fc7f1",
+      "lead": {
+        "confidence_scope": "Frozen forensic support — origin: Medium; regional: Low. These are not probabilities or an overall verdict tier.",
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified. A distinct editing operation is not established by regional anomalies or source declarations.",
+        "title": "Generation context with regional observations"
+      },
+      "limitations": [
+        "Dimensions may share measurements and creation claims; no statistical independence is assumed."
+      ],
+      "origin_assessment": {
+        "contradicting_observations": [],
+        "creation_context": {
+          "declared_process": "unspecified_generation_process",
+          "kind": "explicit_generation_declaration",
+          "provenance_authenticity": "unverified",
+          "workflow_interpretation": null
+        },
+        "evidence_refs": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "sensor_origin:camera_like_acquisition_supported",
+          "fft:structured_frequency_anomaly",
+          "metadata:CREATOR_IDENTITY_PRESENT",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified.",
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+          "Source context does not authenticate the complete creation history."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "declared_generation",
+        "support_tier": "Medium",
+        "supporting_observations": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT"
+        ]
+      },
+      "osint_evidence_fingerprint": "3ddd248cf7d421994f056bc42cb9d0bd952413472b1ca8cfd09cea60e16adf87",
+      "osint_evidence_revision": 0,
+      "parent_revision_id": null,
+      "policy_version": "investigation.origin_processing.v1",
+      "regional_anomaly_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "Regional forensic observations are retained; their support tier is scoped to processing anomalies.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "observations_present",
+        "support_tier": "Low",
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "revision_id": "b0c6018281b10130e3f0d177",
+      "revision_timestamp": "2026-11-08T13:16:19.077953+00:00",
+      "schema_version": 1,
+      "separate_edit_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "A distinct editing operation is not established by regional anomalies or source declarations.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "not_established",
+        "support_tier": null,
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "technical_provenance_authenticity": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "forensic:provenance_evidence"
+        ],
+        "interpretation": "No cryptographic validator and image-binding result authenticates the creation history.",
+        "limitations": [
+          "Metadata declarations, source review and normalized similarity do not verify technical provenance."
+        ],
+        "moderating_observations": [],
+        "review_status": "no_validator_result",
+        "status": "unverified",
+        "support_tier": null,
+        "supporting_observations": []
+      }
+    },
+    "osint_before_analysis": {
+      "external_source_corroboration": {
+        "contradicting_observations": [],
+        "creator_generation_claim": [
+          {
+            "analyst_notes": "The article presents the image as Midjourney-generated.",
+            "basis": "analyst_reviewed_source_context",
+            "claim": "This image was generated using the prompt “high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8",
+            "evidence_ref": "osint:match:0",
+            "image_url": "https://embracepresets.com/wp-content/uploads/2024/08/theart1300_httpss.mj_.runhx-xd-s5Gos_real_photo_-chaos_10_-a_33717b8b-eb01-4bd6-8719-f4b4c9d59fa8_3.png?utm_source=chatgpt.com",
+            "normalized_similarity": 1.0,
+            "page_url": "https://embracepresets.com/best-midjourney-prompts-for-realistic-photos/"
+          }
+        ],
+        "evidence_dependency": [
+          {
+            "evidence_ref": "osint:match:0",
+            "related_refs": [
+              "metadata:DECLARED_SYNTHETIC",
+              "metadata:EMBEDDED_GENERATION_PROMPT"
+            ],
+            "relationship": "may_repeat_same_creation_claim; no_independent_score_credit"
+          }
+        ],
+        "evidence_refs": [
+          "osint:match:0"
+        ],
+        "image_association": "matched",
+        "interpretation": "Reviewed, image-associated source evidence supports generation context.",
+        "limitations": [
+          "Manual similarity is analyst-reported; it is not a computed file-hash match or cryptographic authentication.",
+          "Repeated metadata and source claims are not assumed independent."
+        ],
+        "matches": [
+          {
+            "domain": "embracepresets.com",
+            "first_seen_estimate": null,
+            "image_url": "https://embracepresets.com/wp-content/uploads/2024/08/theart1300_httpss.mj_.runhx-xd-s5Gos_real_photo_-chaos_10_-a_33717b8b-eb01-4bd6-8719-f4b4c9d59fa8_3.png?utm_source=chatgpt.com",
+            "notes": "The article presents the image as Midjourney-generated.",
+            "page_url": "https://embracepresets.com/best-midjourney-prompts-for-realistic-photos/",
+            "provider": "google",
+            "similarity_score": 1.0,
+            "source_type": "ai_gallery",
+            "thumbnail_url": "",
+            "title": "This image was generated using the prompt “high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8"
+          }
+        ],
+        "moderating_observations": [],
+        "review_status": "reviewed_manual_match",
+        "source_image_match_status": "manual_similarity_unverified",
+        "status": "reviewed_manual_match",
+        "support_tier": null,
+        "supporting_observations": [
+          "osint:match:0"
+        ]
+      },
+      "forensic_fingerprint": "c64915b99812e8a5d2c2988f9a824a3350455a54126057d0774617edf5cbccad",
+      "forensic_snapshot_id": "7f8182de22814343af3d2f226b1479e8",
+      "image_sha256": "b5548eb02f4a3841d0f89a3542fc743d48edfcb93253c5d848bbdd6c089fc7f1",
+      "lead": {
+        "confidence_scope": "Frozen forensic support — origin: Medium; regional: Low. These are not probabilities or an overall verdict tier.",
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified. Reviewed, image-associated source evidence supports generation context. A distinct editing operation is not established by regional anomalies or source declarations.",
+        "title": "Generation context with regional observations"
+      },
+      "limitations": [
+        "Dimensions may share measurements and creation claims; no statistical independence is assumed."
+      ],
+      "origin_assessment": {
+        "contradicting_observations": [],
+        "creation_context": {
+          "declared_process": "unspecified_generation_process",
+          "kind": "explicit_generation_declaration",
+          "provenance_authenticity": "unverified",
+          "workflow_interpretation": null
+        },
+        "evidence_refs": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "sensor_origin:camera_like_acquisition_supported",
+          "fft:structured_frequency_anomaly",
+          "metadata:CREATOR_IDENTITY_PRESENT",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization",
+          "osint:match:0"
+        ],
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified. Reviewed, image-associated source evidence supports generation context.",
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+          "Source context does not authenticate the complete creation history."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "declared_generation_with_source_context",
+        "support_tier": "Medium",
+        "supporting_observations": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "osint:match:0"
+        ]
+      },
+      "osint_evidence_fingerprint": "382a5810b2f5e82a30a6beccb3d3823fb5525c6e99482559cf1d3f1f91ab65ac",
+      "osint_evidence_revision": 0,
+      "parent_revision_id": null,
+      "policy_version": "investigation.origin_processing.v1",
+      "regional_anomaly_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "Regional forensic observations are retained; their support tier is scoped to processing anomalies.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "observations_present",
+        "support_tier": "Low",
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "revision_id": "01f43f9afc689982c51f1a1b",
+      "revision_timestamp": "2026-11-08T13:16:19.083699+00:00",
+      "schema_version": 1,
+      "separate_edit_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "A distinct editing operation is not established by regional anomalies or source declarations.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "not_established",
+        "support_tier": null,
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "technical_provenance_authenticity": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "forensic:provenance_evidence"
+        ],
+        "interpretation": "No cryptographic validator and image-binding result authenticates the creation history.",
+        "limitations": [
+          "Metadata declarations, source review and normalized similarity do not verify technical provenance."
+        ],
+        "moderating_observations": [],
+        "review_status": "no_validator_result",
+        "status": "unverified",
+        "support_tier": null,
+        "supporting_observations": []
+      }
+    },
+    "osint_after_analysis": {
+      "external_source_corroboration": {
+        "contradicting_observations": [],
+        "creator_generation_claim": [
+          {
+            "analyst_notes": "The article presents the image as Midjourney-generated.",
+            "basis": "analyst_reviewed_source_context",
+            "claim": "This image was generated using the prompt “high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8",
+            "evidence_ref": "osint:match:0",
+            "image_url": "https://embracepresets.com/wp-content/uploads/2024/08/theart1300_httpss.mj_.runhx-xd-s5Gos_real_photo_-chaos_10_-a_33717b8b-eb01-4bd6-8719-f4b4c9d59fa8_3.png?utm_source=chatgpt.com",
+            "normalized_similarity": 1.0,
+            "page_url": "https://embracepresets.com/best-midjourney-prompts-for-realistic-photos/"
+          }
+        ],
+        "evidence_dependency": [
+          {
+            "evidence_ref": "osint:match:0",
+            "related_refs": [
+              "metadata:DECLARED_SYNTHETIC",
+              "metadata:EMBEDDED_GENERATION_PROMPT"
+            ],
+            "relationship": "may_repeat_same_creation_claim; no_independent_score_credit"
+          }
+        ],
+        "evidence_refs": [
+          "osint:match:0"
+        ],
+        "image_association": "matched",
+        "interpretation": "Reviewed, image-associated source evidence supports generation context.",
+        "limitations": [
+          "Manual similarity is analyst-reported; it is not a computed file-hash match or cryptographic authentication.",
+          "Repeated metadata and source claims are not assumed independent."
+        ],
+        "matches": [
+          {
+            "domain": "embracepresets.com",
+            "first_seen_estimate": null,
+            "image_url": "https://embracepresets.com/wp-content/uploads/2024/08/theart1300_httpss.mj_.runhx-xd-s5Gos_real_photo_-chaos_10_-a_33717b8b-eb01-4bd6-8719-f4b4c9d59fa8_3.png?utm_source=chatgpt.com",
+            "notes": "The article presents the image as Midjourney-generated.",
+            "page_url": "https://embracepresets.com/best-midjourney-prompts-for-realistic-photos/",
+            "provider": "google",
+            "similarity_score": 1.0,
+            "source_type": "ai_gallery",
+            "thumbnail_url": "",
+            "title": "This image was generated using the prompt “high-quality, realistic fashion portrait of a young woman , soft hair, natural dabbled window light f 1.8"
+          }
+        ],
+        "moderating_observations": [],
+        "review_status": "reviewed_manual_match",
+        "source_image_match_status": "manual_similarity_unverified",
+        "status": "reviewed_manual_match",
+        "support_tier": null,
+        "supporting_observations": [
+          "osint:match:0"
+        ]
+      },
+      "forensic_fingerprint": "c64915b99812e8a5d2c2988f9a824a3350455a54126057d0774617edf5cbccad",
+      "forensic_snapshot_id": "5e9159b9b8a644cda3ceb19f7abfd453",
+      "image_sha256": "b5548eb02f4a3841d0f89a3542fc743d48edfcb93253c5d848bbdd6c089fc7f1",
+      "lead": {
+        "confidence_scope": "Frozen forensic support — origin: Medium; regional: Low. These are not probabilities or an overall verdict tier.",
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified. Reviewed, image-associated source evidence supports generation context. A distinct editing operation is not established by regional anomalies or source declarations.",
+        "title": "Generation context with regional observations"
+      },
+      "limitations": [
+        "Dimensions may share measurements and creation claims; no statistical independence is assumed."
+      ],
+      "origin_assessment": {
+        "contradicting_observations": [],
+        "creation_context": {
+          "declared_process": "unspecified_generation_process",
+          "kind": "explicit_generation_declaration",
+          "provenance_authenticity": "unverified",
+          "workflow_interpretation": null
+        },
+        "evidence_refs": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "sensor_origin:camera_like_acquisition_supported",
+          "fft:structured_frequency_anomaly",
+          "metadata:CREATOR_IDENTITY_PRESENT",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization",
+          "osint:match:0"
+        ],
+        "interpretation": "Embedded metadata declares generation; the detailed process and authenticity are unverified. Reviewed, image-associated source evidence supports generation context.",
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+          "Source context does not authenticate the complete creation history."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "declared_generation_with_source_context",
+        "support_tier": "Medium",
+        "supporting_observations": [
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "osint:match:0"
+        ]
+      },
+      "osint_evidence_fingerprint": "382a5810b2f5e82a30a6beccb3d3823fb5525c6e99482559cf1d3f1f91ab65ac",
+      "osint_evidence_revision": 1,
+      "parent_revision_id": "b0c6018281b10130e3f0d177",
+      "policy_version": "investigation.origin_processing.v1",
+      "regional_anomaly_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "Regional forensic observations are retained; their support tier is scoped to processing anomalies.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "observations_present",
+        "support_tier": "Low",
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "revision_id": "8eb0cc37ba3a899718f158b2",
+      "revision_timestamp": "2026-11-08T13:16:19.085573+00:00",
+      "schema_version": 1,
+      "separate_edit_assessment": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:DECLARED_SYNTHETIC",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "patch_similarity:possible_clone_reuse",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_texture_stochastic_regularization"
+        ],
+        "interpretation": "A distinct editing operation is not established by regional anomalies or source declarations.",
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: medium; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 0.6; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "status": "not_established",
+        "support_tier": null,
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "cross_signal:strong_hotspot_convergence",
+          "region_fft:subject_background_frequency_mismatch",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ]
+      },
+      "technical_provenance_authenticity": {
+        "contradicting_observations": [],
+        "evidence_refs": [
+          "forensic:provenance_evidence"
+        ],
+        "interpretation": "No cryptographic validator and image-binding result authenticates the creation history.",
+        "limitations": [
+          "Metadata declarations, source review and normalized similarity do not verify technical provenance."
+        ],
+        "moderating_observations": [],
+        "review_status": "no_validator_result",
+        "status": "unverified",
+        "support_tier": null,
+        "supporting_observations": []
+      }
+    },
+    "equivalent_dimensions": true,
+    "forensic_json_unchanged_after_osint": true,
+    "validation_scope": "saved measurements re-synthesized once with corrected eligibility; no Midjourney pixel detectors rerun"
+  },
+  "comfyui": {
+    "source": "D:\\Coding\\SignalLens\\test_images\\stablediffusion\\the-greatest-amateur-photo-realism-i-have-ever-achieved-v0-ovys259b8xyg1.png",
+    "sha256": "f5aade08871a13d91c89689517b0a895cf04ca27e95cdf42637664ddcdbb2480",
+    "profile": "subject_based",
+    "settings": {
+      "supported_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".tif",
+        ".tiff",
+        ".bmp",
+        ".heic",
+        ".heif"
+      ],
+      "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+      "output_root": "./analyzed/",
+      "patch_similarity_profiles": {
+        "normal": {
+          "patch_size": 24,
+          "stride": 12,
+          "descriptor_size": 8,
+          "similarity_threshold": 0.965,
+          "max_pairs_to_keep": 300,
+          "max_pairs_for_overlay": 60
+        },
+        "subject_based": {
+          "patch_size": 16,
+          "stride": 8,
+          "descriptor_size": 8,
+          "similarity_threshold": 0.945,
+          "max_pairs_to_keep": 500,
+          "max_pairs_for_overlay": 80
+        }
+      },
+      "subject_background_profiles": {
+        "normal": {
+          "subject": 96,
+          "boundary": 64,
+          "background": 128,
+          "boundry": 64
+        },
+        "subject_based": {
+          "subject": 160,
+          "boundary": 64,
+          "background": 64,
+          "boundry": 64
+        }
+      }
+    },
+    "scope": "one fresh pipeline run; temporary artifacts removed after preserving comparison",
+    "stage_coverage": {
+      "status": "complete",
+      "stage_counts": {
+        "success": 23,
+        "skipped": 0,
+        "unavailable": 0,
+        "failed": 0
+      },
+      "elapsed_seconds": 7.9401,
+      "unavailable_stages": []
+    },
+    "errors": [],
+    "forensic_primary": "localized_editing",
+    "tiers": {
+      "synthetic_origin": "Medium",
+      "localized_editing": "High",
+      "camera_acquisition": "Medium"
+    },
+    "scorecard": {
+      "camera_counter_support": 1.25,
+      "suspicious_score": 21.30815,
+      "benign_score": 2.25,
+      "local_edit_support_score": 6.05,
+      "clone_support_score": 0.1499999999999998,
+      "synthetic_boost": 0.4,
+      "edit_boost": 2.6390000000000002,
+      "provenance_boost": 0.75,
+      "sensor_boost": 0.0,
+      "compression_boost": 0.75,
+      "caution_penalty": 1.25,
+      "clone_candidate": false,
+      "clone_ambiguous": false,
+      "contextual_false_positive_risk": false,
+      "synthetic_supported_by_other_domains": true,
+      "suspicious_domains": [
+        "boundary",
+        "boundary_semantic",
+        "compression",
+        "cross_signal",
+        "frequency",
+        "metadata",
+        "patch",
+        "patch_spatial",
+        "region_asymmetry",
+        "subject_material",
+        "subject_texture"
+      ],
+      "benign_domains": [
+        "boundary_focus",
+        "sensor"
+      ],
+      "is_valid": true,
+      "validation_errors": []
+    },
+    "metadata_signals": [
+      "EMBEDDED_GENERATION_PROMPT",
+      "AI_TOOL_NAME_MATCH"
+    ],
+    "conclusion": {
+      "policy_version": "investigation.origin_processing.v1",
+      "origin_assessment": {
+        "status": "declared_generation",
+        "interpretation": "Embedded workflow declares full-image generation from an empty latent; provenance authenticity is unverified.",
+        "support_tier": "Medium",
+        "evidence_refs": [
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "sensor_origin:camera_like_acquisition_supported",
+          "fft:structured_frequency_anomaly",
+          "metadata:AI_TOOL_NAME_MATCH",
+          "patch_similarity:structured_patch_recurrence",
+          "patch_spatial:subject_internal_synthetic_recurrence",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "supporting_observations": [
+          "metadata:EMBEDDED_GENERATION_PROMPT"
+        ],
+        "contradicting_observations": [],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Metadata authenticity is unverified; C2PA presence alone is not validation.",
+          "Source context does not authenticate the complete creation history."
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "creation_context": {
+          "kind": "structured_workflow",
+          "declared_process": "full_image_generation",
+          "provenance_authenticity": "unverified",
+          "workflow_interpretation": {
+            "schema_version": 1,
+            "declared_process": "full_image_generation",
+            "graph_interpretation_status": "coherent",
+            "provenance_authenticity": "unverified",
+            "source_fields": [
+              "PNG:Prompt",
+              "PNG:Workflow"
+            ],
+            "supporting_node_paths": [
+              {
+                "source_field": "PNG:Prompt",
+                "nodes": [
+                  "97",
+                  "93",
+                  "8",
+                  "87"
+                ],
+                "sink_node": "87"
+              },
+              {
+                "source_field": "PNG:Workflow",
+                "nodes": [
+                  "97",
+                  "93",
+                  "8",
+                  "87"
+                ],
+                "sink_node": "87"
+              }
+            ],
+            "declaration_count": 1,
+            "interpretation_limitations": [
+              "Embedded workflows are unauthenticated declarations, not proof of execution or pixel origin.",
+              "Recognized node interfaces are assumed; custom implementations are not authenticated."
+            ],
+            "graph_fingerprint": "31d23cc57f2cd16e34e40cc399212e741ab32ca36c6bde3859381d9b976f7232"
+          }
+        }
+      },
+      "regional_anomaly_assessment": {
+        "status": "observations_present",
+        "interpretation": "Regional forensic observations are retained; their support tier is scoped to processing anomalies.",
+        "support_tier": "High",
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "boundary_focus:boundary_processing_convergence_supported",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ],
+        "contradicting_observations": [
+          "boundary_focus:boundary_processing_convergence_supported"
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: high; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 1.0; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "review_status": "frozen_forensic_assessment"
+      },
+      "separate_edit_assessment": {
+        "status": "not_established",
+        "interpretation": "A distinct editing operation is not established by regional anomalies or source declarations.",
+        "support_tier": null,
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "subject_boundary:possible_boundary_transition_inconsistency",
+          "boundary_focus:boundary_processing_convergence_supported",
+          "sensor_origin:camera_like_acquisition_supported",
+          "metadata:EMBEDDED_GENERATION_PROMPT",
+          "subject_material_realism:subject_material_regularization_dominant",
+          "subject_process_asymmetry:subject_surface_regularization_dominant",
+          "subject_texture_consistency:subject_internal_stochastic_repetition"
+        ],
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "subject_boundary:possible_boundary_transition_inconsistency"
+        ],
+        "contradicting_observations": [
+          "boundary_focus:boundary_processing_convergence_supported"
+        ],
+        "moderating_observations": [
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Regional processing differences do not establish a distinct edit or its chronology.",
+          "Segmentation quality: high; boundary support: 1.0. These are different reliability concepts.",
+          "Background comparison baseline reliability: 1.0; regional sampling may not represent an independent baseline.",
+          "Cross-signal hotspots do not demonstrate alignment with the person boundary."
+        ],
+        "review_status": "frozen_forensic_assessment"
+      },
+      "technical_provenance_authenticity": {
+        "status": "unverified",
+        "interpretation": "No cryptographic validator and image-binding result authenticates the creation history.",
+        "support_tier": null,
+        "evidence_refs": [
+          "forensic:provenance_evidence"
+        ],
+        "supporting_observations": [],
+        "contradicting_observations": [],
+        "moderating_observations": [],
+        "limitations": [
+          "Metadata declarations, source review and normalized similarity do not verify technical provenance."
+        ],
+        "review_status": "no_validator_result"
+      },
+      "external_source_corroboration": {
+        "status": "not_recorded",
+        "interpretation": "Source evidence does not currently supply reviewed, image-associated corroboration.",
+        "support_tier": null,
+        "evidence_refs": [],
+        "supporting_observations": [],
+        "contradicting_observations": [],
+        "moderating_observations": [],
+        "limitations": [
+          "Manual similarity is analyst-reported; it is not a computed file-hash match or cryptographic authentication.",
+          "Repeated metadata and source claims are not assumed independent."
+        ],
+        "review_status": "not_recorded",
+        "image_association": "unassociated",
+        "source_image_match_status": "not_assessed",
+        "matches": [],
+        "creator_generation_claim": [],
+        "evidence_dependency": []
+      },
+      "lead": {
+        "title": "Generation context with regional observations",
+        "interpretation": "Embedded workflow declares full-image generation from an empty latent; provenance authenticity is unverified. A distinct editing operation is not established by regional anomalies or source declarations.",
+        "confidence_scope": "Frozen forensic support — origin: Medium; regional: High. These are not probabilities or an overall verdict tier."
+      },
+      "limitations": [
+        "Dimensions may share measurements and creation claims; no statistical independence is assumed."
+      ]
+    }
+  },
+  "conventional_photo": {
+    "source": "D:\\Coding\\SignalLens\\test_images\\real_camera\\test-nikon-d7500-nikonpassion-small-16.jpg",
+    "sha256": "aed004440af3abfde913604d0a311418da412ea85c106ff9da83b25428be8b09",
+    "profile": "normal",
+    "settings": {
+      "supported_extensions": [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+        ".tif",
+        ".tiff",
+        ".bmp",
+        ".heic",
+        ".heif"
+      ],
+      "file_masks": "*.jpg *.jpeg *.png *.webp *.tif *.tiff *.bmp *.heic *.heif",
+      "output_root": "./analyzed/",
+      "patch_similarity_profiles": {
+        "normal": {
+          "patch_size": 24,
+          "stride": 12,
+          "descriptor_size": 8,
+          "similarity_threshold": 0.965,
+          "max_pairs_to_keep": 300,
+          "max_pairs_for_overlay": 60
+        },
+        "subject_based": {
+          "patch_size": 16,
+          "stride": 8,
+          "descriptor_size": 8,
+          "similarity_threshold": 0.945,
+          "max_pairs_to_keep": 500,
+          "max_pairs_for_overlay": 80
+        }
+      },
+      "subject_background_profiles": {
+        "normal": {
+          "subject": 96,
+          "boundary": 64,
+          "background": 128,
+          "boundry": 64
+        },
+        "subject_based": {
+          "subject": 160,
+          "boundary": 64,
+          "background": 64,
+          "boundry": 64
+        }
+      }
+    },
+    "scope": "one fresh pipeline run; temporary artifacts removed after preserving comparison",
+    "stage_coverage": {
+      "status": "partial",
+      "stage_counts": {
+        "success": 14,
+        "skipped": 8,
+        "unavailable": 1,
+        "failed": 0
+      },
+      "elapsed_seconds": 1.1578,
+      "unavailable_stages": [
+        "Person-derived region masks",
+        "Region segmentation analysis",
+        "Boundary-focused analysis",
+        "Region-aware FFT analysis",
+        "Segmentation alignment analysis",
+        "Subject texture consistency analysis",
+        "Subject process asymmetry analysis",
+        "Subject material realism analysis",
+        "Patch spatial analysis"
+      ]
+    },
+    "errors": [],
+    "forensic_primary": "localized_editing",
+    "tiers": {
+      "synthetic_origin": "Inconclusive",
+      "localized_editing": "Medium",
+      "camera_acquisition": "Medium"
+    },
+    "scorecard": {
+      "camera_counter_support": 1.25,
+      "suspicious_score": 7.6,
+      "benign_score": 2.25,
+      "local_edit_support_score": 0.0,
+      "clone_support_score": 0.0,
+      "synthetic_boost": 0.0,
+      "edit_boost": 0.0,
+      "provenance_boost": 0.0,
+      "sensor_boost": 0.0,
+      "compression_boost": 0.75,
+      "caution_penalty": 2.6,
+      "clone_candidate": false,
+      "clone_ambiguous": false,
+      "contextual_false_positive_risk": false,
+      "synthetic_supported_by_other_domains": false,
+      "suspicious_domains": [
+        "boundary",
+        "compression",
+        "cross_signal",
+        "frequency"
+      ],
+      "benign_domains": [
+        "sensor",
+        "sensor_cfa"
+      ],
+      "is_valid": true,
+      "validation_errors": []
+    },
+    "metadata_signals": [
+      "METADATA_STRIPPED_OR_SPARSE"
+    ],
+    "conclusion": {
+      "policy_version": "investigation.origin_processing.v1",
+      "origin_assessment": {
+        "status": "not_established",
+        "interpretation": "Origin is not established by the frozen forensic assessment.",
+        "support_tier": "Inconclusive",
+        "evidence_refs": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported",
+          "fft:possible_decoder_grid_signature",
+          "metadata:sparse_or_stripped"
+        ],
+        "supporting_observations": [],
+        "contradicting_observations": [],
+        "moderating_observations": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Heuristic support levels are not probabilities.",
+          "Missing provenance coverage is a limitation, not positive generation evidence.",
+          "No substantive generation declaration or specific visual generation finding is established.",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.",
+          "Coverage limitation (not negative evidence): unavailable subject_material_realism, subject_process_asymmetry.",
+          "Source context does not authenticate the complete creation history."
+        ],
+        "review_status": "frozen_forensic_assessment",
+        "creation_context": {
+          "kind": "unspecified",
+          "declared_process": null,
+          "provenance_authenticity": "not_assessed",
+          "workflow_interpretation": null
+        }
+      },
+      "regional_anomaly_assessment": {
+        "status": "observations_present",
+        "interpretation": "Regional forensic observations are retained; their support tier is scoped to processing anomalies.",
+        "support_tier": "Medium",
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence"
+        ],
+        "contradicting_observations": [],
+        "moderating_observations": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Boundary reliability is reduced (0.00).",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.",
+          "Coverage limitation (not negative evidence): unavailable boundary_focus, patch_spatial, region_masks, segmentation_alignment.",
+          "Regional processing differences do not establish a distinct edit or its chronology."
+        ],
+        "review_status": "frozen_forensic_assessment"
+      },
+      "separate_edit_assessment": {
+        "status": "not_established",
+        "interpretation": "A distinct editing operation is not established by regional anomalies or source declarations.",
+        "support_tier": null,
+        "evidence_refs": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence",
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "supporting_observations": [
+          "boundary:possible_foreground_background_processing_mismatch",
+          "compression_history:localized_compression_inconsistency",
+          "cross_signal:strong_hotspot_convergence"
+        ],
+        "contradicting_observations": [],
+        "moderating_observations": [
+          "cfa_demosaic:weak_camera_cfa_supported",
+          "sensor_origin:camera_like_acquisition_supported"
+        ],
+        "limitations": [
+          "Localized editing evidence does not by itself establish AI generation.",
+          "Regional anomaly support is not proof of a separate editing operation.",
+          "Boundary reliability is reduced (0.00).",
+          "Localized-mechanism corroboration remains inconclusive.",
+          "Analysis coverage is incomplete. Unavailable stages: Person-derived region masks, Region segmentation analysis, Boundary-focused analysis, Region-aware FFT analysis, Segmentation alignment analysis, Subject texture consistency analysis, Subject process asymmetry analysis, Subject material realism analysis, Patch spatial analysis. Missing regional evidence supports neither authenticity nor synthetic origin.",
+          "Coverage limitation (not negative evidence): unavailable boundary_focus, patch_spatial, region_masks, segmentation_alignment.",
+          "Regional processing differences do not establish a distinct edit or its chronology."
+        ],
+        "review_status": "frozen_forensic_assessment"
+      },
+      "technical_provenance_authenticity": {
+        "status": "unverified",
+        "interpretation": "No cryptographic validator and image-binding result authenticates the creation history.",
+        "support_tier": null,
+        "evidence_refs": [
+          "forensic:provenance_evidence"
+        ],
+        "supporting_observations": [],
+        "contradicting_observations": [],
+        "moderating_observations": [],
+        "limitations": [
+          "Metadata declarations, source review and normalized similarity do not verify technical provenance."
+        ],
+        "review_status": "no_validator_result"
+      },
+      "external_source_corroboration": {
+        "status": "not_recorded",
+        "interpretation": "Source evidence does not currently supply reviewed, image-associated corroboration.",
+        "support_tier": null,
+        "evidence_refs": [],
+        "supporting_observations": [],
+        "contradicting_observations": [],
+        "moderating_observations": [],
+        "limitations": [
+          "Manual similarity is analyst-reported; it is not a computed file-hash match or cryptographic authentication.",
+          "Repeated metadata and source claims are not assumed independent."
+        ],
+        "review_status": "not_recorded",
+        "image_association": "unassociated",
+        "source_image_match_status": "not_assessed",
+        "matches": [],
+        "creator_generation_claim": [],
+        "evidence_dependency": []
+      },
+      "lead": {
+        "title": "Regional observations; edit history unresolved",
+        "interpretation": "Origin is not established by the frozen forensic assessment. A distinct editing operation is not established by regional anomalies or source declarations.",
+        "confidence_scope": "Frozen forensic support — origin: Inconclusive; regional: Medium. These are not probabilities or an overall verdict tier."
+      },
+      "limitations": [
+        "Dimensions may share measurements and creation claims; no statistical independence is assumed."
+      ]
+    }
+  }
+}

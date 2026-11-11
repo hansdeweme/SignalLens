@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 from typing import Optional
+from workflow_interpretation import interpret_workflows, workflow_description
 # local imports to avoid circular dependencies
 from gui_semantics import ModuleSummary
 from metadata_evidence import (
@@ -74,6 +75,15 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         "provenance_verified": False,
         "camera_metadata_present": "CAMERA_METADATA_RICH" in signal_ids,
     }
+    # Interpret raw observations, never trust a supplied "verified" or process
+    # flag. Legacy extractor payloads retain the original fields in signal evidence.
+    raw_hits = exif_payload.get('raw_watchlist_hits', {})
+    entries = [e for bucket in raw_hits.values() if isinstance(bucket, list) for e in bucket] if isinstance(raw_hits, dict) else []
+    if not entries:
+        entries = [e for s in signals for e in (s.get('evidence') or []) if isinstance(e, dict)]
+    workflow = interpret_workflows(entries)
+    if workflow:
+        section.details['workflow_interpretation'] = workflow
     section.pattern = metadata_status
     # prompt override
     if "EMBEDDED_GENERATION_PROMPT" in signal_ids:
@@ -86,6 +96,8 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
             "Generation-specific structure provides an unverified declaration of AI-mediated creation. "
             "Metadata authenticity has not been verified; this does not establish a localized edit."
         )
+        if workflow:
+            section.note = workflow_description(workflow) + ' This does not establish a separate localized edit.'
         # Optional: surface snippet for UI/debugging
         evidence = [
             e
@@ -161,6 +173,8 @@ def build_metadata_section(exif_payload) -> ModuleSummary:
         metadata_status,
         ("inconclusive", "Metadata analysis completed.", 0.0),
     )
+    if workflow:
+        section.note = workflow_description(workflow)
     if metadata_status in GENERATION_PATTERNS | ENHANCEMENT_PATTERNS:
         section.polarity = "suspicious"
     elif metadata_status == "camera_metadata_present":

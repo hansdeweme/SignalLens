@@ -197,6 +197,12 @@ def test_spatial_corroboration_is_needed_to_present_copy_move_support():
     synthetic = hypotheses(result[4])["synthetic_origin"]
     assert "patch_similarity:possible_clone_reuse" in local["supporting_evidence"]
     assert "patch_similarity:possible_clone_reuse" not in synthetic["supporting_evidence"]
+    # A completed nonconfirming spatial check must survive for ambiguity even
+    # though it is ineligible for positive base credit.
+    env.sections['patch_spatial'] = section('spatial', 'spatial_patch_recurrence_inconclusive', status='inconclusive', polarity='neutral')
+    measured = logic.build_decision_env(env.sections)
+    assert measured.card.clone_ambiguous
+    assert measured.sections['patch_spatial'].status == 'inconclusive'
 
 
 def test_unknown_pattern_names_do_not_infer_hypothesis_relevance():
@@ -244,7 +250,8 @@ def test_rendering_through_summary_builders_includes_scoped_lists():
         "compression_history", "cfa_demosaic",
     )
     state = SimpleNamespace(**{f"{key}_payload": None for key in keys})
-    state.exif_payload = payload_from_record({"PNG:Description": MIDJOURNEY_DESCRIPTION})
+    from reasoning_helpers import comfy_graph
+    state.exif_payload = payload_from_record({'PNG:Prompt': comfy_graph(), "PNG:Description": MIDJOURNEY_DESCRIPTION})
     state.analysis_mode = "normal"
     summary = build_summary_result(state)
     assert summary.overall_pattern == "provenance_supported_synthetic_context"
@@ -254,6 +261,10 @@ def test_rendering_through_summary_builders_includes_scoped_lists():
     assert "metadata authenticity remains unverified" in summary.full_text
     assert "metadata authenticity remains unverified" in summary.full_html
     assert summary.reasoning_trace["analysis_mode"] == "normal"
+    lead = summary.reasoning_trace['causal_interpretation']['lead_explanation']
+    assert 'full-image generation' in lead
+    assert lead in summary.full_text and lead in summary.full_html
+    assert lead in build_reasoning_trace_text(summary.reasoning_trace)
 
 
 def test_legacy_trace_without_new_evidence_fields_still_renders():

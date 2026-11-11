@@ -48,10 +48,14 @@ def recover_metadata(context):
         recorded=mapping(mapping(manifest.get('artifacts')).get('investigation'))
         historical=mapping(context.get('historical'))
         expected=context if context.get('live') else historical
-        if (not expected.get('result_id') or recorded.get('result_id')!=expected.get('result_id')
+        expected_id = mapping(expected.get('storage')).get('forensic_result_id') or expected.get('result_id')
+        if (not expected_id or recorded.get('result_id')!=expected_id
                 or recorded.get('source_sha256')!=context['source_sha256']):
             raise ValueError('Stored metadata run identity does not match this investigation.')
-        path=scoped_path(root,Path(context.get('source_path') or '').stem+'_exif_signals.json')
+        from investigation_storage import run_identity
+        filename = ('evidence/metadata.json' if run_identity(root) else
+                    Path(context.get('source_path') or '').stem+'_exif_signals.json')
+        path=scoped_path(root,filename)
         if path.stat().st_size>16*1024*1024:
             raise ValueError('Recorded metadata payload exceeds the 16 MiB browsing limit.')
         payload=json.loads(path.read_text(encoding='utf-8'))

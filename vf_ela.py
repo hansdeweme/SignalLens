@@ -4,6 +4,7 @@
 # Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Imgages#
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -328,12 +329,12 @@ def run_ela(
     original = load_rgb_image(image_path)
     input_format = image_path.suffix.lower()
     native_jpeg_ela = input_format in SUPPORTED_NATIVE_JPEG
-    temp_jpeg_path = output_dir / f"{image_path.stem}_ela_recompressed_q{recompress_quality}.jpg"
+    temp_jpeg_path = output_dir / f"{artifact_stem(image_path)}_ela_recompressed_q{recompress_quality}.jpg"
     # print(f"[Debug ELA] Recompressed JPEG quality of {temp_jpeg_path}: {recompress_quality}")  
-    ela_image_path = output_dir / f"{image_path.stem}_ela.png"
-    hotspot_overlay_original_path = output_dir / f"{image_path.stem}_ela_overlay_original.png"
-    hotspot_overlay_diff_path = output_dir / f"{image_path.stem}_ela_overlay_diff.png"    
-    ela_json_path = output_dir / f"{image_path.stem}_ela.json"
+    ela_image_path = output_dir / f"{artifact_stem(image_path)}_ela.png"
+    hotspot_overlay_original_path = output_dir / f"{artifact_stem(image_path)}_ela_overlay_original.png"
+    hotspot_overlay_diff_path = output_dir / f"{artifact_stem(image_path)}_ela_overlay_diff.png"    
+    ela_json_path = output_dir / f"{artifact_stem(image_path)}_ela.json"
     # Recompress to JPEG
     original.save(temp_jpeg_path, "JPEG", quality=recompress_quality)
     recompressed = load_rgb_image(temp_jpeg_path)

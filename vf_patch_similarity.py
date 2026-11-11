@@ -10,6 +10,7 @@
 # This module behaves more like “strong repeated local structure detector” than “reliable clone-reuse detector”, thus is best treated as supporting evidence not standalone proof
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 import json
 import math
 import numpy as np
@@ -114,7 +115,7 @@ image_path: str | Path,
         shape=gray.shape,
     )
     similarity_pattern, similarity_note = interpret_patch_similarity(features)
-    stem = image_path.stem
+    stem = artifact_stem(image_path)
     overlay_path = output_dir / f"{stem}_patch_similarity_overlay.png"
     heatmap_path = output_dir / f"{stem}_patch_similarity_heatmap.png"
     json_path = output_dir / "patch_similarity_results.json"
@@ -139,6 +140,9 @@ image_path: str | Path,
             "repetition_score": round(float(features["repetition_score"]), 4),
             "clone_suspicion_score": round(float(features["clone_suspicion_score"]), 4),
             "pair_count": int(features["pair_count"]),
+            "spatially_separated_pair_count": int(features["spatially_separated_pair_count"]),
+            "mean_similarity": float(features["mean_similarity"]),
+            "max_similarity": float(features["max_similarity"]),
             "coverage_ratio": round(float(features["coverage_ratio"]), 4),
             "similarity_pattern": similarity_pattern,
             "similarity_note": similarity_note,

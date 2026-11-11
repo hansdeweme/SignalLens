@@ -3,6 +3,7 @@
 # Licensed under the MIT License (https://opensource.org/licenses/MIT).
 #Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Imgages
 #
+from investigation_storage import artifact_stem
 import numpy as np
 import cv2
 from pathlib import Path
@@ -92,10 +93,10 @@ def run_region_mask_analysis(image_path: str | Path, output_dir: str | Path, bou
     # --------------------------------------------------
     # Step 7: Save masks
     # --------------------------------------------------
-    subject_path = output_dir / f"{image_path.stem}_subject_mask.png"
-    boundary_path = output_dir / f"{image_path.stem}_boundary_band.png"
-    background_path = output_dir / f"{image_path.stem}_background_mask.png"
-    preview_path = output_dir / f"{image_path.stem}_region_preview.png"
+    subject_path = output_dir / f"{artifact_stem(image_path)}_subject_mask.png"
+    boundary_path = output_dir / f"{artifact_stem(image_path)}_boundary_band.png"
+    background_path = output_dir / f"{artifact_stem(image_path)}_background_mask.png"
+    preview_path = output_dir / f"{artifact_stem(image_path)}_region_preview.png"
     cv2.imwrite(str(subject_path), subject_mask * 255)
     cv2.imwrite(str(boundary_path), boundary_band * 255)
     cv2.imwrite(str(background_path), background_mask * 255)

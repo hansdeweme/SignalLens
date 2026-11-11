@@ -1,8 +1,8 @@
 """Revision-bound reports and non-destructive legacy loading.
 
 Existing SummaryResult fields and serializers remain compatible. Current OSINT
-annotations are an explicitly separate appendix; post-run edits never synthesize
-new scores, hypotheses or confidence.
+annotations and current investigation synthesis are separately revision-bound;
+post-run edits never synthesize new forensic scores, hypotheses or confidence.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -16,6 +16,8 @@ from investigation_session import (
 )
 from reasoning_persistence import persist_reasoning_trace, persist_reasoning_trace_text
 from summary_persistence import persist_summary_result
+from investigation_synthesis import synthesis_text
+from investigation_storage import allocate_report, atomic_json, stored_forensic_root
 
 
 def annotations_object(data):
@@ -77,12 +79,25 @@ def create_report_snapshot(session: InvestigationSession) -> ReportSnapshot:
         'imported_from': session.imported_from,
         'historical_identity': json.loads(session.historical_identity_json) if session.historical_identity_json else None,
     }
+    historical = json.loads(session.historical_identity_json or '{}')
+    historical_storage = historical.get('storage') or {}
+    from artifact_presenter import output_root
+    root = (Path(invocation.output_dir) if invocation else output_root(session))
+    if root:
+        data['investigation']['storage'] = {'storage_format': 2,
+            'forensic_run': str(root.resolve()),
+            'forensic_result_id': (historical_storage.get('forensic_result_id') or historical.get('result_id'))
+                if not invocation else session.result_id}
     data['annotations'] = json.loads(session.annotations_json)
     data['forensic_content'] = {'full_text': data.get('full_text') or '',
                                 'full_html': data.get('full_html') or ''}
+    synthesis = session.investigation_synthesis()
+    data['investigation_synthesis'] = synthesis
+    lead = synthesis_text(synthesis)
+    frozen_html = forensic_html(data)
     appendix_text, appendix_html = annotation_appendix(session)
-    data['full_text'] = (data.get('full_text') or '') + '\n\n' + appendix_text
-    data['full_html'] = forensic_html(data) + appendix_html
+    data['full_text'] = lead + '\n\nFrozen forensic analysis\n' + (data.get('full_text') or '') + '\n\n' + appendix_text
+    data['full_html'] = '<h2>Current investigation synthesis</h2><pre>' + escape(lead) + '</pre><h2>Frozen forensic analysis</h2>' + frozen_html + appendix_html
     return ReportSnapshot(session.session_id, session.result_id, session.annotation_revision, json_snapshot(data))
 
 
@@ -98,13 +113,28 @@ def persist_report_snapshot(session: InvestigationSession, snapshot: ReportSnaps
     output = Path(output_dir)
     # Write to a new immutable generation. The atomic pointer is the publication
     # boundary, so a failed write never advertises a partly updated report bundle.
-    generation = output / 'report_revisions' / f'{snapshot.result_id}-a{snapshot.annotation_revision}-{uuid4().hex}'
-    data = snapshot.payload()
-    summary_paths = persist_summary_result(data, generation)
-    trace = data.get('reasoning_trace')
-    trace_json = persist_reasoning_trace(trace, generation)
+    generation, pointer, compact = allocate_report(output)
+    if not compact:
+        generation = output / 'report_revisions' / f'{snapshot.result_id}-a{snapshot.annotation_revision}-{uuid4().hex}'
     try:
-        trace_text = persist_reasoning_trace_text(trace, generation)
+        return _persist_report_generation(session, snapshot, generation, pointer, compact)
+    except Exception:
+        # Only the exclusive, unpublished format-2 generation allocated above
+        # is ours to remove. Historical trees and valid pointers are untouched.
+        if compact and generation.resolve().parent == (pointer.parent / 'reports').resolve():
+            import shutil
+            shutil.rmtree(generation, ignore_errors=True)
+        raise
+
+
+def _persist_report_generation(session, snapshot, generation, pointer, compact):
+    data = snapshot.payload()
+    options = {'flat': True} if compact else {}
+    summary_paths = persist_summary_result(data, generation, **options)
+    trace = data.get('reasoning_trace')
+    trace_json = persist_reasoning_trace(trace, generation, **options)
+    try:
+        trace_text = persist_reasoning_trace_text(trace, generation, **options)
     except (KeyError, TypeError, ValueError):
         # Older/partial traces may not support the legacy narrative renderer.
         # Preserve exact recorded fields, rather than inventing missing facts.
@@ -115,11 +145,8 @@ def persist_report_snapshot(session: InvestigationSession, snapshot: ReportSnaps
     (generation / 'osint_results.json').write_text(json.dumps(data['annotations'], indent=2, ensure_ascii=False), encoding='utf-8')
     if not snapshot_is_current(session, snapshot):
         raise ValueError('Investigation revision changed during report generation.')
-    pointer = output / 'current_report.json'
-    temporary = output / f'.current_report-{uuid4().hex}.tmp'
-    temporary.write_text(json.dumps({'schema_version': 1, 'investigation': data['investigation'],
-                                    'summary': str(Path(summary_paths['final_summary_json']).relative_to(output))}, indent=2), encoding='utf-8')
-    temporary.replace(pointer)
+    atomic_json(pointer, {'schema_version': 1, 'investigation': data['investigation'],
+                         'summary': str(Path(summary_paths['final_summary_json']).relative_to(pointer.parent))})
     session.report_revision = (snapshot.result_id, snapshot.annotation_revision)
     return {**summary_paths, 'reasoning_trace_json': trace_json, 'reasoning_trace_txt': trace_text,
             'current_report': str(pointer)}
@@ -151,7 +178,11 @@ def load_investigation(path: str | Path, image_path: str | Path | None = None) -
         if trace.get(key) is not None and (not isinstance(trace[key], list) or not all(isinstance(row, dict) for row in trace[key])):
             raise ValueError(f'Invalid stored reasoning field: {key}.')
     recorded_path = metadata.get('image_path') or image_path
-    run_dir = source.parent.parent
+    run_dir = stored_forensic_root(metadata)
+    if run_dir is None:
+        run_dir = source.parent.parent
+        if run_dir.parent.name == 'report_revisions':
+            run_dir = run_dir.parent.parent
     manifest = run_dir / 'analysis_run.json'
     if not recorded_path and manifest.is_file():
         recorded_path = json.loads(manifest.read_text(encoding='utf-8')).get('input', {}).get('selected_file')
@@ -168,11 +199,29 @@ def load_investigation(path: str | Path, image_path: str | Path | None = None) -
         annotations_json=json_snapshot(annotations), imported_from=str(source),
         historical_identity_json=json_snapshot(metadata) if metadata else None,
         source_sha256=metadata.get('source_sha256') or (annotations or {}).get('image_sha256'))
-    original = {key: value for key, value in data.items() if key not in ('investigation', 'annotations')}
+    original = {key: value for key, value in data.items() if key not in ('investigation', 'annotations', 'investigation_synthesis')}
     # New-format HTML/text includes the separate appendix. Restore exact frozen
     # forensic text from a recorded copy rather than stripping arbitrary prose.
     if 'forensic_content' in original:
         content = original.pop('forensic_content')
         original['full_text'], original['full_html'] = content['full_text'], content['full_html']
     session.summary_json = json_snapshot(original)
+    recorded_synthesis = data.get('investigation_synthesis')
+    from investigation_synthesis import POLICY_VERSION, build_synthesis
+    if (isinstance(recorded_synthesis, dict) and recorded_synthesis.get('policy_version') == POLICY_VERSION
+            and isinstance(recorded_synthesis.get('lead'), dict)
+            and all(isinstance(recorded_synthesis['lead'].get(k), str) for k in ('title', 'interpretation', 'confidence_scope'))
+            and isinstance(recorded_synthesis.get('revision_id'), str)
+            and all(isinstance(recorded_synthesis.get(k), dict) and isinstance(recorded_synthesis[k].get('status'), str)
+                    and isinstance(recorded_synthesis[k].get('interpretation'), str)
+                    for k in ('origin_assessment', 'regional_anomaly_assessment', 'separate_edit_assessment',
+                              'technical_provenance_authenticity', 'external_source_corroboration'))):
+        key = session.synthesis_key()
+        expected = json.loads(json_snapshot(build_synthesis(original, annotations, session.source_sha256,
+            verifications=session.verified_sources())))
+        if (recorded_synthesis.get('forensic_fingerprint') == key[-2]
+                and recorded_synthesis.get('osint_evidence_fingerprint') == key[-1]
+                and recorded_synthesis.get('image_sha256') == session.source_sha256
+                and all(recorded_synthesis.get(k) == v for k, v in expected.items())):
+            session._synthesis_json, session._synthesis_key = json_snapshot(recorded_synthesis), key
     return session

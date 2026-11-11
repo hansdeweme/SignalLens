@@ -18,6 +18,7 @@ from mask_contract import (
 # local imports
 from signallens_settings import get_patch_profile, get_subject_background_profile
 from run_reporting import RunRecorder
+from investigation_storage import artifact_naming, run_identity, evidence_directory
 from image_gatekeeper import prepare_analysis_images
 from exiftool_backend import analyze_file_with_exiftool
 from vf_ela import run_ela
@@ -50,6 +51,10 @@ RUN_LEGACY_REGION_MASKS = False
 class AnalysisState:
     selected_file: Path
     output_dir: Path
+
+    @property
+    def evidence_dir(self):
+        return evidence_directory(self.output_dir)
     output_json: Path | None = None
     run_recorder: Any | None = None
     prepared_images_payload: dict | None = None
@@ -163,7 +168,8 @@ class SignalLensController:
                 if getattr(state, attr, None) is None:
                     raise StageUnavailable(f"Missing dependency: {attr}")
             self.log(f"Running {name}...", "info")
-            result = func()
+            with artifact_naming(bool(run_identity(state.output_dir))):
+                result = func()
             if assign_attr and result is None:
                 raise StageUnavailable(f"{name} produced no evidence payload.")
             if assign_attr:
@@ -233,7 +239,7 @@ class SignalLensController:
             selected = derive_region_masks_from_person_mask(
                 person_mask_path=block["mask_path"],
                 image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 person_mask_reliability=diagnostics["mask_reliability"],
                 mask_source=diagnostics["mask_source"], person_specific=diagnostics["person_specific"],
             )
@@ -241,7 +247,7 @@ class SignalLensController:
             selected = self.run_stage(
                 state, "Region-mask legacy", lambda: run_region_mask_analysis(
                     image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
-                    output_dir=state.output_dir, boundary_width_px=18,
+                    output_dir=state.evidence_dir, boundary_width_px=18,
                 ), assign_attr="region_masks_payload_old", require=["prepared_images_payload"],
             )
             if selected:
@@ -367,7 +373,7 @@ class SignalLensController:
             name="ELA analysis",
             func=lambda: run_ela(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 jpeg_quality=90,
             ),
             assign_attr="ela_payload",
@@ -380,7 +386,7 @@ class SignalLensController:
             name="Noise analysis",
             func=lambda: run_noise_analysis(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="noise_payload",
             success_log=lambda p: self.log(f"Noise pattern: {p.get('noise', {}).get('pattern', {}).get('noise_pattern')}", "finding"),
@@ -392,7 +398,7 @@ class SignalLensController:
             name="Sensor-origin analysis",
             func=lambda: run_sensor_origin_analysis(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="sensor_origin_payload",
             success_log=lambda p: self.log(
@@ -407,7 +413,7 @@ class SignalLensController:
             name="CFA / demosaicing analysis",
             func=lambda: run_cfa_demosaic_analysis(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="cfa_demosaic_payload",
             success_log=lambda p: self.log(
@@ -422,7 +428,7 @@ class SignalLensController:
             name="Person-aware subject mask",
             func=lambda: run_person_subject_mask_analysis(
                 image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="person_subject_mask_payload",
             require=["prepared_images_payload"],
@@ -453,7 +459,7 @@ class SignalLensController:
             name="Subject-boundary analysis",
             func=lambda: run_subject_boundary_analysis(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="subject_boundary_payload",
             success_log=lambda p: self.log(
@@ -479,7 +485,7 @@ class SignalLensController:
             name="FFT analysis",
             func=lambda: run_fft_analysis(
                 image_path=Path(state.prepared_images_payload["prepared"]["global"]["path"]),
-                out_dir=state.output_dir,
+                out_dir=state.evidence_dir,
             ),
             assign_attr="fft_payload",
             require=["prepared_images_payload"],
@@ -495,7 +501,7 @@ class SignalLensController:
             name="Patch similarity analysis",
             func=lambda: run_patch_similarity_analysis(
                 image_path=Path(state.prepared_images_payload["prepared"]["patch"]["path"]),
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 patch_size=patch_params.get("patch_size", 24),
                 stride=patch_params.get("stride", 12),
                 descriptor_size=patch_params.get("descriptor_size", 8),
@@ -539,7 +545,7 @@ class SignalLensController:
                 region_masks_payload=state.region_masks_payload,
                 ela_payload=state.ela_payload,
                 noise_payload=state.noise_payload,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="boundary_focus_payload",
             require=["region_masks_payload", "ela_payload", "noise_payload"],
@@ -562,7 +568,7 @@ class SignalLensController:
             func=lambda: run_region_fft_analysis(
                 image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
                 region_masks_payload=state.region_masks_payload,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="region_fft_payload",
             require=["region_masks_payload", "prepared_images_payload"],
@@ -604,7 +610,7 @@ class SignalLensController:
             func=lambda: run_subject_texture_consistency_analysis(
                 image_path=_subject_prepared(state)["path"],
                 region_masks_payload=state.region_masks_payload,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 analysis_shape_hw=(
                     _subject_prepared(state)["height"],
                     _subject_prepared(state)["width"],
@@ -642,7 +648,7 @@ class SignalLensController:
                 subject_mask_path=state.region_masks_payload["region_masks"]["subject_mask_path"],
                 boundary_band_path=state.region_masks_payload["region_masks"]["boundary_band_path"],
                 background_mask_path=state.region_masks_payload["region_masks"]["background_mask_path"],
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 analysis_shape_hw=(
                     state.prepared_images_payload["prepared"]["subject"]["height"],
                     state.prepared_images_payload["prepared"]["subject"]["width"],
@@ -668,7 +674,7 @@ class SignalLensController:
                 profile=profile,
                 image_path=state.prepared_images_payload["prepared"]["subject"]["path"],
                 subject_mask_path=state.region_masks_payload["region_masks"]["subject_mask_path"],
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
                 analysis_shape_hw=(
                     state.prepared_images_payload["prepared"]["subject"]["height"],
                     state.prepared_images_payload["prepared"]["subject"]["width"],
@@ -690,7 +696,7 @@ class SignalLensController:
             func=lambda: run_patch_spatial_analysis(
                 patch_similarity_payload=state.patch_similarity_payload,
                 region_masks_payload=state.region_masks_payload,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="patch_spatial_payload",
             require=["patch_similarity_payload", "region_masks_payload"],
@@ -722,7 +728,7 @@ class SignalLensController:
             name="Compression-history analysis",
             func=lambda: run_compression_history_analysis(
                 image_path=state.selected_file,
-                output_dir=state.output_dir,
+                output_dir=state.evidence_dir,
             ),
             assign_attr="compression_history_payload",
             success_log=lambda p: self.log(
@@ -735,7 +741,7 @@ class SignalLensController:
         if create_shared_boundary_overlays is not None:
             def overlay_func():
                 paths = create_shared_boundary_overlays(
-                    output_dir=state.output_dir,
+                    output_dir=state.evidence_dir,
                     selected_file=state.selected_file,
                     cross_signal_payload=state.cross_signal_payload,
                     ela_payload=state.ela_payload,

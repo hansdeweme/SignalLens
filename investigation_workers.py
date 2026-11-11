@@ -74,8 +74,11 @@ class InvestigationWorkers(QObject):
             import json
             from pathlib import Path
             output = Path(invocation.output_dir)
+            from investigation_storage import evidence_directory, run_identity
+            metadata = (evidence_directory(output) / 'metadata.json' if run_identity(output)
+                        else output / f'{Path(invocation.image_path).stem}_exif_signals.json')
             worker = AnalysisWorker(Path(invocation.image_path), output,
-                output / f'{Path(invocation.image_path).stem}_exif_signals.json', invocation.profile,
+                metadata, invocation.profile,
                 settings_snapshot=json.loads(invocation.settings_json))
         handle = InvocationWorker(invocation, worker, self)
         self.handles[invocation.analysis_id] = handle

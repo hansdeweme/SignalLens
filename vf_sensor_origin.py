@@ -10,6 +10,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 import math
 from typing import Any
@@ -177,7 +178,7 @@ def run_sensor_origin_analysis(image_path: str | Path, output_dir: str | Path, b
         localized_inconsistency_score=localized_inconsistency_score,
     )
     top_blocks = build_top_blocks(np.abs(support_map - np.mean(support_map)), top_k=12)
-    overlay_path = output_dir / f"{image_path.stem}_sensor_origin_overlay.jpg"
+    overlay_path = output_dir / f"{artifact_stem(image_path)}_sensor_origin_overlay.jpg"
     overlay_path_str = create_sensor_overlay(
         image_bgr=image_bgr,
         score_map=np.abs(support_map - np.mean(support_map)),

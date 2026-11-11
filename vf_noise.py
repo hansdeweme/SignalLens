@@ -9,6 +9,7 @@
 #    we may see localized hotspots or unusual patterns.
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 import json
 import math
 from dataclasses import asdict, dataclass
@@ -202,10 +203,10 @@ def run_noise_analysis(
     output_dir.mkdir(parents=True, exist_ok=True)
     original = load_rgb_image(image_path)
     input_format = image_path.suffix.lower()
-    residual_image_path = output_dir / f"{image_path.stem}_noise_residual.png"
-    overlay_original_path = output_dir / f"{image_path.stem}_noise_overlay_original.png"
-    overlay_residual_path = output_dir / f"{image_path.stem}_noise_overlay_residual.png"
-    noise_json_path = output_dir / f"{image_path.stem}_noise.json"
+    residual_image_path = output_dir / f"{artifact_stem(image_path)}_noise_residual.png"
+    overlay_original_path = output_dir / f"{artifact_stem(image_path)}_noise_overlay_original.png"
+    overlay_residual_path = output_dir / f"{artifact_stem(image_path)}_noise_overlay_residual.png"
+    noise_json_path = output_dir / f"{artifact_stem(image_path)}_noise.json"
     luma = rgb_to_luminance_array(original)
     residual = compute_residual_array(luma=luma, blur_radius=blur_radius)
     scale_factor = compute_scale_factor(residual)

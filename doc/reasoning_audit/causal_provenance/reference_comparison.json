@@ -1,0 +1,192 @@
+{
+  "source": "D:\\Coding\\SignalLens\\test_images\\stablediffusion\\the-greatest-amateur-photo-realism-i-have-ever-achieved-v0-ovys259b8xyg1.png",
+  "sha256": "f5aade08871a13d91c89689517b0a895cf04ca27e95cdf42637664ddcdbb2480",
+  "profile": "subject_based",
+  "settings": {
+    "descriptor_size": 8,
+    "max_pairs_for_overlay": 80,
+    "max_pairs_to_keep": 500,
+    "patch_size": 16,
+    "similarity_threshold": 0.945,
+    "stride": 8
+  },
+  "before": {
+    "primary": "localized_editing",
+    "tiers": {
+      "synthetic_origin": "Medium",
+      "localized_editing": "High",
+      "camera_acquisition": "Medium"
+    },
+    "signals": [
+      "EMBEDDED_GENERATION_PROMPT",
+      "AI_TOOL_NAME_MATCH",
+      "DECLARED_ENHANCEMENT"
+    ]
+  },
+  "after": {
+    "primary": "localized_editing",
+    "tiers": {
+      "synthetic_origin": "Medium",
+      "localized_editing": "High",
+      "camera_acquisition": "Medium"
+    },
+    "signals": [
+      "EMBEDDED_GENERATION_PROMPT",
+      "AI_TOOL_NAME_MATCH"
+    ],
+    "causal": {
+      "schema_version": 1,
+      "rule": "declared_generation_with_regional_anomalies",
+      "declared_process": "full_image_generation",
+      "provenance_authenticity": "unverified",
+      "graph_interpretation_status": "coherent",
+      "separate_edit_status": "not_established_from_regional_anomalies",
+      "lead_title": "Declared generation with regional anomalies",
+      "lead_explanation": "Embedded workflow declares full-image generation from an empty latent; provenance authenticity is unverified. Regional processing anomalies may coexist with synthetic creation. A separate localized editing operation is not established by these measurements.",
+      "confidence_scope": "High describes regional-anomaly support, not certainty about editing history. Declared creation support: Medium; provenance unverified.",
+      "legacy_primary_hypothesis": "localized_editing"
+    },
+    "workflow": {
+      "schema_version": 1,
+      "declared_process": "full_image_generation",
+      "graph_interpretation_status": "coherent",
+      "provenance_authenticity": "unverified",
+      "source_fields": [
+        "PNG:Prompt",
+        "PNG:Workflow"
+      ],
+      "supporting_node_paths": [
+        {
+          "source_field": "PNG:Prompt",
+          "nodes": [
+            "97",
+            "93",
+            "8",
+            "87"
+          ],
+          "sink_node": "87"
+        },
+        {
+          "source_field": "PNG:Workflow",
+          "nodes": [
+            "97",
+            "93",
+            "8",
+            "87"
+          ],
+          "sink_node": "87"
+        }
+      ],
+      "declaration_count": 1,
+      "interpretation_limitations": [
+        "Embedded workflows are unauthenticated declarations, not proof of execution or pixel origin.",
+        "Recognized node interfaces are assumed; custom implementations are not authenticated."
+      ],
+      "graph_fingerprint": "31d23cc57f2cd16e34e40cc399212e741ab32ca36c6bde3859381d9b976f7232"
+    }
+  },
+  "patch_replay": {
+    "newly_exposed_metrics": {
+      "spatially_separated_pair_count": 276,
+      "mean_similarity": 0.9572603106498718,
+      "max_similarity": 0.9817931056022644
+    },
+    "old_metrics_equal": {
+      "repetition_score": true,
+      "clone_suspicion_score": true,
+      "coverage_ratio": true
+    },
+    "pair_count_equal": true,
+    "pattern_equal": true
+  },
+  "numeric_scorecard_equal": false,
+  "numeric_differences": {
+    "clone_support_score": [
+      0.0,
+      0.1499999999999998
+    ]
+  },
+  "synthetic_route_matched": false,
+  "other_saved_results": [
+    {
+      "case": "MidjourneyBeauty",
+      "source": "D:\\Coding\\SignalLens\\test_images\\ai_gen\\MidjourneyBeauty.webp",
+      "source_exists": true,
+      "sha256": "d2b95ecf7dd3a4a8577c1c824a80174082f7c1fac8acf9e660e4485052042363",
+      "profile": "normal",
+      "scene_context": {
+        "decorative_geometric": false,
+        "natural_repetition": false,
+        "screen_origin": false,
+        "smartphone_computational": false
+      },
+      "settings": {
+        "descriptor_size": 8,
+        "max_pairs_for_overlay": 60,
+        "max_pairs_to_keep": 300,
+        "patch_size": 24,
+        "similarity_threshold": 0.965,
+        "stride": 12
+      },
+      "before": {
+        "primary": "unresolved_anomaly",
+        "tiers": {
+          "synthetic_origin": "Inconclusive",
+          "localized_editing": "Inconclusive",
+          "camera_acquisition": "Inconclusive",
+          "unresolved_anomaly": "Medium"
+        }
+      },
+      "after": {
+        "primary": "unresolved_anomaly",
+        "tiers": {
+          "synthetic_origin": "Inconclusive",
+          "localized_editing": "Inconclusive",
+          "camera_acquisition": "Inconclusive",
+          "unresolved_anomaly": "Medium"
+        }
+      },
+      "scorecard_equal": true,
+      "measurements": "saved sections reused; no detectors rerun"
+    },
+    {
+      "case": "IMG_20260327_095046_222",
+      "source": "D:\\Coding\\SignalLens\\test_images\\ai_gen\\IMG_20260327_095046_222.jpg",
+      "source_exists": true,
+      "sha256": "e4ce2a62044f147b10eeb2f7fb48280c3841086f054af8b12a2bbdcd381155e0",
+      "profile": "normal",
+      "scene_context": {
+        "decorative_geometric": false,
+        "natural_repetition": false,
+        "screen_origin": false,
+        "smartphone_computational": false
+      },
+      "settings": {
+        "descriptor_size": 8,
+        "max_pairs_for_overlay": 60,
+        "max_pairs_to_keep": 300,
+        "patch_size": 24,
+        "similarity_threshold": 0.965,
+        "stride": 12
+      },
+      "before": {
+        "primary": "localized_editing",
+        "tiers": {
+          "synthetic_origin": "Inconclusive",
+          "localized_editing": "High",
+          "camera_acquisition": "Inconclusive"
+        }
+      },
+      "after": {
+        "primary": "localized_editing",
+        "tiers": {
+          "synthetic_origin": "Inconclusive",
+          "localized_editing": "High",
+          "camera_acquisition": "Inconclusive"
+        }
+      },
+      "scorecard_equal": true,
+      "measurements": "saved sections reused; no detectors rerun"
+    }
+  ]
+}

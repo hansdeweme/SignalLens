@@ -21,6 +21,36 @@ from scorecard_integrity import (
 from test_reasoning import metadata, section
 
 
+def test_patch_producer_preserves_computed_metrics_for_reasoning(tmp_path, monkeypatch):
+    """Previously missing producer fields must reach reasoning, not default to zero."""
+    import numpy as np
+    import vf_patch_similarity as patch
+    from pathlib import Path
+    from summary_sections import build_patch_similarity_section
+
+    # Exercise the real producer/JSON boundary with fixed upstream measurements;
+    # existing scorecard tests own arithmetic and detector math remains unchanged.
+    measured = {'pair_count': 40, 'spatially_separated_pair_count': 17,
+                'mean_similarity': .93, 'max_similarity': .98,
+                'repetition_score': .75, 'clone_suspicion_score': .72, 'coverage_ratio': .1}
+    monkeypatch.setattr(patch, 'load_images', lambda **kw: (np.zeros((32, 32)), np.zeros((32, 32, 3)),
+                                                          {'scale': 1, 'width': 32, 'height': 32}))
+    monkeypatch.setattr(patch, 'extract_patch_descriptors', lambda **kw: [])
+    monkeypatch.setattr(patch, 'find_similar_patches_accelerated', lambda **kw: ([], {'patch_count': 40, 'candidate_comparisons': 40}))
+    monkeypatch.setattr(patch, 'build_recurrence_map', lambda **kw: np.zeros((32, 32)))
+    monkeypatch.setattr(patch, 'compute_similarity_features', lambda **kw: dict(measured))
+    monkeypatch.setattr(patch, 'interpret_patch_similarity', lambda features: ('structured_patch_recurrence', 'Observed recurrence'))
+    monkeypatch.setattr(patch, 'save_patch_similarity_overlay', lambda **kw: None)
+    monkeypatch.setattr(patch, 'save_recurrence_heatmap', lambda **kw: None)
+    from investigation_storage import artifact_naming
+    with artifact_naming(True):
+        patch.run_patch_similarity_analysis(tmp_path / ('long original filename ' * 4 + '.png'), tmp_path)
+    payload = json.loads((tmp_path / 'patch_similarity_results.json').read_text())
+    assert Path(payload['patch_similarity']['artifacts']['patch_similarity_overlay']).name == 'image_patch_similarity_overlay.png'
+    derived = derive_signals(build_evidence_snapshot({'patch_similarity': build_patch_similarity_section(payload)}))
+    assert (derived.separated_pair_count, derived.mean_similarity, derived.max_similarity) == (17, .93, .98)
+
+
 def calculate(sections=None, context=None):
     sections = sections or {}
     ev = build_evidence_snapshot(sections)

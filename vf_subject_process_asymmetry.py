@@ -6,6 +6,7 @@
 # geometry utility owner for the subject-region detector family
 #
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 import math
@@ -1007,7 +1008,7 @@ def run_subject_process_asymmetry_analysis(
         stride=stride,
         min_coverage=min_coverage,
     )
-    overlay_path = output_dir / f"{image_path.stem}_subject_process_asymmetry_overlay.jpg"
+    overlay_path = output_dir / f"{artifact_stem(image_path)}_subject_process_asymmetry_overlay.jpg"
     overlay_path_str = _write_overlay(image_bgr, heat, overlay_path)
     """
     print(

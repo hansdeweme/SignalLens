@@ -5,6 +5,32 @@
 #Part of the SignalLens project evaluating signals of AI-generated and/or AI-enhanced Photo Images
 #
 
+DERIVED_SIGNAL_NOTICE = (
+    'Raw derived triggers precede corroboration and confidence assessment. '
+    'Their strength labels are not hypothesis confidence and do not establish origin or a separate editing operation. '
+    'Use the qualified hypothesis assessments and causal conclusion for interpretation.'
+)
+
+# Presentation descriptions only. Legacy keys and their recorded values retain
+# their existing meanings; this mapping is not an alternative decision policy.
+DERIVED_SIGNAL_SCOPES = {
+    'strong_local_edit': 'Raw regional-processing trigger: boundary mismatch pattern.',
+    'fragmented_local_edit': 'Raw fragmented contour-convergence trigger.',
+    'strong_cross': 'Raw ELA/residual hotspot-convergence trigger; shares upstream measurements with boundary.',
+    'subject_boundary_medium': 'Raw intrinsic-edge transition pattern; not a qualified editing mechanism.',
+    'region_geometry_unreliable': 'Regional-comparison geometry warning from process asymmetry.',
+    'person_mask_reliable': 'Person-mask eligibility: medium or high segmentation quality is usable.',
+    'boundary_reliability_score': 'Person-mask/band-support heuristic; not causal confidence.',
+    'patch_structured': 'Raw recurrence-pattern trigger; mechanism requires qualified assessment.',
+    'fft_structured': 'Raw structured-frequency pattern trigger.',
+    'camera_like_support': 'Camera-compatible sensor-pattern trigger; not authenticated acquisition.',
+    'metadata_synthetic': 'Unverified generation declaration; not authenticated origin.',
+    'metadata_enhancement': 'Unverified processing declaration; not authenticated edit history.',
+    'provenance_clean': 'No generation/AI-context trigger in this input; not authenticated provenance.',
+    'local_signals_weak': 'Composite weak/missing-local-signal condition; not proof of an unedited image.',
+}
+
+
 def humanize_signal(pattern: str) -> str:
     entry = SIGNAL_LANGUAGE.get(pattern)
     if not entry:

@@ -77,6 +77,10 @@ def output_root(session, raw_state=None):
         return root if Path(raw_state.output_dir).resolve() == root else None
     if not session.imported_from:
         return None
+    from investigation_storage import stored_forensic_root
+    recorded = stored_forensic_root(json.loads(session.historical_identity_json or '{}'))
+    if recorded:
+        return recorded
     summary = Path(session.imported_from).resolve()
     if summary.parent.name == 'summary':
         generation = summary.parent.parent
@@ -119,7 +123,8 @@ def discover_artifacts(context, snapshot):
     try:
         manifest = json.loads((root/'analysis_run.json').read_text(encoding='utf-8'))
         recorded = manifest.get('artifacts', {}).get('investigation', {})
-        trusted_run = (recorded.get('result_id') == expected.get('result_id')
+        expected_id = (expected.get('storage') or {}).get('forensic_result_id') or expected.get('result_id')
+        trusted_run = (recorded.get('result_id') == expected_id
             and recorded.get('source_sha256') == context['source_sha256'] and bool(context['source_sha256']))
     except (OSError, ValueError, TypeError):
         pass
@@ -128,7 +133,7 @@ def discover_artifacts(context, snapshot):
     if root and trusted_run and not context['live']:
         try:
             catalog = json.loads(scoped_path(root, 'ui_artifacts_v1.json').read_text(encoding='utf-8'))
-            if (catalog.get('schema_version') == 1 and catalog.get('result_id') == expected.get('result_id')
+            if (catalog.get('schema_version') == 1 and catalog.get('result_id') == expected_id
                     and catalog.get('source_sha256') == context['source_sha256']
                     and isinstance(catalog.get('payloads'), dict)):
                 payloads.update(catalog['payloads'])
@@ -142,10 +147,15 @@ def discover_artifacts(context, snapshot):
         # fft_results.json is shared/overwritten by regional calls. Accept it
         # only when its recorded input equals the known global prepared input.
         contracts['fft'] = 'fft_results.json'
+        from investigation_storage import run_identity
+        compact = bool(run_identity(root))
+        if compact:
+            contracts = {'ela': 'evidence/image_ela.json', 'noise': 'evidence/image_noise.json',
+                'patch_similarity': 'evidence/patch_similarity_results.json', 'fft': 'evidence/global_fft.json'}
         for detector, filename in contracts.items():
             try:
                 payload = json.loads(scoped_path(root, filename).read_text(encoding='utf-8'))
-                if detector == 'fft' and Path(payload.get('fft', {}).get('input_image','')).name != stem+'_global.png':
+                if detector == 'fft' and Path(payload.get('fft', {}).get('input_image','')).name != ('global.png' if compact else stem+'_global.png'):
                     continue
                 payloads.setdefault(detector, payload)
             except (OSError, ValueError, TypeError):

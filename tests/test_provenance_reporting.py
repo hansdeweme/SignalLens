@@ -82,16 +82,101 @@ def test_stored_metadata_recovery_requires_both_run_identity_and_source_hash(tmp
 
 def test_osint_workspace_displays_committed_source_and_revision(window,source):
     from osint_reverse_search import add_manual_match
+    from osint_dialogs import OSINTFindingDialog
     publish(window,source)
     frozen=window.session.summary_json
     draft=deepcopy(window.osint_result)
-    add_manual_match(draft,'other','https://example.com/source',title='External claim',notes='Analyst context')
+    dialog=OSINTFindingDialog()
+    dialog.page_url_edit.setText('https://example.com/source')
+    dialog.title_edit.setText('External claim')
+    dialog.notes_edit.setPlainText('Analyst context')
+    fields=dialog.relationship_fields
+    fields['claim_process'].setCurrentIndex(fields['claim_process'].findData('full_image_generation'))
+    fields['image_association'].setCurrentIndex(fields['image_association'].findData('analyst_associated'))
+    fields['association_method'].setCurrentIndex(fields['association_method'].findData('analyst_visual_check'))
+    fields['association_details'].setText('Matching distinctive scene reviewed by analyst')
+    fields['model_family'].setText('FLUX.2 Klein')
+    fields['source_dependency'].setCurrentIndex(fields['source_dependency'].findData('same_creator'))
+    add_manual_match(draft,**dialog.get_data())
+    restored_dialog=OSINTFindingDialog(existing_match=draft.matches[0])
+    assert restored_dialog.get_data()==dialog.get_data()
+    restored_dialog.close();dialog.close()
     assert window._commit_osint(window.session.session_id,draft)
     workspace=window.workspace.provenance
     assert 'revision: 1' in workspace.revision.text()
     assert 'https://example.com/source' in workspace.annotation_detail.toPlainText()
     assert 'Analyst context' in workspace.annotation_detail.toPlainText()
+    assert 'analyst_associated' in workspace.annotation_detail.toPlainText()
+    assert 'FLUX.2 Klein' in workspace.annotation_detail.toPlainText()
+    relationships=window.workspace.evidence_relationships.toPlainText()
+    assert 'https://example.com/source' in relationships and 'same_creator' in relationships
+    assert 'full_image_generation' in relationships
+    synthesis=json.loads(window.view_snapshot.investigation_synthesis_json)
+    assert synthesis['external_source_corroboration']['assessment_status'] in workspace.external_context.text()
+    assert synthesis['revision_id'] in window.workspace.investigation_detail.toPlainText()
     assert window.session.summary_json==frozen
+    window.set_selected_file(source)
+    assert not window.workspace.evidence_relationships.toPlainText()
+
+
+def test_osint_verification_action_runs_off_thread_and_publishes_receipt(window, source, app, monkeypatch):
+    """Gap: real verification action must publish its worker result through OSINT commit."""
+    from PyQt6.QtCore import QTimer
+    from PyQt6.QtWidgets import QApplication
+    from osint_reverse_search import add_manual_match
+    from source_image_verification import SafeHTTP
+    from source_verification_dialog import SourceVerificationDialog
+    publish(window, source)
+    frozen = window.session.summary_json
+    draft = deepcopy(window.osint_result)
+    add_manual_match(draft, 'other', 'https://example.com/page', title='Creator claim',
+                     image_url='https://example.com/image', claim_process='full_image_generation')
+    window._commit_osint(window.session.session_id, draft)
+    observed = []
+    def fetch(self, url, cancel, deadline):
+        observed.append(threading.get_ident())
+        return url, 'image/png', source.read_bytes()
+    monkeypatch.setattr(SafeHTTP, 'fetch', fetch)
+    timer = QTimer()
+    def accept_when_ready():
+        dialog = QApplication.activeModalWidget()
+        if isinstance(dialog, SourceVerificationDialog) and not dialog.workers.busy:
+            if dialog.save.isEnabled():
+                dialog.save.click()
+            else:
+                dialog.reject()
+    timer.timeout.connect(accept_when_ready)
+    timer.start(10)
+    try:
+        window.btn_verify_osint.click()
+    finally:
+        timer.stop()
+    assert observed and observed[0] != threading.get_ident()
+    assert window.session.annotation_revision == 2
+    assert window.osint_result.matches[0].verification
+    assert 'byte_identical' in window.workspace.provenance.annotation_detail.toPlainText()
+    assert 'sha256' in window.workspace.evidence_relationships.toPlainText()
+    assert window.session.summary_json == frozen
+
+
+def test_source_verification_cancellation_discards_worker_result(window, source, app, monkeypatch):
+    """Gap: cancelling a source retrieval must wait for retirement and never accept."""
+    import source_verification_dialog as module
+    from osint_reverse_search import ReverseSearchMatch, sha256_of_file
+    entered = threading.Event()
+    def pending(path, sha, match, cancel, progress):
+        entered.set()
+        assert cancel.wait(2), 'cancellation was not delivered'
+        raise InterruptedError('Verification cancelled')
+    monkeypatch.setattr(module, 'retrieve', pending)
+    dialog = module.SourceVerificationDialog(window, str(source), sha256_of_file(source),
+        ReverseSearchMatch('other', page_url='https://example.com/page'))
+    dialog.show()
+    wait_for(app, entered.is_set)
+    dialog.reject()
+    wait_for(app, lambda: not dialog.workers.busy)
+    assert dialog.selected_result is None and dialog.result() == 0 and not dialog.results
+    dialog.deleteLater()
 
 
 def test_preview_export_bytes_share_snapshot_and_legacy_text_fallback(tmp_path):

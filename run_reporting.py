@@ -14,6 +14,7 @@ from   typing import Any, Dict, List, Optional
 from   uuid import uuid4
 # local imports
 from signallens_version import APP_VERSION
+from investigation_storage import atomic_json, run_identity
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).astimezone().replace(microsecond=0).isoformat()
@@ -42,6 +43,9 @@ class RunRecorder:
 
     def __post_init__(self) -> None:
         self.output_dir = Path(self.output_dir)
+        identity = run_identity(self.output_dir)
+        if identity:
+            self.artifacts['investigation'] = identity
         self.selected_file = Path(self.selected_file)
         self.logs_dir = self.output_dir / "logs"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -113,8 +117,5 @@ class RunRecorder:
         }
 
     def flush_manifest(self) -> None:
-        self.manifest_path.write_text(
-            json.dumps(self.as_dict(), indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        atomic_json(self.manifest_path, self.as_dict())
 

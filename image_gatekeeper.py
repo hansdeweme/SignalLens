@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from PIL import Image
+from investigation_storage import compact_artifacts
 
 DEFAULT_RESOLUTION_POLICY = {
     "global": {"max_dim": 1024, "resample": Image.Resampling.LANCZOS},
@@ -71,7 +72,12 @@ def prepare_analysis_images(
         orig_w, orig_h = img.size
     prepared: dict[str, PreparedImageInfo] = {}
     for role, cfg in policy.items():
-        suffix = f"{image_path.stem}_{role}.png"
+        # Production ELA reads the original source directly. Do not create an
+        # unconsumed full-resolution RGB duplicate in newly allocated storage.
+        # Explicit caller-supplied policies and legacy runs retain their contract.
+        if compact_artifacts() and resolution_policy is None and role == 'ela':
+            continue
+        suffix = f'{role}.png' if compact_artifacts() else f"{image_path.stem}_{role}.png"
         out_path = prep_dir / suffix
         prepared[role] = _save_prepared_variant(
             src_path=image_path,
@@ -88,6 +94,6 @@ def prepare_analysis_images(
         "prepared": {k: asdict(v) for k, v in prepared.items()},
         "policy": {
             k: {"max_dim": v.get("max_dim")}
-            for k, v in policy.items()
+            for k, v in policy.items() if k in prepared
         },
     }

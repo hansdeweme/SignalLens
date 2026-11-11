@@ -56,6 +56,11 @@ class EvidenceSnapshot:
     
 @dataclass
 class DerivedSignals:
+    """Intermediate measurement/pattern triggers before gates and confidence.
+
+    Persisted legacy names (including strong_local_edit) are not causal findings.
+    Qualified hypotheses and causal/investigation synthesis own those claims.
+    """
     camera_like_support: bool = False
     sensor_trace_inconsistency: bool = False
     cfa_camera_like_support: bool = False
@@ -506,8 +511,9 @@ def compute_scorecard(sections: dict[str, ModuleSummary], ctx: HypothesisContext
         and ev.patch_similarity.pattern == "possible_clone_reuse"
     )
     patch_spatial_inconclusive = (
-        ev.patch_spatial is not None
-        and ev.patch_spatial.pattern == "spatial_patch_recurrence_inconclusive"
+        sections.get('patch_spatial') is not None
+        and sections['patch_spatial'].status in {'weak', 'medium', 'strong', 'inconclusive'}
+        and sections['patch_spatial'].pattern == "spatial_patch_recurrence_inconclusive"
     )
     patch_spatial_supportive = (
         ev.patch_spatial is not None

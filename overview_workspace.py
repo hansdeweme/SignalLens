@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
 from gui_components import label, Panel, ConfidenceIndicator, StatusMessage, scroll_area
 from gui_design_system import SPACE, apply_theme, font
 from source_image_viewer import SourceImageViewer
+import json
 
 HYPOTHESES = {'synthetic_origin': 'Synthetic origin', 'localized_editing': 'Localized editing',
               'camera_acquisition': 'Camera-acquisition compatibility'}
@@ -229,6 +230,8 @@ class OverviewWorkspace(QWidget):
         self.preview.set_source(source.path if source else None, (snapshot.session_id, snapshot.analysis_id), source.sha256 if source else None)
         self.confidence.set_tier(summary.confidence_tier if complete else None)
         self.finding_title.setText(HYPOTHESES.get(summary.primary_hypothesis, summary.primary_hypothesis or 'Primary hypothesis not recorded') if complete else 'No completed finding')
+        if complete and summary.lead_title:
+            self.finding_title.setText(summary.lead_title)
         self.pattern.setText(('Dominant pattern · ' + (summary.primary_finding or 'Not recorded')) if complete else '')
         primary = next((h for h in snapshot.hypotheses if h.hypothesis_id == summary.primary_hypothesis), None)
         states = {'empty': 'Choose an image to begin an investigation.',
@@ -239,10 +242,24 @@ class OverviewWorkspace(QWidget):
         explanation = (primary.finding if primary and primary.finding else 'Structured interpretation not recorded. Open the full narrative for any available historical content.') if complete else states.get(summary.status, 'No completed finding.')
         if not complete and source and source.error:
             explanation += '\n' + source.error
+        if complete and summary.lead_explanation:
+            explanation = summary.lead_explanation + '\n' + explanation
         self.finding_explanation.setText(excerpt(explanation, 440))
         self.finding_explanation.setToolTip(explanation)
         self.qualifier.setText(excerpt('\n'.join(summary.limitations), 210) if complete and summary.limitations else 'Confidence is a support tier, not a probability or proof of authenticity.')
         self.qualifier.setToolTip('\n'.join(summary.limitations))
+        if complete and summary.confidence_scope:
+            self.qualifier.setText(summary.confidence_scope)
+            self.qualifier.setToolTip(summary.confidence_scope + '\n' + '\n'.join(summary.limitations))
+        synthesis = json.loads(snapshot.investigation_synthesis_json) if complete else None
+        self.confidence.setVisible(not bool(synthesis))
+        if synthesis:
+            lead = synthesis['lead']
+            self.finding_title.setText(lead['title'])
+            self.finding_explanation.setText(lead['interpretation'])
+            self.finding_explanation.setToolTip(lead['interpretation'] + '\nFrozen forensic assessment:\n' + explanation)
+            self.qualifier.setText(lead['confidence_scope'])
+            self.qualifier.setToolTip('\n'.join(dict.fromkeys([*summary.limitations, *synthesis['regional_anomaly_assessment']['limitations']])))
         for hid, card in self.cards.items():
             card.bind(next((item for item in snapshot.hypotheses if item.hypothesis_id == hid), None), complete)
         self.primary_reasoning.setEnabled(complete and bool(snapshot.hypotheses))

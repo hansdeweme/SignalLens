@@ -28,8 +28,10 @@ def write_export(snapshot,output):
     data=snapshot.payload()
     owner=InvestigationSession(session_id=snapshot.session_id,state=InvestigationState.COMPLETED,
         result_id=snapshot.result_id,annotation_revision=snapshot.annotation_revision,
-        analysis_revision=data['investigation']['analysis_revision'])
-    return persist_report_snapshot(owner,snapshot,output)
+        analysis_revision=data['investigation']['analysis_revision'],
+        image_path=data['investigation'].get('image_path'),
+        source_sha256=data['investigation'].get('source_sha256'))
+    return persist_report_snapshot(owner,snapshot,owner.storage_directory(output))
 
 
 class _ExportDelivery(QObject):

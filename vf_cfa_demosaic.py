@@ -14,6 +14,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any
 import math
@@ -255,7 +256,7 @@ def run_cfa_demosaic_analysis(image_path: str | Path, output_dir: str | Path, bl
         localized_inconsistency_score=localized_inconsistency_score,
     )
     top_blocks = build_top_blocks(localized_inconsistency_map, top_k=12)
-    overlay_path = output_dir / f"{image_path.stem}_cfa_demosaic_overlay.jpg"
+    overlay_path = output_dir / f"{artifact_stem(image_path)}_cfa_demosaic_overlay.jpg"
     overlay_path_str = create_overlay(
         image_bgr=image_bgr,
         score_map=localized_inconsistency_map,

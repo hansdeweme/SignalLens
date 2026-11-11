@@ -5,6 +5,7 @@
 #
 
 from __future__ import annotations
+from workflow_interpretation import workflow_description
 from dataclasses import dataclass, field, replace
 from typing import Any, Callable
 from math import isfinite
@@ -31,13 +32,13 @@ from confidence_policy import (
 )
 from confidence_policy_inputs import snapshot_confidence_facts, coverage_limitations
 from production_corroboration import (
-    CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate,
+    CorroborationRequirement, RequirementKind, evaluate_corroboration, record_gate, explain_gate,
 )
 from metadata_evidence import (
     ProvenanceState, metadata_provenance_state,
 )
 from hypothesis_evidence import scope_hypothesis_evidence, evidence_presentation, append_hypothesis_evidence
-from signal_language import humanize_signal
+from signal_language import humanize_signal, DERIVED_SIGNAL_NOTICE
 
 #=============================================
 # Helpers structured reasoning trace
@@ -115,6 +116,7 @@ def _build_reasoning_trace(
     confidence_rationale: list[str] | None = None,
     corroboration_gates: list[dict] | None = None,
     confidence_policy_results: list[ConfidencePolicyResult] | None = None,
+    causal_interpretation: dict | None = None,
 ) -> dict:
     assessment = next((h for h in (hypotheses or []) if h.hypothesis_id == primary_hypothesis), None)
     presentation = evidence_presentation(assessment)
@@ -126,6 +128,7 @@ def _build_reasoning_trace(
         context_dict["analysis_mode"] = analysis_mode            
     return {
         "analysis_mode": analysis_mode,
+        "causal_interpretation": causal_interpretation or {},
         "section_snapshot": _section_snapshot(sections),
         "context": context_dict,
         "contextual_priors": contextual_priors or {},
@@ -152,6 +155,8 @@ def _build_reasoning_trace(
         "provenance_evidence": {
             "state": ds.provenance_state,
             "metadata_authenticity_verified": False,
+            **({'workflow_interpretation': sections['metadata'].details['workflow_interpretation']}
+               if sections.get('metadata') and (sections['metadata'].details or {}).get('workflow_interpretation') else {}),
         },
         "decision": {
             "primary_hypothesis": primary_hypothesis,
@@ -317,6 +322,13 @@ def determine_confidence(card, sections, *, corroboration_gates=None):
         score_requirement_satisfied=score >= 3.0,
         gate_passed=source_check['requirement_satisfied'] and score >= 3.0,
         production_correction='Replace detector-count diversity with measurement-disjoint indicator witnesses; keep score thresholds unchanged.')
+    explain_gate(source_check, [
+        ('indicator_count', len(source_check['eligible_evidence']) >= 2,
+            f"{len(source_check['eligible_evidence'])} eligible supporting indicators; require >= 2."),
+        ('source_diversity', source_check['corroborating_source_count'] >= 2,
+            f"{source_check['corroborating_source_count']} measurement-disjoint sources; require >= 2."),
+        ('suspicious_score', score >= 3.0, f'Suspicious score {score}; require >= 3.0.'),
+    ])
     record_gate(corroboration_gates, source_check)
     # Compatibility helper; authoritative generic thresholds live in the policy.
     return generic_confidence(score, strong_signals, source_check['requirement_satisfied'])[0]
@@ -491,6 +503,7 @@ class DecisionEnv:
     corroboration_gates: list[dict] = field(default_factory=list)
     confidence_policy_results: list[ConfidencePolicyResult] = field(default_factory=list)
     coverage_limitations: tuple[str, ...] = ()
+    causal_interpretation: dict = field(default_factory=dict)
 
 @dataclass(frozen=True)
 class DecisionResult:
@@ -590,13 +603,25 @@ def _boundary_corroborated(env: DecisionEnv) -> bool:
         subject_boundary_strong,
         segmentation_alignment_supportive,
     ])
-    boundary_specific_strength = 0.0
-    for section in (boundary_focus_section, subject_boundary_section, boundary_section):
-        if section is not None and section.score is not None:
-            boundary_specific_strength = max(boundary_specific_strength, float(section.score))
+    # Strength witnesses must be positive eligible observations. Focus scores are
+    # intensity differences, not the normalized subject-boundary scale: its
+    # positive pattern already satisfies the detector's ratio/boost predicates.
+    strength_witnesses = []
+    if boundary_focus_strong and boundary_focus_section.pattern in {
+        'boundary_focused_transition_anomaly', 'boundary_focused_processing_mismatch'}:
+        strength_witnesses.append({'evidence_id': 'evidence:boundary_focus',
+            'field': 'pattern', 'value': boundary_focus_section.pattern,
+            'predicate': 'positive_detector_ratio_and_boost_pattern', 'scale': 'detector_specific'})
+    for key, section, eligible in (('subject_boundary', subject_boundary_section, subject_boundary_strong),
+                                   ('boundary', boundary_section, boundary_signal_strong)):
+        if eligible and section.score is not None and float(section.score) >= 0.45:
+            strength_witnesses.append({'evidence_id': 'evidence:' + key,
+                'field': 'score', 'value': float(section.score), 'predicate': 'eligible_normalized_score >= 0.45',
+                'scale': 'normalized_anomaly'})
+    strength_satisfied = bool(strength_witnesses)
     passed = (
         boundary_corroboration_count >= 2
-        and boundary_specific_strength >= 0.45
+        and strength_satisfied
     )
     check = evaluate_corroboration(
         env.sections, ['evidence:' + key for key, supported in (
@@ -606,9 +631,27 @@ def _boundary_corroborated(env: DecisionEnv) -> bool:
         CorroborationRequirement('boundary.compound_support', 'localized_editing',
             RequirementKind.COMPOUND, minimum_indicators=2),
     )
-    check.update(strength_requirement_satisfied=boundary_specific_strength >= 0.45,
+    check.update(strength_requirement_satisfied=strength_satisfied, strength_witnesses=strength_witnesses,
         gate_passed=passed, production_condition_changed=False,
         interpretation='Related boundary checks establish compound spatial/processing agreement; they are not counted as separate independent measurement sources.')
+    check['strength_observations'] = [
+        {'evidence_id': 'evidence:' + key, 'eligible_for_strength': eligible,
+         'status': section.status if section else None, 'polarity': section.polarity if section else None,
+         'score': section.score if section else None, 'pattern': section.pattern if section else None,
+         'requirement': ('positive_detector_ratio_and_boost_pattern' if key == 'boundary_focus'
+             else 'eligible_normalized_score >= 0.45')}
+        for key, section, eligible in (
+            ('boundary', boundary_section, boundary_signal_strong),
+            ('boundary_focus', boundary_focus_section, boundary_focus_strong),
+            ('subject_boundary', subject_boundary_section, subject_boundary_strong))]
+    explain_gate(check, [
+        ('indicator_count', boundary_corroboration_count >= 2,
+            f'{boundary_corroboration_count} suspicious medium/strong supporting indicators; require >= 2.'),
+        ('supporting_strength', strength_satisfied,
+            'Require at least one eligible boundary/subject-boundary normalized score >= 0.45 '
+            'or eligible positive Boundary Focus ratio/boost pattern; '
+            f'{len(strength_witnesses)} qualifying strength witnesses.'),
+    ])
     record_gate(env.corroboration_gates, check)
     return passed
 
@@ -766,6 +809,7 @@ def finish_decision(
         confidence_rationale=rationale,
         corroboration_gates=env.corroboration_gates,
         confidence_policy_results=env.confidence_policy_results,
+        causal_interpretation=env.causal_interpretation,
     )
     return (pattern, text, result.confidence, polarity, reasoning_trace)
 
@@ -853,9 +897,10 @@ def route_strong_local_edit(env: DecisionEnv) -> DecisionResult | None:
                 "possible_foreground_background_processing_mismatch",
                 enrich_text_with_context(
                     env,
-                    "Strong evidence of localized compositing or subject-level editing. "
+                    "Strong regional processing anomalies are present. "
                     "Boundary-focused forensic signals indicate inconsistent processing "
-                    "between foreground and background regions."
+                    "between foreground and background regions. These measurements do not by themselves "
+                    "establish a separate compositing or editing operation."
                 ),
                 "High",
                 "suspicious",
@@ -1012,6 +1057,16 @@ def route_synthetic_multi_signal(env: DecisionEnv) -> DecisionResult | None:
             CorroborationRequirement(gate_id, 'synthetic_origin', kind, minimum_indicators=2 if kind == RequirementKind.COMPOUND else 1))
         check.update(gate_passed=bool(matched), production_condition_changed=False,
             interpretation='Existing compound/accumulation predicate retained; no claim of independent corroboration.')
+        conditions = [(key + '_support_flag', active, f'{key} derived supporting flag = {bool(active)}; require True.')
+            for key, active in keys]
+        if kind == RequirementKind.ACCUMULATION:
+            conditions = [('additional_support_flag', matched,
+                f'Existing scorecard synthetic_supported_by_other_domains = {bool(matched)}; '
+                'require any metadata, OSINT-context or strong-material flag (not two independent sources).')]
+        elif gate_id == 'synthetic.material_asymmetry_compound':
+            conditions.append(('region_geometry', not env.ds.region_geometry_unreliable,
+                f'region_geometry_unreliable = {env.ds.region_geometry_unreliable}; require False.'))
+        explain_gate(check, conditions)
         record_gate(env.corroboration_gates, check)
     if (
         env.card.synthetic_boost >= 1.0
@@ -1332,6 +1387,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     env.corroboration_gates[:] = [entry for entry in env.corroboration_gates
         if entry['gate_id'] == 'confidence.strong_source_diversity']
     env.confidence_policy_results = []
+    env.causal_interpretation = {}
     if not env.card.is_valid:
         explanation = "Scorecard calculation is invalid; a forensic conclusion is withheld. " + "; ".join(env.card.validation_errors)
         env.primary_hypothesis = "unresolved_anomaly"
@@ -1381,7 +1437,7 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     # supported visual generation can lead when local corroboration is weaker.
     if _specific_finding(local_result) and local_result.specificity == Specificity.DECISIVE:
         chosen = local_choice
-        why = "Corroborated localized-mechanism evidence leads; generation evidence is assessed separately."
+        why = "Corroborated regional-processing evidence leads; creation history and separate-edit causality are assessed separately."
     elif _specific_finding(synthetic_result) and synthetic_choice[0].evaluate == route_synthetic_multi_signal:
         chosen = synthetic_choice
         why = "Generation-relevant visual convergence leads; localized-mechanism uncertainty is scoped to localized editing."
@@ -1424,6 +1480,8 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
     if not (visual or env.ds.metadata_synthetic or env.ds.metadata_enhancement or env.ds.osint_ai_context):
         synthetic_limits.append("No substantive generation declaration or specific visual generation finding is established.")
     local_limits = ["Localized editing evidence does not by itself establish AI generation."]
+    if local_choice and local_choice[1].finding not in {Finding.CLONE_DECISIVE, Finding.MULTI_LOCAL}:
+        local_limits.append('Regional anomaly support is not proof of a separate editing operation.')
     boundary_observed = any(
         s is not None and s.status != "not_run" and s.pattern
         for key in ("boundary", "boundary_focus", "subject_boundary", "region_masks")
@@ -1497,7 +1555,66 @@ def evaluate_hypotheses(env: DecisionEnv, routes=None) -> DecisionResult:
                                     local_choice[0].evaluate.__name__ if local_choice else "",
                                     synthetic_choice[0].evaluate.__name__ if synthetic_choice else "",
                                 } else "alternative_candidate; scoped safeguards and specificity rules apply")
-    return _apply_confidence_policy(env, candidates, chosen[1])
+    result = _apply_confidence_policy(env, candidates, chosen[1])
+    return _qualify_causal_interpretation(env, result, local_result)
+
+
+def _qualify_causal_interpretation(env, result, local_result):
+    """Separate observation strength from an inferred editing history.
+
+    This additive synthesis does not rerank tiers or suppress a scoped mechanism.
+    A graph supplies declared context only; spatial reuse retains its own finding.
+    """
+    metadata = env.sections.get('metadata')
+    workflow = (metadata.details or {}).get('workflow_interpretation') if metadata else None
+    from metadata_evidence import metadata_creation_context
+    creation = metadata_creation_context(metadata)
+    regional = bool(local_result)
+    specific_reuse = bool(local_result and local_result.finding in {Finding.CLONE_DECISIVE, Finding.MULTI_LOCAL})
+    if not workflow and creation['kind'] not in {'explicit_generation_declaration', 'explicit_processing_declaration'} and (not regional or specific_reuse or env.primary_hypothesis != 'localized_editing'):
+        return result
+    full = bool(workflow and workflow.get('graph_interpretation_status') == 'coherent'
+                and workflow.get('declared_process') == 'full_image_generation')
+    explanation = workflow_description(workflow)
+    if not explanation and creation['kind'] == 'explicit_generation_declaration':
+        explanation = 'Embedded metadata explicitly declares AI-mediated generation; provenance authenticity is unverified.'
+    scope = ''
+    title = ''
+    if regional and not specific_reuse:
+        regional_text = ('Regional processing anomalies may coexist with synthetic creation. '
+                         'A separate localized editing operation is not established by these measurements.')
+        if not full:
+            regional_text = 'Regional processing measurements do not by themselves establish a separate editing operation.'
+        explanation = (explanation + ' ' + regional_text).strip()
+        local = next(a for a in env.hypotheses if a.hypothesis_id == 'localized_editing')
+        scope = f'{local.confidence_tier} describes regional-anomaly support, not certainty about editing history.'
+        if full:
+            synthetic = next(a for a in env.hypotheses if a.hypothesis_id == 'synthetic_origin')
+            scope += f' Declared creation support: {synthetic.confidence_tier}; provenance unverified.'
+        if env.primary_hypothesis != 'localized_editing':
+            scope = f'Selected hypothesis support: {result.confidence}. ' + scope
+        # Preserve the recorded measurement explanation and all evidence roles.
+        local.explanation += ' ' + regional_text
+        if env.primary_hypothesis == 'localized_editing':
+            title = 'Declared generation with regional anomalies' if full else 'Localized processing anomalies'
+    elif specific_reuse:
+        explanation += ' Specific spatial-reuse evidence is assessed separately; this declaration does not refute it or establish when reuse occurred.'
+    if full and not specific_reuse and regional:
+        env.selection_reason = ('Regional-anomaly support is retained alongside a coherent declared full-generation workflow. '
+                                'Unverified metadata does not establish origin; regional measurements do not establish a separate edit.')
+    env.causal_interpretation = {
+        'schema_version': 1,
+        'rule': 'declared_generation_with_regional_anomalies' if full and regional and not specific_reuse else 'separate_process_and_observation',
+        'declared_process': creation['declared_process'],
+        'creation_context_kind': creation['kind'],
+        'provenance_authenticity': creation['provenance_authenticity'],
+        'graph_interpretation_status': workflow.get('graph_interpretation_status') if workflow else None,
+        'separate_edit_status': ('specific_spatial_reuse_supported' if specific_reuse else
+                                 'not_established_from_regional_anomalies' if regional else 'not_assessed'),
+        'lead_title': title, 'lead_explanation': explanation, 'confidence_scope': scope,
+        'legacy_primary_hypothesis': env.primary_hypothesis,
+    }
+    return replace(result, text=explanation + (' ' + scope if scope else '') + '\n' + result.text)
 
 
 def synthesize_overall(
@@ -1525,6 +1642,7 @@ def synthesize_overall(
     else:
         base_suspicious_score, base_benign_score, suspicious_domains, benign_domains = 0.0, 0.0, set(), set()
     debug_lines: list[str] = [
+        DERIVED_SIGNAL_NOTICE,
         f"camera_like_support={env.ds.camera_like_support}",
         f"sensor_trace_inconsistency={env.ds.sensor_trace_inconsistency}",
         f"compression_consistent={env.ds.compression_consistent}",

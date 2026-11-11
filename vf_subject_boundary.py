@@ -5,6 +5,7 @@
 
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any
 import cv2
@@ -248,7 +249,7 @@ def run_subject_boundary_analysis(image_path: str | Path, output_dir: str | Path
     local_map_n = normalize_map(local_map)
     block_map = block_score_map(gray, local_map_n, block_size=block_size)
     top_blocks = build_top_blocks(block_map, top_k=12)
-    overlay_path = output_dir / f"{image_path.stem}_subject_boundary_overlay.jpg"
+    overlay_path = output_dir / f"{artifact_stem(image_path)}_subject_boundary_overlay.jpg"
     overlay_path_str = create_boundary_overlay(image_bgr, local_map_n, overlay_path)
     pattern, note = interpret_subject_boundary(
         boundary_anomaly_score=boundary_anomaly_score,

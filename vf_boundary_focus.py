@@ -5,6 +5,7 @@
 #
 
 from __future__ import annotations
+from investigation_storage import artifact_stem
 from pathlib import Path
 from typing import Any, Dict
 import cv2
@@ -202,7 +203,7 @@ def run_boundary_focus_analysis(
         boundary_mask=boundary_mask,
         background_mask=background_mask,
     )
-    preview_path = output_dir / f"{image_path.stem}_boundary_focus_preview.png"
+    preview_path = output_dir / f"{artifact_stem(image_path)}_boundary_focus_preview.png"
     cv2.imwrite(str(preview_path), cv2.cvtColor(preview, cv2.COLOR_RGB2BGR))
     return {
         "boundary_focus": {

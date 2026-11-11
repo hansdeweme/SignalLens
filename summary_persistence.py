@@ -25,7 +25,7 @@ def _to_jsonable(value: Any) -> Any:
         return str(value)
     return value
 
-def persist_summary_result(summary_result: Any, output_dir: str | Path) -> Dict[str, str]:
+def persist_summary_result(summary_result: Any, output_dir: str | Path, *, flat: bool = False) -> Dict[str, str]:
     """
     Persist SummaryResult into:
       - summary/final_summary.json
@@ -34,7 +34,7 @@ def persist_summary_result(summary_result: Any, output_dir: str | Path) -> Dict[
     Returns a dict with the written file paths.
     """
     output_dir = Path(output_dir)
-    summary_dir = output_dir / "summary"
+    summary_dir = output_dir if flat else output_dir / "summary"
     summary_dir.mkdir(parents=True, exist_ok=True)
     json_path = summary_dir / "final_summary.json"
     txt_path = summary_dir / "final_summary.txt"

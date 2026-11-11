@@ -234,7 +234,18 @@ def test_osint_edits_refresh_view_and_report_without_any_resynthesis(window, ima
         payload = json.loads(Path(window._report_paths['final_summary_json']).read_text(encoding='utf-8'))
         assert len(payload['annotations']['matches']) == n+1
         assert payload['reasoning_trace'] == json.loads(frozen)['reasoning_trace']
+        synthesis = json.loads(window.view_snapshot.investigation_synthesis_json)
+        assert payload['investigation_synthesis'] == synthesis
+        assert synthesis['external_source_corroboration']['status'] == 'reviewed_manual_match'
+        # Source category alone cannot provide image-specific origin support.
+        assert 'Origin and editing history unresolved' in window.workspace.overview.finding_title.text()
+        assert synthesis['revision_id'] in window.workspace.investigation_detail.toPlainText()
         assert 'annotation '+str(n) in window.summary_box.toPlainText()
+    assert window.session.summary_json == frozen
+
+    from osint_reverse_search import create_empty_osint_result
+    assert window._commit_osint(window.session.session_id, create_empty_osint_result(images[0]))
+    assert json.loads(window.view_snapshot.investigation_synthesis_json)['external_source_corroboration']['status'] == 'not_recorded'
     assert window.session.summary_json == frozen
 
 
@@ -245,7 +256,8 @@ def test_cancelled_dialog_and_switched_session_cannot_commit_annotations(window,
         def __init__(self, *args, **kwargs): pass
         def exec(self): return 0
     monkeypatch.setattr(gui, 'OSINTFindingDialog', Cancelled)
-    window.add_osint_finding()
+    assert window.workspace.source_context.isEnabled()
+    window.workspace.source_context.click()
     assert window.session.annotation_revision == 0
     draft = deepcopy(window.osint_result)
     add_manual_match(draft, 'google', 'https://example.com/old')
@@ -259,6 +271,11 @@ def test_cancelled_dialog_and_switched_session_cannot_commit_annotations(window,
     assert window.session.session_id != first
     assert window.session.annotation_revision == 0 and not window.osint_result.matches
     assert not window._commit_osint(first, draft)
+    mismatched = deepcopy(window.osint_result)
+    mismatched.image_sha256 = '0' * 64
+    revision = window.session.annotation_revision
+    assert not window._commit_osint(window.session.session_id, mismatched)
+    assert window.session.annotation_revision == revision
 
 
 def test_annotation_save_failure_does_not_commit_draft(window, images, monkeypatch):

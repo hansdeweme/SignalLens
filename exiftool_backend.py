@@ -26,6 +26,7 @@ import sys, subprocess
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
+from workflow_interpretation import interpret_workflows, workflow_container
 from typing import Any, Dict, List, Optional, Tuple
 
 # local imports
@@ -444,8 +445,11 @@ def find_term_matches(hits: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[D
                 result["generic_editing_tools"].append(enriched)
 
         # Declarative phrases
-        dec_gen_hits = contains_any(text, DECLARATIVE_GENERATION_TERMS)
-        dec_enh_hits = contains_any(text, DECLARATIVE_ENHANCEMENT_TERMS)
+        # Graph identifiers, model filenames and prompt prose are not declarations
+        # of an enhancement operation. Interpret connected graph semantics below.
+        structured = workflow_container(item)
+        dec_gen_hits = [] if structured else contains_any(text, DECLARATIVE_GENERATION_TERMS)
+        dec_enh_hits = [] if structured else contains_any(text, DECLARATIVE_ENHANCEMENT_TERMS)
         if dec_gen_hits:
             result["declarative_generation_terms"].append(
                 {**item, "matched_terms": dec_gen_hits}
@@ -503,9 +507,14 @@ def build_signals(
 
     # 0. Generator prompt
     prompt_fields = hits.get("generation_prompt", [])
+    workflow_fields = prompt_fields + hits.get("container_text", [])
+    workflow = interpret_workflows(workflow_fields)
     generation_prompt_evidence = [
         item for item in prompt_fields + hits.get("container_text", [])
-        if _is_embedded_metadata_entry(item) and _explicit_generation_workflow([item])
+        if _is_embedded_metadata_entry(item) and (
+            (workflow_container(item) and workflow and workflow['graph_interpretation_status'] == 'coherent'
+             and workflow['declared_process'] in {'full_image_generation', 'image_to_image', 'inpainting', 'mixed'})
+            or (not workflow_container(item) and _explicit_generation_workflow([item])))
     ]
     if generation_prompt_evidence:
         signals.append(
@@ -644,6 +653,10 @@ def build_signals(
     # 10. Explicit declarative enhancement wording
     enhancement_declarations = (matches["declarative_enhancement_terms"]
                                 + _source_type_declarations(hits, "DECLARED_ENHANCEMENT"))
+    if workflow and workflow['graph_interpretation_status'] == 'coherent' and workflow['declared_process'] in {'enhancement', 'inpainting'}:
+        enhancement_declarations += [{**item, 'declaration_kind': 'connected_workflow_operation',
+                                      'declared_process': workflow['declared_process']}
+                                     for item in workflow_fields if workflow_container(item)]
     if enhancement_declarations:
         signals.append(
             Signal(
@@ -890,6 +903,7 @@ def build_output_payload(
         "term_matches": matches,
         "signals": [asdict(s) for s in signals],
         "classification": derive_classification(signals),
+        "workflow_interpretation": interpret_workflows(collect_textual_evidence(hits)),
         "notes": [
             "Metadata alone does not prove AI generation or enhancement.",
             "C2PA presence should be verified separately in a dedicated provenance step.",

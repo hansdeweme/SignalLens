@@ -11,6 +11,9 @@ class InvestigationSummaryView:
     confidence_tier: str | None
     status: str
     limitations: tuple[str, ...]
+    lead_title: str | None = None
+    lead_explanation: str | None = None
+    confidence_scope: str | None = None
 
 
 @dataclass(frozen=True)
@@ -80,3 +83,4 @@ class InvestigationViewSnapshot:
     annotations_json: str
     analysis_annotation_revision: int | None
     source: SourceIdentityView | None = None
+    investigation_synthesis_json: str = 'null'

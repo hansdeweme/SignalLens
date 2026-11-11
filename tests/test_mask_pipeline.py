@@ -24,6 +24,22 @@ from gui_semantics import ModuleSummary
 from hypothesis_engine import build_evidence_snapshot, derive_signals
 
 
+def test_compact_prepared_roles_preserve_pixels_without_unused_ela_copy(source, tmp_path):
+    """New retention boundary: consumed role pixels stay exact; unused copy is omitted."""
+    from image_gatekeeper import prepare_analysis_images
+    from investigation_storage import artifact_naming
+    legacy = prepare_analysis_images(source, tmp_path / 'legacy')
+    with artifact_naming(True):
+        compact = prepare_analysis_images(source, tmp_path / 'compact')
+    assert set(legacy['prepared']) == {'global', 'patch', 'subject', 'ela'}
+    assert set(compact['prepared']) == set(compact['policy']) == {'global', 'patch', 'subject'}
+    assert not (tmp_path / 'compact' / 'prepared_images' / 'ela.png').exists()
+    for role, record in compact['prepared'].items():
+        assert Path(record['path']).name == role + '.png'
+        assert Path(record['path']).read_bytes() == Path(legacy['prepared'][role]['path']).read_bytes()
+    assert source.is_file()
+
+
 REGIONAL_STAGES = {
     "Region segmentation analysis", "Boundary-focused analysis", "Region-aware FFT analysis",
     "Segmentation alignment analysis", "Subject texture consistency analysis",

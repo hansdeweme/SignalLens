@@ -48,6 +48,8 @@ class ProvenanceWorkspace(QWidget):
         self.description=label('','secondary');body.addWidget(self.description)
         self.metadata_description=label('','caption');body.addWidget(self.metadata_description)
         self.tabs=QTabWidget()
+        self.external_context=label('','caption')
+        body.addWidget(self.external_context)
         metadata=QWidget();layout=QVBoxLayout(metadata)
         self.search=QLineEdit();self.search.setPlaceholderText('Search recorded field names and values')
         self.search.setAccessibleName('Search metadata names and values')
@@ -169,10 +171,18 @@ class ProvenanceWorkspace(QWidget):
             '\nResearch completed: '+str(annotations.get('completed_at_utc') or 'Not recorded')+
             '\nAnalyst notes: '+str(annotations.get('analyst_notes') or 'Not recorded'))
         if selected:
+            from source_image_verification import validate
+            verification = validate(selected, annotations.get('image_sha256'))
+            detail += '\nSource-image verification: ' + (json.dumps(verification, indent=2) if verification else
+                'Unavailable / not established. Missing or stale evidence cannot verify association.')
             detail+='\n\nSelected external claim / analyst observation\n'+'\n'.join(
                 title+': '+str(selected.get(key) or 'Not recorded') for key,title in (
                     ('title','Title'),('page_url','Source page URL'),('image_url','Source image URL'),('provider','Research provider'),
-                    ('notes','Analyst context'),('source_type','Analyst source classification'),('first_seen_estimate','First seen (estimate)')))
+                    ('notes','Analyst context'),('source_type','Analyst source classification'),('first_seen_estimate','First seen (estimate)'),
+                    ('claim_process','Claimed process'),('claim_text','Relevant source claim'),('model_family','Claimed model'),
+                    ('workflow_details','Source workflow details'),('claimed_by','Claim made by'),('attribution','Reported attribution'),
+                    ('image_association','Analyst image-association assertion'),('association_method','Association method'),
+                    ('association_details','Association basis'),('source_dependency','Source dependence'),('claim_limitations','Remaining uncertainty')))
         else:detail+='\n\nNo contextual source selected.'
         self.annotation_detail.setPlainText(detail)
 

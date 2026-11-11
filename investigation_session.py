@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import datetime, timezone
 from enum import Enum
 import json
+import hashlib
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -72,14 +73,28 @@ class InvestigationSession:
     historical_identity_json: str | None = None
     error: str | None = None
     source_sha256: str | None = None
+    _synthesis_json: str | None = field(default=None, repr=False)
+    _synthesis_key: tuple | None = field(default=None, repr=False)
+    storage_dir: str | None = None
+
+    def storage_directory(self, output_root):
+        from investigation_storage import investigation_directory
+        directory = investigation_directory(output_root, self.image_path or 'imported',
+                                              self.source_sha256, self.session_id)
+        self.storage_dir = str(directory)
+        return directory
 
     @classmethod
     def selected(cls, path: str | Path, annotations=None) -> InvestigationSession:
         frozen = json_snapshot(annotations)
         data = json.loads(frozen)
+        from osint_reverse_search import sha256_of_file
+        source_hash = sha256_of_file(path) if Path(path).is_file() else data.get('image_sha256') if isinstance(data, dict) else None
+        if isinstance(data, dict) and data.get('image_sha256') and source_hash and data['image_sha256'] != source_hash:
+            raise ValueError('Source annotations belong to a different image SHA-256.')
         return cls(image_path=str(Path(path).resolve()), state=InvestigationState.IMAGE_SELECTED,
                    annotations_json=frozen,
-                   source_sha256=data.get('image_sha256') if isinstance(data, dict) else None)
+                   source_sha256=source_hash)
 
     def begin_analysis(self, profile: str, scene_context: dict, settings: dict,
                        output_root: str | Path) -> AnalysisInvocation:
@@ -88,11 +103,14 @@ class InvestigationSession:
         if self.state == InvestigationState.ANALYZING:
             self.cancel()  # logical supersession only; owner retains the worker
         analysis_id = uuid4().hex
+        from investigation_storage import allocate_run
+        output = allocate_run(self.storage_directory(output_root), analysis_id,
+                              self.source_sha256, self.session_id)
         invocation = AnalysisInvocation(
             self.session_id, analysis_id, self.image_path, profile,
             tuple(sorted((k, bool(v)) for k, v in scene_context.items())),
             json_snapshot(settings), self.annotations_json, self.annotation_revision,
-            str(Path(output_root).resolve() / Path(self.image_path).stem / self.session_id / analysis_id),
+            str(output),
             source_sha256=self.source_sha256,
         )
         self.invocation = invocation
@@ -139,6 +157,7 @@ class InvestigationSession:
 
     def commit_annotations(self, annotations: Any) -> bool:
         frozen = json_snapshot(annotations)
+        self.validate_annotations(json.loads(frozen))
         if frozen == self.annotations_json:
             return False
         self.annotations_json = frozen
@@ -146,6 +165,50 @@ class InvestigationSession:
         self.report_revision = None
         self.updated_at = utc_now()
         return True
+
+    def validate_annotations(self, annotations):
+        data = json.loads(json_snapshot(annotations))
+        if isinstance(data, dict) and data.get('image_sha256') and self.source_sha256 and data['image_sha256'] != self.source_sha256:
+            raise ValueError('Source evidence belongs to a different image SHA-256.')
+
+    def synthesis_key(self, data=None):
+        from investigation_synthesis import POLICY_VERSION
+        forensic = json_snapshot(self.summary_data() if data is None else data)
+        health = hashlib.sha256(json_snapshot(self.verified_sources()).encode()).hexdigest()
+        return (self.result_id, self.source_sha256, self.annotation_revision, POLICY_VERSION, health,
+                hashlib.sha256(forensic.encode('utf-8')).hexdigest(),
+                hashlib.sha256(self.annotations_json.encode('utf-8')).hexdigest())
+
+    def verified_sources(self):
+        from source_image_verification import validate
+        notes = json.loads(self.annotations_json) or {}
+        return {m['record_id']: record for m in notes.get('matches', [])
+                if isinstance(m, dict) and (record := validate(m, self.source_sha256))}
+
+    def investigation_synthesis(self, data=None):
+        if self.state != InvestigationState.COMPLETED or not self.result_id:
+            return None
+        from investigation_synthesis import build_synthesis
+        key = self.synthesis_key(data)
+        if key != self._synthesis_key:
+            if self._synthesis_key and key[4] != self._synthesis_key[4]:
+                # Artifact integrity can change without an annotation edit.
+                # Keep old report bytes historical, never call their pointer current.
+                self.report_revision = None
+                self.updated_at = utc_now()
+            parent = json.loads(self._synthesis_json).get('revision_id') if self._synthesis_json else None
+            record = build_synthesis(self.summary_data() if data is None else data,
+                                     json.loads(self.annotations_json), self.source_sha256,
+                                     verifications=self.verified_sources())
+            historical = json.loads(self.historical_identity_json) if self.historical_identity_json else {}
+            record.update(schema_version=1, image_sha256=self.source_sha256,
+                forensic_snapshot_id=historical.get('result_id') or self.result_id,
+                forensic_fingerprint=key[-2], osint_evidence_fingerprint=key[-1],
+                osint_evidence_revision=self.annotation_revision,
+                revision_id=hashlib.sha256(json_snapshot(key).encode()).hexdigest()[:24],
+                revision_timestamp=self.updated_at, parent_revision_id=parent)
+            self._synthesis_json, self._synthesis_key = json_snapshot(record), key
+        return json.loads(self._synthesis_json)
 
     @property
     def revision_key(self) -> tuple[str, int] | None:

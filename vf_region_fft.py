@@ -148,9 +148,10 @@ def run_region_fft_analysis(image_path: str | Path, region_masks_payload: Dict[s
     # Save temporary masked images
     # (so we can reuse existing FFT pipeline)
     # --------------------------------------------------
-    subject_path = output_dir / f"{image_path.stem}_subject_tmp.png"
-    boundary_path = output_dir / f"{image_path.stem}_boundary_tmp.png"
-    background_path = output_dir / f"{image_path.stem}_background_tmp.png"
+    from investigation_storage import compact_artifacts
+    subject_path = output_dir / ('subject_input.png' if compact_artifacts() else f"{image_path.stem}_subject_tmp.png")
+    boundary_path = output_dir / ('boundary_input.png' if compact_artifacts() else f"{image_path.stem}_boundary_tmp.png")
+    background_path = output_dir / ('background_input.png' if compact_artifacts() else f"{image_path.stem}_background_tmp.png")
     cv2.imwrite(str(subject_path), subject_img)
     cv2.imwrite(str(boundary_path), boundary_img)
     cv2.imwrite(str(background_path), background_img)

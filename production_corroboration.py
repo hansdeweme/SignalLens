@@ -167,3 +167,18 @@ def record_gate(collector, result):
         collector[:]=[entry for entry in collector if entry['gate_id']!=result['gate_id']]+[result]
         collector.sort(key=lambda entry:entry['gate_id'])
     return result
+
+
+def explain_gate(result, conditions):
+    """Describe the caller's actual production predicates, not just ancestry counts.
+
+    `requirement_satisfied` remains the structural corroboration subcondition.
+    Some legacy production predicates intentionally use derived pattern flags
+    rather than that subcondition; callers must state those predicates explicitly.
+    """
+    result['conditions'] = [dict(condition_id=key, passed=bool(passed), explanation=text)
+        for key, passed, text in conditions]
+    result['failure_reasons'] = [c['explanation'] for c in result['conditions'] if not c['passed']]
+    result['overall_explanation'] = ('Overall PASS: all production conditions satisfied.'
+        if result['gate_passed'] else 'Overall FAIL: ' + '; '.join(result['failure_reasons']))
+    return result

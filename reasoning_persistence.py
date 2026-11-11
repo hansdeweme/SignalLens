@@ -6,15 +6,16 @@
 #
 from __future__ import annotations
 from hypothesis_evidence import ROLE_TITLES, evidence_presentation
+from signal_language import DERIVED_SIGNAL_NOTICE, DERIVED_SIGNAL_SCOPES
 import json
 from pathlib import Path
 from typing import Any
 
-def persist_reasoning_trace(reasoning_trace: dict[str, Any] | None, output_dir: str | Path) -> str | None:
+def persist_reasoning_trace(reasoning_trace: dict[str, Any] | None, output_dir: str | Path, *, flat: bool = False) -> str | None:
     if not reasoning_trace:
         return None
     output_dir = Path(output_dir)
-    summary_dir = output_dir / "summary"
+    summary_dir = output_dir if flat else output_dir / "summary"
     summary_dir.mkdir(parents=True, exist_ok=True)
     trace_path = summary_dir / "reasoning_trace.json"
     trace_path.write_text(
@@ -100,7 +101,7 @@ def _build_decision_win_explanation(reasoning_trace: dict) -> list[str]:
         and not derived.get("patch_structured")
     ):
         lines.append(
-            "strong anomaly signals exist, but no stable structural mechanism (localized editing or structured recurrence) is identified"
+            "Anomaly signals are present without the raw boundary-mismatch or structured-recurrence trigger; a causal mechanism requires qualified assessment."
         )    
     if derived.get("boundary_reliability_score") is not None:
         br = float(derived.get("boundary_reliability_score") or 0.0)
@@ -137,7 +138,7 @@ def _build_decision_win_explanation(reasoning_trace: dict) -> list[str]:
 
                 if derived.get("strong_local_edit") is not None:
                     lines.append(
-                        f"strong_local_edit = {_fmt_scalar(derived.get('strong_local_edit'))}; localized editing is supported, but not at the strongest branch threshold"
+                        f"strong_local_edit = {_fmt_scalar(derived.get('strong_local_edit'))}; this is a raw regional-processing trigger, not an editing conclusion"
                     )
 
                 if local_edit is not None:
@@ -166,7 +167,7 @@ def _build_decision_win_explanation(reasoning_trace: dict) -> list[str]:
 
                 if derived.get("person_mask_reliable"):
                     lines.append(
-                        "person-aware segmentation is reliable, so boundary and region signals are geometrically meaningful"
+                        "person-aware segmentation is eligible for regional analysis; this does not establish person-boundary alignment or causal reliability"
                     )
 
                 if derived.get("boundary_reliability_score") is not None:
@@ -213,7 +214,7 @@ def _build_decision_win_explanation(reasoning_trace: dict) -> list[str]:
                     )
                 if derived.get("strong_local_edit") is not None:
                     lines.append(
-                        f"strong_local_edit = {_fmt_scalar(derived.get('strong_local_edit'))}, so the system avoids a decisive localized-edit verdict"
+                        f"strong_local_edit = {_fmt_scalar(derived.get('strong_local_edit'))}; the qualified local assessment, not this trigger, determines editing support"
                     )
                 if fp_risk is not None:
                     lines.append(
@@ -326,8 +327,23 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         _add_heading(lines, 'Production Corroboration Audit')
         _add_kv(lines, 'Version', corroboration.get('version'))
         for gate in corroboration.get('evaluated_gates', []):
-            lines.append(f"- {gate['gate_id']}: passed={gate.get('gate_passed', gate['requirement_satisfied'])}; {gate['explanation']}")
+            lines.append(f"- {gate['gate_id']}: passed={gate.get('gate_passed', gate['requirement_satisfied'])}")
+            _add_kv(lines, '  Structural Corroboration', gate['explanation'])
+            _add_kv(lines, '  Overall', gate.get('overall_explanation'))
+            for condition in gate.get('conditions', []):
+                lines.append(f"  {condition['condition_id']}: {'PASS' if condition['passed'] else 'FAIL'} - {condition['explanation']}")
             _add_kv(lines, '  Eligible Evidence', gate['eligible_evidence'])
+            _add_kv(lines, '  Excluded Evidence', gate.get('excluded_evidence'))
+            strength_ids = {item['evidence_id'] for item in gate.get('strength_witnesses', [])}
+            for observation in gate.get('strength_observations', []):
+                lines.append(f"  Strength {observation['evidence_id']}: "
+                    f"eligible={observation['eligible_for_strength']}; "
+                    f"status={observation['status']}/{observation['polarity']}; "
+                    f"score={observation['score']}; pattern={observation['pattern']}; "
+                    f"requirement={observation['requirement']}; "
+                    f"qualifies={observation['evidence_id'] in strength_ids}")
+            _add_kv(lines, '  Strength Witnesses', gate.get('strength_witnesses'))
+            _add_kv(lines, '  Failure Reasons', gate.get('failure_reasons'))
             _add_kv(lines, '  Distinct Ancestry Groups', gate['distinct_ancestry_groups'])
             _add_kv(lines, '  Shared Ancestry', gate['shared_ancestry'])
         _add_list(lines, 'Corroboration Limitations', corroboration.get('limitations'))
@@ -378,6 +394,11 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         _add_list(lines, "Mask Rejection Reasons", mask.get("rejection_reasons"))
         _add_list(lines, "Unavailable Regional Stages", mask.get("disabled_stages"))
     _add_heading(lines, "Final Decision")
+    causal = reasoning_trace.get('causal_interpretation') or {}
+    if causal:
+        for key in ('rule', 'declared_process', 'provenance_authenticity', 'separate_edit_status',
+                    'lead_explanation', 'confidence_scope'):
+            _add_kv(lines, key, causal.get(key))
     _add_kv(lines, "Branch", decision.get("decision_branch"))
     _add_kv(lines, "Dominant Pattern", decision.get("dominant_pattern"))
     _add_kv(lines, "Confidence Tier", decision.get("confidence_tier"))
@@ -441,7 +462,8 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         if key in scorecard:
             _add_kv(lines, key, scorecard[key])
     lines.append("")
-    _add_heading(lines, "Derived Signals")
+    _add_heading(lines, "Derived Measurement Signals (raw triggers)")
+    lines.append(DERIVED_SIGNAL_NOTICE)
     derived_keys = [
         "person_mask_reliable",
         "subject_area_ratio",
@@ -449,7 +471,9 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         "boundary_support_low",
         "boundary_reliability_score",        
         "strong_local_edit",
+        "fragmented_local_edit",
         "strong_cross",
+        "subject_boundary_medium",
         "region_geometry_unreliable",
         "patch_structured",
         "fft_structured",
@@ -464,6 +488,8 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
     for key in derived_keys:
         if key in derived:
             _add_kv(lines, key, derived[key])
+            if key in DERIVED_SIGNAL_SCOPES:
+                lines.append('  Scope: ' + DERIVED_SIGNAL_SCOPES[key])
     lines.append("")
     _add_heading(lines, "Section Snapshot")
     for key, section in sections.items():
@@ -479,11 +505,11 @@ def build_reasoning_trace_text(reasoning_trace: dict | None) -> str:
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
-def persist_reasoning_trace_text(reasoning_trace: dict[str, Any] | None, output_dir: str | Path) -> str | None:
+def persist_reasoning_trace_text(reasoning_trace: dict[str, Any] | None, output_dir: str | Path, *, flat: bool = False) -> str | None:
     if not reasoning_trace:
         return None
     output_dir = Path(output_dir)
-    summary_dir = output_dir / "summary"
+    summary_dir = output_dir if flat else output_dir / "summary"
     summary_dir.mkdir(parents=True, exist_ok=True)
     trace_txt_path = summary_dir / "reasoning_trace.txt"
     trace_txt_path.write_text(

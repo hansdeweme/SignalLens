@@ -73,6 +73,9 @@ def test_true_compound_boundary_condition_is_not_replaced_by_source_uniqueness()
     assert compound['requirement_satisfied']
     env=logic.build_decision_env(sections)
     assert logic._boundary_corroborated(env)
+    gate = next(g for g in env.corroboration_gates if g['gate_id'] == 'boundary.compound_support')
+    assert all(c['passed'] for c in gate['conditions'])
+    assert gate['failure_reasons'] == [] and 'Overall PASS' in gate['overall_explanation']
     assert logic.route_strong_local_edit(env).confidence=='High'
 
 
@@ -220,6 +223,9 @@ def test_trace_is_compact_and_repeated_environment_evaluation_does_not_accumulat
     assert len(ids)==len(set(ids))
     assert 'lineage' not in audit
     assert 'Production Corroboration Audit' in build_reasoning_trace_text(first[4])
+    for gate in audit['evaluated_gates']:
+        assert gate['gate_passed'] == all(c['passed'] for c in gate['conditions'])
+        assert bool(gate['failure_reasons']) == (not gate['gate_passed'])
     assert len(first)==5
 
 

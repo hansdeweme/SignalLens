@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
+from uuid import uuid4
 
 # ------------------------------------------------------------
 # dataclasses
@@ -31,6 +32,19 @@ class ReverseSearchMatch:
     similarity_score: Optional[float] = None
     first_seen_estimate: Optional[str] = None
     notes: str = ""
+    claim_process: str = "not_recorded"
+    claim_text: str = ""
+    model_family: str = ""
+    workflow_details: str = ""
+    claimed_by: str = "unknown"
+    attribution: str = ""
+    image_association: str = "unestablished"
+    association_method: str = ""
+    association_details: str = ""
+    source_dependency: str = "unknown"
+    claim_limitations: str = ""
+    record_id: str = field(default_factory=lambda: uuid4().hex)
+    verification: Optional[dict] = None
 
 
 @dataclass
@@ -392,6 +406,11 @@ def add_manual_match(
     first_seen_estimate: Optional[str] = None,
     source_type: str = "unknown",
     notes: str = "",
+    *,
+    claim_process: str = "not_recorded", claim_text: str = "", model_family: str = "",
+    workflow_details: str = "", claimed_by: str = "unknown", attribution: str = "",
+    image_association: str = "unestablished", association_method: str = "",
+    association_details: str = "", source_dependency: str = "unknown", claim_limitations: str = "",
 ) -> ReverseSearchResult:
     inferred_source_type = source_type
     if inferred_source_type == "unknown":
@@ -408,6 +427,11 @@ def add_manual_match(
         similarity_score=similarity_score,
         first_seen_estimate=first_seen_estimate.strip() if first_seen_estimate else None,
         notes=notes.strip(),
+        claim_process=claim_process, claim_text=claim_text.strip(), model_family=model_family.strip(),
+        workflow_details=workflow_details.strip(), claimed_by=claimed_by, attribution=attribution.strip(),
+        image_association=image_association, association_method=association_method,
+        association_details=association_details.strip(), source_dependency=source_dependency,
+        claim_limitations=claim_limitations.strip(),
     )
 
     result.matches.append(match)
@@ -430,6 +454,11 @@ def replace_match(
     first_seen_estimate: Optional[str] = None,
     source_type: str = "unknown",
     notes: str = "",
+    *,
+    claim_process: str = "not_recorded", claim_text: str = "", model_family: str = "",
+    workflow_details: str = "", claimed_by: str = "unknown", attribution: str = "",
+    image_association: str = "unestablished", association_method: str = "",
+    association_details: str = "", source_dependency: str = "unknown", claim_limitations: str = "",
 ) -> ReverseSearchResult:
     if not (0 <= index < len(result.matches)):
         raise IndexError("Match index out of range.")
@@ -438,6 +467,7 @@ def replace_match(
     if inferred_source_type == "unknown":
         inferred_source_type = classify_source_type(page_url, title)
 
+    previous = result.matches[index]
     result.matches[index] = ReverseSearchMatch(
         provider=provider,
         title=title.strip(),
@@ -449,6 +479,13 @@ def replace_match(
         similarity_score=similarity_score,
         first_seen_estimate=first_seen_estimate.strip() if first_seen_estimate else None,
         notes=notes.strip(),
+        claim_process=claim_process, claim_text=claim_text.strip(), model_family=model_family.strip(),
+        workflow_details=workflow_details.strip(), claimed_by=claimed_by, attribution=attribution.strip(),
+        image_association=image_association, association_method=association_method,
+        association_details=association_details.strip(), source_dependency=source_dependency,
+        claim_limitations=claim_limitations.strip(),
+        record_id=previous.record_id,
+        verification=previous.verification if image_url.strip() == previous.image_url and image_association != 'rejected' else None,
     )
 
     result.analyst_reviewed = True

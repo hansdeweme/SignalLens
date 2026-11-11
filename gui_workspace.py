@@ -4,6 +4,7 @@ This module projects snapshots and routes existing actions. It never synthesizes
 findings, runs detectors, owns a second session, or changes report contents.
 """
 from pathlib import Path
+import json
 from PyQt6.QtCore import Qt, QSize, QUrl
 from PyQt6.QtGui import QAction, QKeySequence, QDesktopServices
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -70,11 +71,19 @@ class WorkspaceShell(QWidget):
         host.run_button = QPushButton('Run Analysis')
         host.run_button.setProperty('slPrimary', True)
         host.run_button.clicked.connect(host.run_analysis)
+        self.source_context = QPushButton('Source & Context…')
+        self.source_context.setToolTip('Optional: record a source URL, source claim or analyst notes before or after analysis.')
+        self.source_context.clicked.connect(host.add_osint_finding)
         host.clear_button = QPushButton('Clear')
         host.clear_button.clicked.connect(host.clear_ui)
         for widget in (host.pick_button, host.file_edit, configure, host.run_button, host.clear_button):
             commands.addWidget(widget, 1 if widget is host.file_edit else 0)
         layout.addLayout(commands)
+        context_commands = QHBoxLayout()
+        context_commands.addWidget(self.source_context)
+        self.investigation_status = label('Source context is optional. Forensic measurements remain separate from external claims.', 'caption')
+        context_commands.addWidget(self.investigation_status, 1)
+        layout.addLayout(context_commands)
         self._configuration()
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -207,10 +216,15 @@ class WorkspaceShell(QWidget):
         self.stack.addWidget(self.evidence)
         self.empty_states['Evidence'] = self.evidence.empty
         self.evidence_details = self.evidence.compatibility_details
+        self.evidence_relationships = text_view()
+        self.evidence_relationships.setAccessibleName('Cross-source evidence relationships')
+        self.evidence.tabs.addTab(self.evidence_relationships, 'Source relationships')
 
     def _reasoning(self):
         from explorer_workspace import ReasoningWorkspace
         self.reasoning = ReasoningWorkspace(self.host,self.navigate_context)
+        self.investigation_detail = text_view()
+        self.reasoning.tabs.addTab(self.investigation_detail, 'Investigation synthesis')
         self.pages['Reasoning'] = self.reasoning
         self.stack.addWidget(self.reasoning)
         self.empty_states['Reasoning'] = self.reasoning.empty
@@ -320,6 +334,20 @@ class WorkspaceShell(QWidget):
             return False
         state = snapshot.summary.status
         complete = state == 'completed' and snapshot.result_id is not None
+        from investigation_synthesis import synthesis_text
+        synthesis = json.loads(snapshot.investigation_synthesis_json)
+        self.source_context.setEnabled(state != 'empty' and bool(snapshot.source and snapshot.source.sha256))
+        if synthesis:
+            self.investigation_status.setText(f"Investigation revision {synthesis['revision_id'][:8]} · Source evidence revision {snapshot.annotation_revision} · Frozen forensic reasoning retained")
+            self.investigation_detail.setPlainText('The other reasoning tabs retain the frozen forensic snapshot. '
+                'This investigation revision includes current source review without rerunning pixel analysis.\n\n' + synthesis_text(synthesis))
+            from evidence_relationships import relationship_text
+            self.evidence_relationships.setPlainText(relationship_text(
+                synthesis['external_source_corroboration'].get('cross_source_assessment')))
+        else:
+            self.investigation_status.setText('Optional source context can be entered now; analysis is not required first.')
+            self.investigation_detail.clear()
+            self.evidence_relationships.clear()
         self.lifecycle.set_state(state)
         self.progress.setVisible(state == 'analyzing')
         self.identity.setText(f'Investigation {snapshot.session_id[:8]}\n{snapshot.summary.image_name or "No image selected"}\n' + ('Current result available' if complete else 'No completed result'))
@@ -327,6 +355,11 @@ class WorkspaceShell(QWidget):
         self.forensics.bind(snapshot)
         self.refresh_explorers()
         self.provenance.bind(snapshot)
+        if synthesis:
+            self.provenance.external_context.setText('Technical authenticity: ' + synthesis['technical_provenance_authenticity']['status']
+                + ' · External corroboration: ' + synthesis['external_source_corroboration'].get('assessment_status', synthesis['external_source_corroboration']['status']))
+        else:
+            self.provenance.external_context.setText('External source review is optional and separate from technical provenance.')
         self.reports.bind(snapshot)
         for destination, empty in self.empty_states.items():
             unavailable = not complete or (destination == 'Evidence' and not snapshot.evidence) or (destination == 'Reasoning' and not snapshot.hypotheses)

@@ -33,6 +33,7 @@ def build_presentation(session: InvestigationSession, result=None) -> Investigat
     data = mapping(result) if result is not None else mapping(session.summary_data())
     trace = mapping(data.get('reasoning_trace'))
     decision = mapping(trace.get('decision'))
+    causal = mapping(trace.get('causal_interpretation'))
     policy = mapping(trace.get('confidence_policy'))
     policies = {p['hypothesis']: p for item in records(policy.get('assessments'))
                 if (p := mapping(item)) and isinstance(p.get('hypothesis'), str)}
@@ -46,7 +47,7 @@ def build_presentation(session: InvestigationSession, result=None) -> Investigat
         hypotheses.append(HypothesisView(
             hid, h.get('explanation'), p.get('tier', h.get('confidence_tier')),
             *(optional_roles(h, role) for role in ('supporting_evidence', 'contradicting_evidence', 'moderating_evidence', 'contextual_evidence')),
-            strings(h.get('limitations')) + strings(p.get('reliability_limitations')),
+            tuple(dict.fromkeys(strings(h.get('limitations')) + strings(p.get('reliability_limitations')))),
             p.get('policy_rule', h.get('confidence_policy_rule')),
             strings(p.get('rationale', h.get('confidence_rationale'))),
         ))
@@ -67,13 +68,15 @@ def build_presentation(session: InvestigationSession, result=None) -> Investigat
                    if (s := mapping(raw)))
     provenance = mapping(trace.get('provenance_evidence'))
     verified = provenance.get('metadata_authenticity_verified')
+    synthesis = session.investigation_synthesis(data)
     return InvestigationViewSnapshot(
         session.session_id, session.invocation.analysis_id if session.invocation else None,
         session.analysis_revision, session.annotation_revision, session.result_id,
         InvestigationSummaryView(session.session_id, Path(session.image_path).name if session.image_path else None,
             primary, decision.get('dominant_pattern'),
             primary_policy.get('tier', decision.get('confidence_tier')),
-            session.state.value, primary_view.limitations if primary_view else strings(decision.get('limitations'))),
+            session.state.value, primary_view.limitations if primary_view else strings(decision.get('limitations')),
+            causal.get('lead_title'), causal.get('lead_explanation'), causal.get('confidence_scope')),
         tuple(hypotheses), tuple(evidence),
         ProvenanceView(provenance.get('state'), 'verified' if verified is True else 'unverified' if verified is False else 'unknown',
                        mapping(mapping(data.get('sections')).get('metadata')).get('note'), ()),
@@ -83,4 +86,5 @@ def build_presentation(session: InvestigationSession, result=None) -> Investigat
             session.invocation.profile if session.invocation else
             mapping(json.loads(session.historical_identity_json)).get('profile') if session.historical_identity_json else None,
             bool(session.imported_from), session.error),
+        json.dumps(synthesis, sort_keys=True, ensure_ascii=False),
     )

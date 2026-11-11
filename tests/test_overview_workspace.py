@@ -110,7 +110,22 @@ def test_primary_pattern_and_exact_confidence_are_recorded(window, source, prima
     overview = window.workspace.overview
     assert overview.confidence.tier == tier
     assert 'recorded_pattern' in overview.pattern.text()
-    assert 'not recorded' in overview.finding_title.text().lower() if primary is None else primary.replace('_', ' ').split()[0].lower() in overview.finding_title.text().lower()
+    recorded = json.loads(window.view_snapshot.investigation_synthesis_json)
+    assert overview.finding_title.text() == recorded['lead']['title']
+    assert window.view_snapshot.summary.primary_hypothesis == primary
+    assert overview.confidence.isHidden()  # per-hypothesis tiers remain in cards
+    if primary == 'localized_editing':
+        # Presentation projects the recorded causal lead without changing the
+        # selected hypothesis/tier or inferring a creation history itself.
+        trace['causal_interpretation'] = {
+            'lead_title': 'Declared generation with regional anomalies',
+            'lead_explanation': 'Full-image generation is declared; provenance authenticity is unverified.',
+            'confidence_scope': 'High describes regional-anomaly support, not certainty about editing history.'}
+        set_trace(window, trace)
+        current = json.loads(window.view_snapshot.investigation_synthesis_json)
+        assert overview.finding_title.text() == current['lead']['title']
+        assert overview.qualifier.text() == current['lead']['confidence_scope']
+        assert overview.confidence.tier == tier
 
 
 def test_three_hypotheses_missing_assessments_and_no_policy_inference(window, source):
@@ -150,6 +165,25 @@ def test_limitations_keep_unverified_provenance_and_unavailable_regions(window, 
     assert 'No reliable mask' in overview.scope_text
     assert 'Region FFT' in overview.scope_text
     assert 'not negative evidence' in overview.scope_text
+
+    # Hypothesis and confidence policy can record the same limitation (Instagram
+    # localized-editing result). Display it once while retaining distinct caveats.
+    trace = window.session.summary_data()['reasoning_trace']
+    caveat = 'Localized editing evidence does not by itself establish AI generation.'
+    trace['decision']['primary_hypothesis'] = 'localized_editing'
+    trace['hypothesis_assessments'][0]['hypothesis_id'] = 'localized_editing'
+    trace['hypothesis_assessments'][0]['limitations'].append(caveat)
+    trace['confidence_policy'] = {'assessments': [{
+        'hypothesis': 'localized_editing', 'reliability_limitations': [caveat, 'Coverage limited.']}]}
+    set_trace(window, trace)
+    frozen = window.session.summary_json
+    expected = ('Metadata authenticity is unverified.', caveat, 'Coverage limited.')
+    snapshot = build_presentation(window.session)
+    assert snapshot.summary.limitations == snapshot.hypotheses[0].limitations == expected
+    assert 'not probabilities' in overview.qualifier.text()
+    assert overview.qualifier.toolTip().count(caveat) == 1
+    assert overview.cards['localized_editing'].limitation.toolTip() == '\n'.join(expected)
+    assert window.session.summary_json == frozen
 
 
 def test_navigation_and_narrative_preserve_snapshot_and_annotations(window, source, app):
